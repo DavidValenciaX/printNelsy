@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Imágenes con Fabric.js</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .main-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        #canvas-container {
+            border: 1px solid black;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .size-button,
+        .control-button,
+        .orientation-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            width: 200px;
+        }
+
+        .size-button:hover,
+        .control-button:hover,
+        .orientation-button:hover {
+            background-color: #45a049;
+        }
+
+        .size-button:active,
+        .control-button:active,
+        .orientation-button:active {
+            background-color: #3e8e41;
+        }
+
+        #imageLoader {
+            display: none;
+        }
+
+        .control-button[for="imageLoader"] {
+            display: inline-block;
+            text-align: center;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+</head>
+
+<body>
+    <div class="main-container">
+        <div class="button-container">
+            <label for="imageLoader" class="control-button">Cargar imágenes</label>
+            <input type="file" id="imageLoader" accept="image/*" multiple aria-label="Cargar imágenes">
+            <button type="button" id="printButton" class="control-button">Imprimir</button>
+        </div>
+        <div id="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+        <div class="button-container">
+            <button type="button" class="size-button" id="cartaButton">CARTA</button>
+            <button type="button" class="size-button" id="oficioButton">OFICIO</button>
+            <button type="button" class="orientation-button" id="verticalButton">▯ Vertical</button>
+            <button type="button" class="orientation-button" id="horizontalButton">▭ Horizontal</button>
+            <button type="button" id="rotateButton+90" class="control-button">Girar 90 grados a la derecha ↻</button>
+            <button type="button" id="rotateButton-90" class="control-button">Girar 90 grados a la izquierda ↺</button>
+        </div>
+    </div>
+
+    <script>
+        const canvasElement = document.getElementById('canvas');
+        let canvas = new fabric.Canvas('canvas');
+        const imageLoader = document.getElementById('imageLoader');
+        const printButton = document.getElementById('printButton');
+        const cartaButton = document.getElementById('cartaButton');
+        const oficioButton = document.getElementById('oficioButton');
+        const verticalButton = document.getElementById('verticalButton');
+        const horizontalButton = document.getElementById('horizontalButton');
+        const rotateButton_p90 = document.getElementById('rotateButton+90');
+        const rotateButton_n90 = document.getElementById('rotateButton-90');
+
+        const dpi = 300;
+        const marginInches = 0.2;
+        const marginPixels = marginInches * dpi;
+        const paperSizes = {
+            carta: { width: 8.5 * dpi, height: 11 * dpi },
+            oficio: { width: 8.5 * dpi, height: 13 * dpi }
+        };
+
+        let currentSize = 'carta';
+        let isVertical = true;
+        let marginRect;
+
+        function resizeCanvas(size, orientation = isVertical) {
+            currentSize = size;
+            isVertical = orientation;
+            const scale = 0.3;
+            let width = paperSizes[size].width;
+            let height = paperSizes[size].height;
+
+            if (!isVertical) {
+                [width, height] = [height, width];
+            }
+
+            canvas.setWidth(width * scale);
+            canvas.setHeight(height * scale);
+
+            if (marginRect) {
+                canvas.remove(marginRect);
+            }
+
+            marginRect = new fabric.Rect({
+                width: width * scale - (2 * marginPixels * scale),
+                height: height * scale - (2 * marginPixels * scale),
+                left: marginPixels * scale,
+                top: marginPixels * scale,
+                fill: 'transparent',
+                stroke: 'gray',
+                strokeWidth: 1,
+                strokeDashArray: [5, 5],
+                selectable: false,
+                evented: false
+            });
+
+            canvas.add(marginRect);
+            canvas.renderAll();
+
+            // Actualizar los límites para todas las imágenes existentes
+            canvas.forEachObject(function (obj) {
+                if (obj !== marginRect) {
+                    updateObjectCoords(obj);
+                }
+            });
+        }
+
+        function changeOrientation(vertical) {
+            resizeCanvas(currentSize, vertical);
+        }
+
+        cartaButton.addEventListener('click', () => resizeCanvas('carta'));
+        oficioButton.addEventListener('click', () => resizeCanvas('oficio'));
+        verticalButton.addEventListener('click', () => changeOrientation(true));
+        horizontalButton.addEventListener('click', () => changeOrientation(false));
+
+        imageLoader.addEventListener('change', handleImageUpload);
+        printButton.addEventListener('click', printCanvas);
+        rotateButton_p90.addEventListener('click', function () {
+            rotateImage(90);
+        });
+
+        rotateButton_n90.addEventListener('click', function () {
+            rotateImage(-90);
+        });
+
+
+        function handleImageUpload(e) {
+            const files = e.target.files;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    fabric.Image.fromURL(event.target.result, function (img) {
+                        img.scaleToWidth(canvas.width / 2);
+                        canvas.add(img);
+                        canvas.setActiveObject(img);
+                        canvas.renderAll();
+                    });
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function printCanvas() {
+            const dataUrl = canvas.toDataURL({
+                format: 'png',
+                quality: 1,
+                multiplier: 1 / canvas.getZoom()
+            });
+            const windowContent = '<!DOCTYPE html><html><head><title>Imprimir Canvas</title></head><body><img src="' + dataUrl + '" style="width:100%;"></body></html>';
+            const printWin = window.open('', '', 'width=800,height=600');
+            printWin.document.open();
+            printWin.document.write(windowContent);
+            printWin.document.close();
+            printWin.setTimeout(function () {
+                printWin.focus();
+                printWin.print();
+                printWin.close();
+            }, 250);
+        }
+
+        fabric.Object.prototype.transparentCorners = false;
+        fabric.Object.prototype.cornerColor = 'limegreen';
+        fabric.Object.prototype.cornerStrokeColor = 'black';
+        fabric.Object.prototype.cornerStyle = 'rect';
+        fabric.Object.prototype.cornerSize = 12;
+        const controls = fabric.Object.prototype.controls
+        const rotateControls = controls.mtr
+        rotateControls.visible = false
+
+        function updateObjectCoords(obj) {
+            obj.setCoords();
+        }
+
+        canvas.on('object:moving', function (e) {
+            var obj = e.target;
+
+            // Obtener los límites del objeto y del margen
+            var objBounds = obj.getBoundingRect(true, true);
+            var marginBounds = marginRect.getBoundingRect(true, true);
+
+            // Corregir la posición si sale de los márgenes
+            if (objBounds.left < marginBounds.left) {
+                obj.left = obj.left + (marginBounds.left - objBounds.left);
+            }
+            if (objBounds.top < marginBounds.top) {
+                obj.top = obj.top + (marginBounds.top - objBounds.top);
+            }
+            if (objBounds.left + objBounds.width > marginBounds.left + marginBounds.width) {
+                obj.left = obj.left - ((objBounds.left + objBounds.width) - (marginBounds.left + marginBounds.width));
+            }
+            if (objBounds.top + objBounds.height > marginBounds.top + marginBounds.height) {
+                obj.top = obj.top - ((objBounds.top + objBounds.height) - (marginBounds.top + marginBounds.height));
+            }
+
+            obj.setCoords();  // Actualiza las coordenadas después de cualquier ajuste
+        });
+
+        canvas.on('object:scaling', function (e) {
+            var obj = e.target;
+            obj.setCoords();
+
+            // Obtener los límites del objeto y del margen
+            var objBounds = obj.getBoundingRect(true, true);
+            var marginBounds = marginRect.getBoundingRect(true, true);
+
+            // Calcular los factores de escala máximos permitidos
+            var maxScaleX = (marginBounds.width - (objBounds.left - marginBounds.left)) / obj.width;
+            var maxScaleY = (marginBounds.height - (objBounds.top - marginBounds.top)) / obj.height;
+
+            // Aplicar restricciones de escala
+            if (objBounds.left < marginBounds.left) {
+                obj.scaleX *= (objBounds.width - (marginBounds.left - objBounds.left)) / objBounds.width;
+                obj.left = marginBounds.left;
+            }
+            if (objBounds.top < marginBounds.top) {
+                obj.scaleY *= (objBounds.height - (marginBounds.top - objBounds.top)) / objBounds.height;
+                obj.top = marginBounds.top;
+            }
+            if (objBounds.left + objBounds.width > marginBounds.left + marginBounds.width) {
+                obj.scaleX = Math.min(obj.scaleX, maxScaleX);
+            }
+            if (objBounds.top + objBounds.height > marginBounds.top + marginBounds.height) {
+                obj.scaleY = Math.min(obj.scaleY, maxScaleY);
+            }
+
+            // Asegurar que la escala no sea menor que cierto valor mínimo
+            var minScale = 0.1;
+            obj.scaleX = Math.max(obj.scaleX, minScale);
+            obj.scaleY = Math.max(obj.scaleY, minScale);
+
+            obj.setCoords();
+        });
+
+        function rotateImage(deg) {
+            const activeObject = canvas.getActiveObject();
+            if (activeObject) {
+                activeObject.rotate((activeObject.angle + deg) % 360);
+                activeObject.setCoords(); // Actualiza las coordenadas del objeto después de la rotación
+                canvas.renderAll();
+            }
+        }
+
+        resizeCanvas('carta');
+    </script>
+</body>
+
+</html>
