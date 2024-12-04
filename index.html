@@ -183,6 +183,10 @@
                 reader.onload = function (event) {
                     fabric.Image.fromURL(event.target.result, function (img) {
                         img.scaleToWidth(canvas.width / 2);
+                        img.set({
+                            left: canvas.width / 2 - img.getScaledWidth() / 2,
+                            top: canvas.height / 2 - img.getScaledHeight() / 2
+                        });
                         canvas.add(img);
                         canvas.setActiveObject(img);
                         canvas.renderAll();
