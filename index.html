@@ -269,23 +269,6 @@
             var obj = e.target;
             obj.setCoords();
 
-            // Agregamos logs para el escalado
-             console.log('=== ESCALADO ===');
-            /*console.log('Objeto rotado:', obj.angle !== 0);
-            console.log('Ángulo actual:', obj.angle);
-            console.log('Escala:', { scaleX: obj.scaleX, scaleY: obj.scaleY });
-            console.log('Última escala válida:', { 
-                lastScaleX: obj._lastScaleX, 
-                lastScaleY: obj._lastScaleY 
-            });*/
-            console.log('Coordenadas absolutas:', obj.aCoords);
-            console.log('Coordenadas relativas:', obj.oCoords);
-            console.log('Bounds:', obj.getBoundingRect());
-            console.log('Centro de rotación:', { 
-                x: obj.getCenterPoint().x, 
-                y: obj.getCenterPoint().y 
-            }); 
-
             // Obtener los puntos del objeto y del margen
             var objPoints = [obj.aCoords.tl, obj.aCoords.tr, obj.aCoords.br, obj.aCoords.bl];
             var marginPoints = marginRect.aCoords;
@@ -307,7 +290,6 @@
                 }
                 if (point.x > marginMaxX) {
                     exceedsMargin = true;
-                    //offsetX = Math.min(offsetX, marginMaxX - point.x);
                 }
                 if (point.y < marginMinY) {
                     exceedsMargin = true;
@@ -315,24 +297,25 @@
                 }
                 if (point.y > marginMaxY) {
                     exceedsMargin = true;
-                    //offsetY = Math.min(offsetY, marginMaxY - point.y);
                 }
             });
 
             if (exceedsMargin) {
-                // Restaurar la escala anterior
+                // Restauramos la escala anterior válida
                 obj.scaleX = obj._lastScaleX || obj.scaleX;
                 obj.scaleY = obj._lastScaleY || obj.scaleY;
-                
-                // Ajustar la posición si es necesario
-                if (offsetX !== 0) obj.left += offsetX;
-                if (offsetY !== 0) obj.top += offsetY;
-                
+
+                // Restauramos la posición anterior válida
+                obj.left = obj._lastLeft || obj.left;
+                obj.top = obj._lastTop || obj.top;
+
                 obj.setCoords();
             } else {
-                // Guardar la escala válida
+                // Guardamos la escala y posición válidas
                 obj._lastScaleX = obj.scaleX;
                 obj._lastScaleY = obj.scaleY;
+                obj._lastLeft = obj.left;
+                obj._lastTop = obj.top;
             }
 
             canvas.renderAll();
@@ -343,20 +326,6 @@
             if (activeObject) {
                 activeObject.rotate((activeObject.angle + deg) % 360);
                 activeObject.setCoords();
-                
-                // Agregamos logs para la rotación
-                /* console.log('=== ROTACIÓN ===');
-                console.log('Ángulo:', activeObject.angle);
-                console.log('Coordenadas absolutas:', activeObject.aCoords);
-                console.log('Coordenadas relativas:', activeObject.oCoords);
-                console.log('Posición:', { left: activeObject.left, top: activeObject.top });
-                console.log('Dimensiones:', { 
-                    width: activeObject.width * activeObject.scaleX,
-                    height: activeObject.height * activeObject.scaleY
-                });
-                console.log('Punto de transformación:', activeObject.transformMatrix);
-                console.log('Bounds:', activeObject.getBoundingRect()); */
-                
                 canvas.renderAll();
             }
         }
