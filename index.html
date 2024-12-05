@@ -226,62 +226,78 @@
 
         canvas.on('object:moving', function (e) {
             var obj = e.target;
+            obj.setCoords(); // Actualiza las coordenadas del objeto
 
-            // Obtener los límites del objeto y del margen
-            var objBounds = obj.getBoundingRect(true, true);
-            var marginBounds = marginRect.getBoundingRect(true, true);
+            // Obtener los puntos del objeto y del margen
+            var objPoints = [obj.aCoords.tl, obj.aCoords.tr, obj.aCoords.br, obj.aCoords.bl];
+            var marginPoints = marginRect.aCoords;
 
-            // Corregir la posición si sale de los márgenes
-            if (objBounds.left < marginBounds.left) {
-                obj.left = obj.left + (marginBounds.left - objBounds.left);
-            }
-            if (objBounds.top < marginBounds.top) {
-                obj.top = obj.top + (marginBounds.top - objBounds.top);
-            }
-            if (objBounds.left + objBounds.width > marginBounds.left + marginBounds.width) {
-                obj.left = obj.left - ((objBounds.left + objBounds.width) - (marginBounds.left + marginBounds.width));
-            }
-            if (objBounds.top + objBounds.height > marginBounds.top + marginBounds.height) {
-                obj.top = obj.top - ((objBounds.top + objBounds.height) - (marginBounds.top + marginBounds.height));
-            }
+            // Calcular los límites del margen
+            var marginMinX = Math.min(marginPoints.tl.x, marginPoints.tr.x, marginPoints.br.x, marginPoints.bl.x);
+            var marginMaxX = Math.max(marginPoints.tl.x, marginPoints.tr.x, marginPoints.br.x, marginPoints.bl.x);
+            var marginMinY = Math.min(marginPoints.tl.y, marginPoints.tr.y, marginPoints.br.y, marginPoints.bl.y);
+            var marginMaxY = Math.max(marginPoints.tl.y, marginPoints.tr.y, marginPoints.br.y, marginPoints.bl.y);
 
-            obj.setCoords();  // Actualiza las coordenadas después de cualquier ajuste
+            // Inicializar desplazamientos
+            var offsetX = 0, offsetY = 0;
+
+            // Comprobar cada punto del objeto
+            objPoints.forEach(function (point) {
+                if (point.x < marginMinX) {
+                    offsetX = Math.max(offsetX, marginMinX - point.x);
+                }
+                if (point.x > marginMaxX) {
+                    offsetX = Math.min(offsetX, marginMaxX - point.x);
+                }
+                if (point.y < marginMinY) {
+                    offsetY = Math.max(offsetY, marginMinY - point.y);
+                }
+                if (point.y > marginMaxY) {
+                    offsetY = Math.min(offsetY, marginMaxY - point.y);
+                }
+            });
+
+            // Aplicar desplazamientos si es necesario
+            if (offsetX !== 0 || offsetY !== 0) {
+                obj.left += offsetX;
+                obj.top += offsetY;
+                obj.setCoords(); // Actualiza las coordenadas después de ajustar la posición
+            }
         });
 
         canvas.on('object:scaling', function (e) {
             var obj = e.target;
             obj.setCoords();
 
-            // Obtener los límites del objeto y del margen
-            var objBounds = obj.getBoundingRect(true, true);
-            var marginBounds = marginRect.getBoundingRect(true, true);
+            // Obtener los puntos del objeto y del margen
+            var objPoints = [obj.aCoords.tl, obj.aCoords.tr, obj.aCoords.br, obj.aCoords.bl];
+            var marginPoints = marginRect.aCoords;
 
-            // Calcular los factores de escala máximos permitidos
-            var maxScaleX = (marginBounds.width - (objBounds.left - marginBounds.left)) / obj.width;
-            var maxScaleY = (marginBounds.height - (objBounds.top - marginBounds.top)) / obj.height;
+            // Calcular los límites del margen
+            var marginMinX = Math.min(marginPoints.tl.x, marginPoints.tr.x, marginPoints.br.x, marginPoints.bl.x);
+            var marginMaxX = Math.max(marginPoints.tl.x, marginPoints.tr.x, marginPoints.br.x, marginPoints.bl.x);
+            var marginMinY = Math.min(marginPoints.tl.y, marginPoints.tr.y, marginPoints.br.y, marginPoints.bl.y);
+            var marginMaxY = Math.max(marginPoints.tl.y, marginPoints.tr.y, marginPoints.br.y, marginPoints.bl.y);
 
-            // Aplicar restricciones de escala
-            if (objBounds.left < marginBounds.left) {
-                obj.scaleX *= (objBounds.width - (marginBounds.left - objBounds.left)) / objBounds.width;
-                obj.left = marginBounds.left;
-            }
-            if (objBounds.top < marginBounds.top) {
-                obj.scaleY *= (objBounds.height - (marginBounds.top - objBounds.top)) / objBounds.height;
-                obj.top = marginBounds.top;
-            }
-            if (objBounds.left + objBounds.width > marginBounds.left + marginBounds.width) {
-                obj.scaleX = Math.min(obj.scaleX, maxScaleX);
-            }
-            if (objBounds.top + objBounds.height > marginBounds.top + marginBounds.height) {
-                obj.scaleY = Math.min(obj.scaleY, maxScaleY);
+            // Verificar si algún punto del objeto excede los márgenes y ajustar la escala
+            var exceedsMargin = false;
+            objPoints.forEach(function (point) {
+                if (point.x < marginMinX || point.x > marginMaxX || point.y < marginMinY || point.y > marginMaxY) {
+                    exceedsMargin = true;
+                }
+            });
+
+            if (exceedsMargin) {
+                // Impedir el escalado más allá de los márgenes
+                obj.scaleX = obj._lastScaleX || obj.scaleX;
+                obj.scaleY = obj._lastScaleY || obj.scaleY;
+            } else {
+                // Guardar la escala válida
+                obj._lastScaleX = obj.scaleX;
+                obj._lastScaleY = obj.scaleY;
             }
 
-            // Asegurar que la escala no sea menor que cierto valor mínimo
-            var minScale = 0.1;
-            obj.scaleX = Math.max(obj.scaleX, minScale);
-            obj.scaleY = Math.max(obj.scaleY, minScale);
-
-            obj.setCoords();
+            obj.setCoords(); // Actualiza las coordenadas después de ajustar la escala
         });
 
         function rotateImage(deg) {
