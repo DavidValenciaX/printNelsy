@@ -269,36 +269,26 @@
             var obj = e.target;
             obj.setCoords();
 
-            // Obtener los puntos del objeto y del margen
-            var objPoints = [obj.aCoords.tl, obj.aCoords.tr, obj.aCoords.br, obj.aCoords.bl];
-            var marginPoints = marginRect.aCoords;
-
-            // Calcular los límites del margen
-            var marginMinX = Math.min(marginPoints.tl.x, marginPoints.tr.x, marginPoints.br.x, marginPoints.bl.x);
-            var marginMaxX = Math.max(marginPoints.tl.x, marginPoints.tr.x, marginPoints.br.x, marginPoints.bl.x);
-            var marginMinY = Math.min(marginPoints.tl.y, marginPoints.tr.y, marginPoints.br.y, marginPoints.bl.y);
-            var marginMaxY = Math.max(marginPoints.tl.y, marginPoints.tr.y, marginPoints.br.y, marginPoints.bl.y);
+            // Obtenemos el bounding rect del objeto, considerando la rotación
+            var objBoundingRect = obj.getBoundingRect(true);
+            // Obtenemos el bounding rect del margen
+            var marginBoundingRect = marginRect.getBoundingRect();
 
             var exceedsMargin = false;
-            var offsetX = 0, offsetY = 0;
 
-            // Verificar si algún punto del objeto excede los márgenes
-            objPoints.forEach(function (point) {
-                if (point.x < marginMinX) {
-                    exceedsMargin = true;
-                    offsetX = Math.max(offsetX, marginMinX - point.x);
-                }
-                if (point.x > marginMaxX) {
-                    exceedsMargin = true;
-                }
-                if (point.y < marginMinY) {
-                    exceedsMargin = true;
-                    offsetY = Math.max(offsetY, marginMinY - point.y);
-                }
-                if (point.y > marginMaxY) {
-                    exceedsMargin = true;
-                }
-            });
+            // Verificamos si el objeto excede los márgenes
+            if (objBoundingRect.left < marginBoundingRect.left) {
+                exceedsMargin = true;
+            }
+            if (objBoundingRect.top < marginBoundingRect.top) {
+                exceedsMargin = true;
+            }
+            if ((objBoundingRect.left + objBoundingRect.width) > (marginBoundingRect.left + marginBoundingRect.width)) {
+                exceedsMargin = true;
+            }
+            if ((objBoundingRect.top + objBoundingRect.height) > (marginBoundingRect.top + marginBoundingRect.height)) {
+                exceedsMargin = true;
+            }
 
             if (exceedsMargin) {
                 // Restauramos la escala anterior válida
