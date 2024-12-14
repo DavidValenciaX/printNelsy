@@ -177,8 +177,8 @@
 
         function handleImageUpload(e) {
             const files = e.target.files;
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
+            for (const element of files) {
+                const file = element;
                 const reader = new FileReader();
                 reader.onload = function (event) {
                     fabric.Image.fromURL(event.target.result, function (img) {
@@ -218,7 +218,7 @@
         fabric.Object.prototype.cornerSize = 12;
         const controls = fabric.Object.prototype.controls
         const rotateControls = controls.mtr
-        rotateControls.visible = false
+        rotateControls.visible = true
 
         function updateObjectCoords(obj) {
             obj.setCoords();
