@@ -277,16 +277,25 @@
             var exceedsMargin = false;
 
             // Verificamos si el objeto excede los márgenes
+
+            // left
             if (objBoundingRect.left < marginBoundingRect.left) {
+                console.log("Left");
                 exceedsMargin = true;
             }
+            // top
             if (objBoundingRect.top < marginBoundingRect.top) {
+                console.log("Top");
                 exceedsMargin = true;
             }
+            // right
             if ((objBoundingRect.left + objBoundingRect.width) > (marginBoundingRect.left + marginBoundingRect.width)) {
+                console.log("Right");
                 exceedsMargin = true;
             }
+            // bottom
             if ((objBoundingRect.top + objBoundingRect.height) > (marginBoundingRect.top + marginBoundingRect.height)) {
+                console.log("Bottom");
                 exceedsMargin = true;
             }
 
