@@ -178,7 +178,7 @@
             // Actualizar los límites para todas las imágenes existentes
             canvas.forEachObject(function (obj) {
                 if (obj !== marginRect) {
-                    updateObjectCoords(obj);
+                    obj.setCoords();
                 }
             });
         }
@@ -255,10 +255,6 @@
         const controls = fabric.Object.prototype.controls
         const rotateControls = controls.mtr
         rotateControls.visible = true
-
-        function updateObjectCoords(obj) {
-            obj.setCoords();
-        }
 
         canvas.on('object:moving', function (e) {
             var obj = e.target;
@@ -362,6 +358,9 @@
                 obj._lastLeft = obj.left;
                 obj._lastTop = obj.top;
             }
+
+            console.log("scaleX", obj.scaleX);
+            console.log("scaleY", obj.scaleY);
 
             canvas.renderAll();
         });
