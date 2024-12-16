@@ -116,15 +116,11 @@
         // Variable para almacenar los puntos rojos
         let coordinateMarkers = {};
 
-        function updateCoordinateMarker(obj) {
-            if (coordinateMarkers[obj.id]) {
-                canvas.remove(coordinateMarkers[obj.id]);
-            }
-
+        function createCoordinateMarker(x, y, color = 'red', id = null) {
             const marker = new fabric.Circle({
-                left: obj.left,
-                top: obj.top,
-                fill: 'red',
+                left: x,
+                top: y,
+                fill: color,
                 radius: 10,
                 selectable: false,
                 evented: false,
@@ -132,11 +128,36 @@
                 originY: 'center'
             });
 
-            marker.id = `marker-${obj.id}`;
-            coordinateMarkers[obj.id] = marker;
+            if (id) {
+                marker.id = id;
+                coordinateMarkers[id] = marker;
+            }
 
             canvas.add(marker);
             canvas.bringToFront(marker);
+            return marker;
+        }
+
+        function updateCoordinateMarker(obj) {
+            // Eliminar marcadores anteriores específicos de este objeto
+            Object.keys(coordinateMarkers).forEach(key => {
+                if (key.startsWith(`marker-${obj.id}`)) {
+                    canvas.remove(coordinateMarkers[key]);
+                    delete coordinateMarkers[key];
+                }
+            });
+
+            // Crear marcadores para top-left
+            createCoordinateMarker(obj.left, obj.top, 'red', `marker-${obj.id}-top-left`);
+
+            // Obtener bounding rect para calcular objRight y objBottom
+            const objBoundingRect = obj.getBoundingRect(true);
+            const objRight = objBoundingRect.left + objBoundingRect.width;
+            const objBottom = objBoundingRect.top + objBoundingRect.height;
+
+            // Crear marcadores para right-bottom
+            createCoordinateMarker(objRight, objBottom, 'blue', `marker-${obj.id}-right-bottom`);
+
             canvas.renderAll();
         }
 
@@ -320,6 +341,12 @@
 
             // Verificamos si el objeto excede los márgenes
 
+            objRight = (objBoundingRect.left + objBoundingRect.width);
+            objBottom = (objBoundingRect.top + objBoundingRect.height);
+
+            console.log("objRight", objRight);
+            console.log("objBottom", objBottom);
+
             // left
             if (objBoundingRect.left < marginBoundingRect.left) {
                 console.log("Left");
@@ -331,12 +358,12 @@
                 exceedsMargin = true;
             }
             // right
-            if ((objBoundingRect.left + objBoundingRect.width) > (marginBoundingRect.left + marginBoundingRect.width)) {
+            if (objRight > (marginBoundingRect.left + marginBoundingRect.width)) {
                 console.log("Right");
                 exceedsMargin = true;
             }
             // bottom
-            if ((objBoundingRect.top + objBoundingRect.height) > (marginBoundingRect.top + marginBoundingRect.height)) {
+            if (objBottom > (marginBoundingRect.top + marginBoundingRect.height)) {
                 console.log("Bottom");
                 exceedsMargin = true;
             }
@@ -369,6 +396,15 @@
             var obj = e.target;
             obj.setCoords(); // Actualiza las coordenadas del objeto
 
+            // Obtenemos el bounding rect del objeto, considerando la rotación
+            var objBoundingRect = obj.getBoundingRect(true);
+
+            objRight = (objBoundingRect.left + objBoundingRect.width);
+            objBottom = (objBoundingRect.top + objBoundingRect.height);
+
+            console.log("objRight", objRight);
+            console.log("objBottom", objBottom);
+
             // Actualizar el marcador de coordenadas
             if (obj.id && obj.id.startsWith('image-')) {
                 updateCoordinateMarker(obj);
@@ -380,6 +416,10 @@
             if (activeObject) {
                 activeObject.rotate((activeObject.angle + deg) % 360);
                 activeObject.setCoords();
+                
+                // Actualizar marcadores de coordenadas después de rotar
+                updateCoordinateMarker(activeObject);
+                
                 canvas.renderAll();
             }
         }
