@@ -350,6 +350,11 @@
             marginRight = (marginBoundingRect.left + marginBoundingRect.width);
             marginBottom = (marginBoundingRect.top + marginBoundingRect.height);
 
+            esquinaArribaIzquierda = obj.aCoords.tl;
+            esquinaArribaDerecha = obj.aCoords.tr;
+            esquinaAbajoIzquierda = obj.aCoords.bl;
+            esquinaAbajoDerecha = obj.aCoords.br;
+
             console.log("objBoundingRight", objBoundingRight);
             console.log("objBoundingBottom", objBoundingBottom);
 
@@ -373,19 +378,29 @@
 
                 exceedsMargin = true;
             }
-            // right
-            if (objBoundingRight > marginRight) {
-                console.log("Right");
+            // esquinaArribaDerecha supera el margen derecho
+            if (esquinaArribaDerecha.x > marginRight) {
+                console.log("esquinaArribaDerecha supera el margen derecho");
 
                 if (obj.angle >= 0 && obj.angle < 90) {
-                    desiredObjWidth = (marginRight - obj.aCoords.tl.x) / Math.cos(obj.angle * Math.PI / 180);
+                    desiredObjWidth = (marginRight - esquinaArribaIzquierda.x) / Math.cos(obj.angle * Math.PI / 180);
 
                     desiredScaleX = desiredObjWidth / obj.width;
 
                     obj.scaleX = desiredScaleX;
 
-                } else if (obj.angle >= 270 && obj.angle < 360) {
-                    desiredObjWidth = (marginRight - obj.aCoords.bl.x) / Math.cos((360 - obj.angle) * Math.PI / 180);
+                }
+
+                obj.scaleY = obj._lastScaleY || obj.scaleY;
+
+                exceedsMargin = true;
+            }
+            
+            if (esquinaAbajoDerecha.x > marginRight) {
+                console.log("esquinaAbajoDerecha supera el margen derecho");
+
+                if (obj.angle >= 270 && obj.angle < 360) {
+                    desiredObjWidth = (marginRight - esquinaAbajoIzquierda.x) / Math.cos((360 - obj.angle) * Math.PI / 180);
                     
                     desiredScaleX = desiredObjWidth / obj.width;
                     
@@ -396,6 +411,8 @@
 
                 exceedsMargin = true;
             }
+
+            
             // bottom
             if (objBoundingBottom > marginBottom) {
                 console.log("Bottom");
@@ -431,8 +448,6 @@
         canvas.on('object:rotating', function (e) {
             var obj = e.target;
             obj.setCoords(); // Actualiza las coordenadas del objeto
-
-            console.log("object angle", obj.angle);
 
             // Actualizar el marcador de coordenadas
             if (obj.id && obj.id.startsWith('image-')) {
