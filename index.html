@@ -113,6 +113,34 @@
         let isVertical = true;
         let marginRect;
 
+        // Variable para almacenar los puntos rojos
+        let coordinateMarkers = {};
+
+        function updateCoordinateMarker(obj) {
+            if (coordinateMarkers[obj.id]) {
+                canvas.remove(coordinateMarkers[obj.id]);
+            }
+
+            const marker = new fabric.Circle({
+                left: obj.left,
+                top: obj.top,
+                fill: 'red',
+                radius: 10,
+                selectable: false,
+                evented: false,
+                originX: 'center',
+                originY: 'center'
+            });
+
+            marker.id = `marker-${obj.id}`;
+            coordinateMarkers[obj.id] = marker;
+
+            canvas.add(marker);
+            canvas.bringToFront(marker);
+            canvas.renderAll();
+        }
+
+
         function resizeCanvas(size, orientation = isVertical) {
             currentSize = size;
             isVertical = orientation;
@@ -182,10 +210,18 @@
                 const reader = new FileReader();
                 reader.onload = function (event) {
                     fabric.Image.fromURL(event.target.result, function (img) {
+
+                        // Asignar un ID único a la imagen
+                        img.id = `image-${Date.now()}`;
+
                         img.scaleToWidth(canvas.width / 2);
                         canvas.add(img);
                         canvas.centerObject(img);
                         canvas.setActiveObject(img);
+
+                        // Crear el marcador de coordenadas inicial
+                        updateCoordinateMarker(img);
+
                         canvas.renderAll();
                     });
                 }
@@ -228,6 +264,11 @@
             var obj = e.target;
             obj.setCoords(); // Actualiza las coordenadas del objeto
 
+            // Actualizar el marcador de coordenadas
+            if (obj.id && obj.id.startsWith('image-')) {
+                updateCoordinateMarker(obj);
+            }
+
             // Obtener los puntos del objeto y del margen
             var objPoints = [obj.aCoords.tl, obj.aCoords.tr, obj.aCoords.br, obj.aCoords.bl];
             var marginPoints = marginRect.aCoords;
@@ -268,6 +309,11 @@
         canvas.on('object:scaling', function (e) {
             var obj = e.target;
             obj.setCoords();
+
+            // Actualizar el marcador de coordenadas
+            if (obj.id && obj.id.startsWith('image-')) {
+                updateCoordinateMarker(obj);
+            }
 
             // Obtenemos el bounding rect del objeto, considerando la rotación
             var objBoundingRect = obj.getBoundingRect(true);
@@ -318,6 +364,16 @@
             }
 
             canvas.renderAll();
+        });
+
+        canvas.on('object:rotating', function (e) {
+            var obj = e.target;
+            obj.setCoords(); // Actualiza las coordenadas del objeto
+
+            // Actualizar el marcador de coordenadas
+            if (obj.id && obj.id.startsWith('image-')) {
+                updateCoordinateMarker(obj);
+            }
         });
 
         function rotateImage(deg) {
