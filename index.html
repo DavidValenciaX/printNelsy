@@ -147,17 +147,17 @@
                 }
             });
 
-            // Obtener bounding rect para calcular objRight y objBottom
+            // Obtener bounding rect para calcular objBoundingRight y objBoundingBottom
             const objBoundingRect = obj.getBoundingRect(true);
 
             // Crear marcadores para top-left
             createCoordinateMarker(objBoundingRect.left, objBoundingRect.top, 'red', `marker-${obj.id}-top-left`);
 
-            const objRight = objBoundingRect.left + objBoundingRect.width;
-            const objBottom = objBoundingRect.top + objBoundingRect.height;
+            const objBoundingRight = objBoundingRect.left + objBoundingRect.width;
+            const objBoundingBottom = objBoundingRect.top + objBoundingRect.height;
 
             // Crear marcadores para right-bottom
-            createCoordinateMarker(objRight, objBottom, 'blue', `marker-${obj.id}-right-bottom`);
+            createCoordinateMarker(objBoundingRight, objBoundingBottom, 'blue', `marker-${obj.id}-right-bottom`);
 
             canvas.renderAll();
         }
@@ -325,7 +325,9 @@
         });
 
         canvas.on('object:scaling', function (e) {
-            var obj = e.target;
+            let obj = e.target;
+            let desiredObjWidth;
+            let desiredScaleX;
             obj.setCoords();
 
             // Actualizar el marcador de coordenadas
@@ -342,40 +344,70 @@
 
             // Verificamos si el objeto excede los márgenes
 
-            objRight = (objBoundingRect.left + objBoundingRect.width);
-            objBottom = (objBoundingRect.top + objBoundingRect.height);
+            objBoundingRight = (objBoundingRect.left + objBoundingRect.width);
+            objBoundingBottom = (objBoundingRect.top + objBoundingRect.height);
 
             marginRight = (marginBoundingRect.left + marginBoundingRect.width);
             marginBottom = (marginBoundingRect.top + marginBoundingRect.height);
 
-            console.log("objRight", objRight);
-            console.log("objBottom", objBottom);
+            console.log("objBoundingRight", objBoundingRight);
+            console.log("objBoundingBottom", objBoundingBottom);
 
             // left
             if (objBoundingRect.left < marginBoundingRect.left) {
                 console.log("Left");
+
+                // Restauramos la escala anterior válida
+                obj.scaleX = obj._lastScaleX || obj.scaleX;
+                obj.scaleY = obj._lastScaleY || obj.scaleY;
+
                 exceedsMargin = true;
             }
             // top
             if (objBoundingRect.top < marginBoundingRect.top) {
                 console.log("Top");
+
+                // Restauramos la escala anterior válida
+                obj.scaleX = obj._lastScaleX || obj.scaleX;
+                obj.scaleY = obj._lastScaleY || obj.scaleY;
+
                 exceedsMargin = true;
             }
             // right
-            if (objRight > marginRight) {
+            if (objBoundingRight > marginRight) {
                 console.log("Right");
+
+                if (obj.angle >= 0 && obj.angle < 90) {
+                    desiredObjWidth = (marginRight - obj.aCoords.tl.x) / Math.cos(obj.angle * Math.PI / 180);
+
+                    desiredScaleX = desiredObjWidth / obj.width;
+
+                    obj.scaleX = desiredScaleX;
+
+                } else if (obj.angle >= 270 && obj.angle < 360) {
+                    desiredObjWidth = (marginRight - obj.aCoords.bl.x) / Math.cos((360 - obj.angle) * Math.PI / 180);
+                    
+                    desiredScaleX = desiredObjWidth / obj.width;
+                    
+                    obj.scaleX = desiredScaleX;
+                }
+
+                obj.scaleY = obj._lastScaleY || obj.scaleY;
+
                 exceedsMargin = true;
             }
             // bottom
-            if (objBottom > marginBottom) {
+            if (objBoundingBottom > marginBottom) {
                 console.log("Bottom");
+
+                // Restauramos la escala anterior válida
+                obj.scaleX = obj._lastScaleX || obj.scaleX;
+                obj.scaleY = obj._lastScaleY || obj.scaleY;
+
                 exceedsMargin = true;
             }
 
             if (exceedsMargin) {
-                // Restauramos la escala anterior válida
-                obj.scaleX = obj._lastScaleX || obj.scaleX;
-                obj.scaleY = obj._lastScaleY || obj.scaleY;
 
                 // Restauramos la posición anterior válida
                 obj.left = obj._lastLeft || obj.left;
@@ -400,14 +432,7 @@
             var obj = e.target;
             obj.setCoords(); // Actualiza las coordenadas del objeto
 
-            // Obtenemos el bounding rect del objeto, considerando la rotación
-            var objBoundingRect = obj.getBoundingRect(true);
-
-            objRight = (objBoundingRect.left + objBoundingRect.width);
-            objBottom = (objBoundingRect.top + objBoundingRect.height);
-
-            console.log("objRight", objRight);
-            console.log("objBottom", objBottom);
+            console.log("object angle", obj.angle);
 
             // Actualizar el marcador de coordenadas
             if (obj.id && obj.id.startsWith('image-')) {
@@ -420,10 +445,10 @@
             if (activeObject) {
                 activeObject.rotate((activeObject.angle + deg) % 360);
                 activeObject.setCoords();
-                
+
                 // Actualizar marcadores de coordenadas después de rotar
                 updateCoordinateMarker(activeObject);
-                
+
                 canvas.renderAll();
             }
         }
