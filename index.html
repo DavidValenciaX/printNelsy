@@ -147,11 +147,12 @@
                 }
             });
 
-            // Crear marcadores para top-left
-            createCoordinateMarker(obj.left, obj.top, 'red', `marker-${obj.id}-top-left`);
-
             // Obtener bounding rect para calcular objRight y objBottom
             const objBoundingRect = obj.getBoundingRect(true);
+
+            // Crear marcadores para top-left
+            createCoordinateMarker(objBoundingRect.left, objBoundingRect.top, 'red', `marker-${obj.id}-top-left`);
+
             const objRight = objBoundingRect.left + objBoundingRect.width;
             const objBottom = objBoundingRect.top + objBoundingRect.height;
 
@@ -344,6 +345,9 @@
             objRight = (objBoundingRect.left + objBoundingRect.width);
             objBottom = (objBoundingRect.top + objBoundingRect.height);
 
+            marginRight = (marginBoundingRect.left + marginBoundingRect.width);
+            marginBottom = (marginBoundingRect.top + marginBoundingRect.height);
+
             console.log("objRight", objRight);
             console.log("objBottom", objBottom);
 
@@ -358,12 +362,12 @@
                 exceedsMargin = true;
             }
             // right
-            if (objRight > (marginBoundingRect.left + marginBoundingRect.width)) {
+            if (objRight > marginRight) {
                 console.log("Right");
                 exceedsMargin = true;
             }
             // bottom
-            if (objBottom > (marginBoundingRect.top + marginBoundingRect.height)) {
+            if (objBottom > marginBottom) {
                 console.log("Bottom");
                 exceedsMargin = true;
             }
