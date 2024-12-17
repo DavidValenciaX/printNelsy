@@ -279,7 +279,7 @@
         rotateControls.visible = true
 
         canvas.on('object:moving', function (e) {
-            var obj = e.target;
+            let obj = e.target;
             obj.setCoords(); // Actualiza las coordenadas del objeto
 
             // Actualizar el marcador de coordenadas
@@ -288,17 +288,17 @@
             }
 
             // Obtener los puntos del objeto y del margen
-            var objPoints = [obj.aCoords.tl, obj.aCoords.tr, obj.aCoords.br, obj.aCoords.bl];
-            var marginPoints = marginRect.aCoords;
+            let objPoints = [obj.aCoords.tl, obj.aCoords.tr, obj.aCoords.br, obj.aCoords.bl];
+            let marginPoints = marginRect.aCoords;
 
             // Calcular los límites del margen
-            var marginMinX = Math.min(marginPoints.tl.x, marginPoints.tr.x, marginPoints.br.x, marginPoints.bl.x);
-            var marginMaxX = Math.max(marginPoints.tl.x, marginPoints.tr.x, marginPoints.br.x, marginPoints.bl.x);
-            var marginMinY = Math.min(marginPoints.tl.y, marginPoints.tr.y, marginPoints.br.y, marginPoints.bl.y);
-            var marginMaxY = Math.max(marginPoints.tl.y, marginPoints.tr.y, marginPoints.br.y, marginPoints.bl.y);
+            let marginMinX = Math.min(marginPoints.tl.x, marginPoints.tr.x, marginPoints.br.x, marginPoints.bl.x);
+            let marginMaxX = Math.max(marginPoints.tl.x, marginPoints.tr.x, marginPoints.br.x, marginPoints.bl.x);
+            let marginMinY = Math.min(marginPoints.tl.y, marginPoints.tr.y, marginPoints.br.y, marginPoints.bl.y);
+            let marginMaxY = Math.max(marginPoints.tl.y, marginPoints.tr.y, marginPoints.br.y, marginPoints.bl.y);
 
             // Inicializar desplazamientos
-            var offsetX = 0, offsetY = 0;
+            let offsetX = 0, offsetY = 0;
 
             // Comprobar cada punto del objeto
             objPoints.forEach(function (point) {
@@ -336,11 +336,11 @@
             }
 
             // Obtenemos el bounding rect del objeto, considerando la rotación
-            var objBoundingRect = obj.getBoundingRect(true);
+            let objBoundingRect = obj.getBoundingRect(true);
             // Obtenemos el bounding rect del margen
-            var marginBoundingRect = marginRect.getBoundingRect();
+            let marginBoundingRect = marginRect.getBoundingRect();
 
-            var exceedsMargin = false;
+            let exceedsMargin = false;
 
             // Comparar valores previos y actuales de scaleX y scaleY
             const scaleXChanged = obj.scaleX !== obj._lastScaleX;
@@ -348,16 +348,15 @@
 
             // Verificamos si el objeto excede los márgenes
 
-            objBoundingRight = (objBoundingRect.left + objBoundingRect.width);
-            objBoundingBottom = (objBoundingRect.top + objBoundingRect.height);
+            let objBoundingBottom = (objBoundingRect.top + objBoundingRect.height);
 
-            marginRight = (marginBoundingRect.left + marginBoundingRect.width);
-            marginBottom = (marginBoundingRect.top + marginBoundingRect.height);
+            let marginRight = (marginBoundingRect.left + marginBoundingRect.width);
+            let marginBottom = (marginBoundingRect.top + marginBoundingRect.height);
 
-            esquinaArribaIzquierda = obj.aCoords.tl;
-            esquinaArribaDerecha = obj.aCoords.tr;
-            esquinaAbajoIzquierda = obj.aCoords.bl;
-            esquinaAbajoDerecha = obj.aCoords.br;
+            let esquinaArribaIzquierda = obj.aCoords.tl;
+            let esquinaArribaDerecha = obj.aCoords.tr;
+            let esquinaAbajoIzquierda = obj.aCoords.bl;
+            let esquinaAbajoDerecha = obj.aCoords.br;
 
             // left
             if (objBoundingRect.left < marginBoundingRect.left) {
@@ -384,6 +383,7 @@
 
                 if (obj.angle >= 0 && obj.angle < 90) {
                     // Cuando se está escalando horizontalmente
+
                     if (scaleXChanged) {
                         console.log("esquinaArribaDerecha supera el margen derecho escalando horizontalmente");
 
@@ -393,19 +393,23 @@
 
                         obj.scaleX = desiredScaleX;
 
-                        obj.scaleY = obj._lastScaleY || obj.scaleY;
+                        obj.scaleY = obj.scaleY;
 
-                    } else if (scaleYChanged) {
+                        obj.left = esquinaArribaIzquierda.x;
+                        obj.top = esquinaArribaIzquierda.y;
+
+                    }
+                    if(scaleYChanged) {
 
                         console.log("esquinaArribaDerecha supera el margen derecho escalando verticalmente");
 
-                        desiredObjHeight = (marginRight - esquinaAbajoDerecha.x) / Math.sin(obj.angle * Math.PI / 180);
+                        let desiredObjHeight = (marginRight - esquinaAbajoDerecha.x) / Math.sin(obj.angle * Math.PI / 180);
 
-                        desiredScaleY = desiredObjHeight / obj.height;
+                        let desiredScaleY = desiredObjHeight / obj.height;
 
                         obj.scaleY = desiredScaleY;
 
-                        obj.scaleX = obj._lastScaleX || obj.scaleX;
+                        obj.scaleX = obj.scaleX;
 
                         // Calculo del punto top  y left 
 
@@ -479,17 +483,11 @@
                 obj._lastTop = obj.top;
             }
 
-            //console.log("scaleX", obj.scaleX);
-            //console.log("scaleY", obj.scaleY);
-
-            console.log("objLeft", obj.left);
-            console.log("objTop", obj.top);
-
             canvas.renderAll();
         });
 
         canvas.on('object:rotating', function (e) {
-            var obj = e.target;
+            let obj = e.target;
             obj.setCoords(); // Actualiza las coordenadas del objeto
 
             // Actualizar el marcador de coordenadas
