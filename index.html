@@ -342,6 +342,10 @@
 
             var exceedsMargin = false;
 
+            // Comparar valores previos y actuales de scaleX y scaleY
+            const scaleXChanged = obj.scaleX !== obj._lastScaleX;
+            const scaleYChanged = obj.scaleY !== obj._lastScaleY;
+
             // Verificamos si el objeto excede los márgenes
 
             objBoundingRight = (objBoundingRect.left + objBoundingRect.width);
@@ -354,9 +358,6 @@
             esquinaArribaDerecha = obj.aCoords.tr;
             esquinaAbajoIzquierda = obj.aCoords.bl;
             esquinaAbajoDerecha = obj.aCoords.br;
-
-            console.log("objBoundingRight", objBoundingRight);
-            console.log("objBoundingBottom", objBoundingBottom);
 
             // left
             if (objBoundingRect.left < marginBoundingRect.left) {
@@ -380,30 +381,69 @@
             }
             // esquinaArribaDerecha supera el margen derecho
             if (esquinaArribaDerecha.x > marginRight) {
-                console.log("esquinaArribaDerecha supera el margen derecho");
 
                 if (obj.angle >= 0 && obj.angle < 90) {
-                    desiredObjWidth = (marginRight - esquinaArribaIzquierda.x) / Math.cos(obj.angle * Math.PI / 180);
+                    // Cuando se está escalando horizontalmente
+                    if (scaleXChanged) {
+                        console.log("esquinaArribaDerecha supera el margen derecho escalando horizontalmente");
 
-                    desiredScaleX = desiredObjWidth / obj.width;
+                        desiredObjWidth = (marginRight - esquinaArribaIzquierda.x) / Math.cos(obj.angle * Math.PI / 180);
 
-                    obj.scaleX = desiredScaleX;
+                        desiredScaleX = desiredObjWidth / obj.width;
 
+                        obj.scaleX = desiredScaleX;
+
+                        obj.scaleY = obj._lastScaleY || obj.scaleY;
+
+                    } else if (scaleYChanged) {
+
+                        console.log("esquinaArribaDerecha supera el margen derecho escalando verticalmente");
+
+                        desiredObjHeight = (marginRight - esquinaAbajoDerecha.x) / Math.sin(obj.angle * Math.PI / 180);
+
+                        desiredScaleY = desiredObjHeight / obj.height;
+
+                        obj.scaleY = desiredScaleY;
+
+                        obj.scaleX = obj._lastScaleX || obj.scaleX;
+
+                        // Calculo del punto top  y left 
+
+                        // Primero calculo del punto deseado de Top Right
+                        let neededAngle = obj.angle * Math.PI / 180;
+
+                        let TR_x = marginRight;
+
+                        let ca = desiredObjHeight * Math.cos(neededAngle);
+
+                        let TR_y = esquinaAbajoDerecha.y - ca;
+
+                        // Segundo calculo del punto deseado de Top Left
+
+                        let top_ca = (obj.width * obj.scaleX) * Math.cos(neededAngle);
+
+                        let TL_x = TR_x - top_ca;
+
+                        let top_co = (obj.width * obj.scaleX) * Math.sin(neededAngle);
+
+                        let TL_y = TR_y - top_co;
+
+                        obj.left = TL_x;
+                        obj.top = TL_y;
+
+                    }
                 }
 
-                obj.scaleY = obj._lastScaleY || obj.scaleY;
-
-                exceedsMargin = true;
             }
-            
+
             if (esquinaAbajoDerecha.x > marginRight) {
                 console.log("esquinaAbajoDerecha supera el margen derecho");
 
                 if (obj.angle >= 270 && obj.angle < 360) {
                     desiredObjWidth = (marginRight - esquinaAbajoIzquierda.x) / Math.cos((360 - obj.angle) * Math.PI / 180);
-                    
+
                     desiredScaleX = desiredObjWidth / obj.width;
-                    
+
                     obj.scaleX = desiredScaleX;
                 }
 
@@ -412,7 +452,7 @@
                 exceedsMargin = true;
             }
 
-            
+
             // bottom
             if (objBoundingBottom > marginBottom) {
                 console.log("Bottom");
@@ -439,8 +479,11 @@
                 obj._lastTop = obj.top;
             }
 
-            console.log("scaleX", obj.scaleX);
-            console.log("scaleY", obj.scaleY);
+            //console.log("scaleX", obj.scaleX);
+            //console.log("scaleY", obj.scaleY);
+
+            console.log("objLeft", obj.left);
+            console.log("objTop", obj.top);
 
             canvas.renderAll();
         });
