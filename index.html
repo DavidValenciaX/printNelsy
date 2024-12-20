@@ -116,6 +116,10 @@
         // Variable para almacenar los puntos rojos
         let coordinateMarkers = {};
 
+        function degToRad(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
         function createCoordinateMarker(x, y, color = 'red', id = null) {
             const marker = new fabric.Circle({
                 left: x,
@@ -324,10 +328,16 @@
             }
         });
 
+        function bringToFront(options) {
+            options.target.bringToFront();
+        }
+
         canvas.on('object:scaling', function (e) {
             let obj = e.target;
             let desiredObjWidth;
+            let desiredObjHeight;
             let desiredScaleX;
+            let desiredScaleY;
             obj.setCoords();
 
             // Actualizar el marcador de coordenadas
@@ -337,8 +347,6 @@
 
             // Obtenemos el bounding rect del objeto, considerando la rotación
             let objBoundingRect = obj.getBoundingRect(true);
-            // Obtenemos el bounding rect del margen
-            let marginBoundingRect = marginRect.getBoundingRect();
 
             let exceedsMargin = false;
 
@@ -350,8 +358,8 @@
 
             let objBoundingBottom = (objBoundingRect.top + objBoundingRect.height);
 
-            let marginRight = (marginBoundingRect.left + marginBoundingRect.width);
-            let marginBottom = (marginBoundingRect.top + marginBoundingRect.height);
+            let marginRight = (marginRect.left + marginRect.width);
+            let marginBottom = (marginRect.top + marginRect.height);
 
             let esquinaArribaIzquierda = obj.aCoords.tl;
             let esquinaArribaDerecha = obj.aCoords.tr;
@@ -359,7 +367,7 @@
             let esquinaAbajoDerecha = obj.aCoords.br;
 
             // left
-            if (objBoundingRect.left < marginBoundingRect.left) {
+            if (objBoundingRect.left < marginRect.left) {
                 console.log("Left");
 
                 // Restauramos la escala anterior válida
@@ -369,7 +377,7 @@
                 exceedsMargin = true;
             }
             // top
-            if (objBoundingRect.top < marginBoundingRect.top) {
+            if (objBoundingRect.top < marginRect.top) {
                 console.log("Top");
 
                 // Restauramos la escala anterior válida
@@ -382,9 +390,36 @@
             if (esquinaArribaDerecha.x > marginRight) {
 
                 if (obj.angle >= 0 && obj.angle < 90) {
-                    // Cuando se está escalando horizontalmente
+                    if (scaleXChanged && scaleYChanged) {
+                        // Cuando se está escalando horizontal y verticalmente
 
-                    if (scaleXChanged) {
+                        console.log("esquinaArribaDerecha supera el margen derecho escalando horizontal y verticalmente");
+
+                        let xOffset = esquinaArribaDerecha.x - marginRight;
+
+                        let yOffset = xOffset * Math.tan(degToRad(45 - obj.angle));
+
+                        xCollision = Math.abs(esquinaArribaDerecha.x - xOffset);
+
+                        yCollision = Math.abs(esquinaArribaDerecha.y + yOffset);
+
+                        // Draw a circle in the collision point
+
+                        let circle = new fabric.Circle({
+                            radius: 5,
+                            fill: 'red',
+                            left: xCollision,
+                            top: yCollision
+                        });
+
+                        canvas.add(circle);
+
+                        // bring the circle to the front
+
+                        circle.bringToFront();
+
+                    } else if (scaleXChanged) {
+
                         console.log("esquinaArribaDerecha supera el margen derecho escalando horizontalmente");
 
                         desiredObjWidth = (marginRight - esquinaArribaIzquierda.x) / Math.cos(obj.angle * Math.PI / 180);
@@ -393,13 +428,12 @@
 
                         obj.scaleX = desiredScaleX;
 
-                        obj.scaleY = obj.scaleY;
+                        //obj.scaleY = obj.scaleY;
 
                         obj.left = esquinaArribaIzquierda.x;
                         obj.top = esquinaArribaIzquierda.y;
 
-                    }
-                    if(scaleYChanged) {
+                    } else if (scaleYChanged) {
 
                         console.log("esquinaArribaDerecha supera el margen derecho escalando verticalmente");
 
@@ -409,9 +443,9 @@
 
                         obj.scaleY = desiredScaleY;
 
-                        obj.scaleX = obj.scaleX;
+                        //obj.scaleX = obj.scaleX;
 
-                        // Calculo del punto top  y left 
+                        // Calculo del punto top y left 
 
                         // Primero calculo del punto deseado de Top Right
                         let neededAngle = obj.angle * Math.PI / 180;
