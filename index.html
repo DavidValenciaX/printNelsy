@@ -406,17 +406,45 @@
 
                         let yOffset = xOffset * Math.tan(diagAngle - degToRad(obj.angle));
 
-                        xCollision = Math.abs(esquinaArribaDerecha.x - xOffset);
+                        //let xCollision = Math.abs(esquinaArribaDerecha.x - xOffset);
 
-                        yCollision = Math.abs(esquinaArribaDerecha.y + yOffset);
+                        let yCollision = Math.abs(esquinaArribaDerecha.y + yOffset);
 
-                        createCoordinateMarker(xCollision, yCollision, 'green', 'collision');
+                        createCoordinateMarker(marginRight, yCollision, 'green', 'collision');
 
-                        //obj.top = esquinaArribaIzquierda.y + xOffset;
+                        // Calcular las escalas x y y restringidas
 
-                        //obj.left = esquinaArribaIzquierda.x - yOffset;
+                        // Calcular la distancia de la diagonal del objeto
 
-                        //createCoordinateMarker(obj.left, obj.top, 'green', 'collision');
+                        let collisionToAnchorWidth = Math.abs(marginRight - esquinaAbajoIzquierda.x);
+
+                        let collisionToAnchorHeight = Math.abs(yCollision - esquinaAbajoIzquierda.y);
+
+                        let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
+
+                        let restrictedObjectWidth = restrictedObjectDiagonal * Math.cos(diagAngle);
+
+                        let restrictedObjectHeight = restrictedObjectDiagonal * Math.sin(diagAngle);
+
+                        let restrictedScaleX = restrictedObjectWidth / obj.width;
+
+                        let restrictedScaleY = restrictedObjectHeight / obj.height;
+
+                        obj.scaleX = restrictedScaleX;
+
+                        obj.scaleY = restrictedScaleY;
+
+                        // Calculo del punto top y left
+
+                        // Primero calculo del punto deseado de Top Right del bounding rect
+
+                        let blToBoundingTR = restrictedObjectHeight * Math.cos(degToRad(obj.angle));
+
+                        let boundingTRToTL = restrictedObjectHeight * Math.sin(degToRad(obj.angle));
+
+                        obj.left = esquinaAbajoIzquierda.x + boundingTRToTL;
+
+                        obj.top = esquinaAbajoIzquierda.y - blToBoundingTR;
 
                     } else if (scaleXChanged) {
 
