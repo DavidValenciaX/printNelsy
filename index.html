@@ -125,7 +125,7 @@
                 left: x,
                 top: y,
                 fill: color,
-                radius: 10,
+                radius: 5,
                 selectable: false,
                 evented: false,
                 originX: 'center',
@@ -348,6 +348,9 @@
             // Obtenemos el bounding rect del objeto, considerando la rotación
             let objBoundingRect = obj.getBoundingRect(true);
 
+            let realObjectWidth = obj.width * obj.scaleX;
+            let realObjectHeight = obj.height * obj.scaleY;
+
             let exceedsMargin = false;
 
             // Comparar valores previos y actuales de scaleX y scaleY
@@ -395,34 +398,31 @@
 
                         console.log("esquinaArribaDerecha supera el margen derecho escalando horizontal y verticalmente");
 
+                        // hallar angulo de la diagonal del objeto
+
+                        let diagAngle  = Math.atan(realObjectHeight / realObjectWidth);
+
                         let xOffset = esquinaArribaDerecha.x - marginRight;
 
-                        let yOffset = xOffset * Math.tan(degToRad(45 - obj.angle));
+                        let yOffset = xOffset * Math.tan(diagAngle - degToRad(obj.angle));
 
                         xCollision = Math.abs(esquinaArribaDerecha.x - xOffset);
 
                         yCollision = Math.abs(esquinaArribaDerecha.y + yOffset);
 
-                        // Draw a circle in the collision point
+                        createCoordinateMarker(xCollision, yCollision, 'green', 'collision');
 
-                        let circle = new fabric.Circle({
-                            radius: 5,
-                            fill: 'red',
-                            left: xCollision,
-                            top: yCollision
-                        });
+                        //obj.top = esquinaArribaIzquierda.y + xOffset;
 
-                        canvas.add(circle);
+                        //obj.left = esquinaArribaIzquierda.x - yOffset;
 
-                        // bring the circle to the front
-
-                        circle.bringToFront();
+                        //createCoordinateMarker(obj.left, obj.top, 'green', 'collision');
 
                     } else if (scaleXChanged) {
 
                         console.log("esquinaArribaDerecha supera el margen derecho escalando horizontalmente");
 
-                        desiredObjWidth = (marginRight - esquinaArribaIzquierda.x) / Math.cos(obj.angle * Math.PI / 180);
+                        desiredObjWidth = (marginRight - esquinaArribaIzquierda.x) / Math.cos(degToRad(obj.angle));
 
                         desiredScaleX = desiredObjWidth / obj.width;
 
@@ -437,7 +437,7 @@
 
                         console.log("esquinaArribaDerecha supera el margen derecho escalando verticalmente");
 
-                        let desiredObjHeight = (marginRight - esquinaAbajoDerecha.x) / Math.sin(obj.angle * Math.PI / 180);
+                        let desiredObjHeight = (marginRight - esquinaAbajoDerecha.x) / Math.sin(degToRad(obj.angle));
 
                         let desiredScaleY = desiredObjHeight / obj.height;
 
@@ -448,21 +448,20 @@
                         // Calculo del punto top y left 
 
                         // Primero calculo del punto deseado de Top Right
-                        let neededAngle = obj.angle * Math.PI / 180;
 
                         let TR_x = marginRight;
 
-                        let ca = desiredObjHeight * Math.cos(neededAngle);
+                        let ca = desiredObjHeight * Math.cos(degToRad(obj.angle));
 
                         let TR_y = esquinaAbajoDerecha.y - ca;
 
                         // Segundo calculo del punto deseado de Top Left
 
-                        let top_ca = (obj.width * obj.scaleX) * Math.cos(neededAngle);
+                        let top_ca = realObjectWidth * Math.cos(degToRad(obj.angle));
 
                         let TL_x = TR_x - top_ca;
 
-                        let top_co = (obj.width * obj.scaleX) * Math.sin(neededAngle);
+                        let top_co = realObjectWidth * Math.sin(degToRad(obj.angle));
 
                         let TL_y = TR_y - top_co;
 
