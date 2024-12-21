@@ -351,8 +351,6 @@
             let realObjectWidth = obj.width * obj.scaleX;
             let realObjectHeight = obj.height * obj.scaleY;
 
-            let exceedsMargin = false;
-
             // Comparar valores previos y actuales de scaleX y scaleY
             const scaleXChanged = obj.scaleX !== obj._lastScaleX;
             const scaleYChanged = obj.scaleY !== obj._lastScaleY;
@@ -369,26 +367,6 @@
             let esquinaAbajoIzquierda = obj.aCoords.bl;
             let esquinaAbajoDerecha = obj.aCoords.br;
 
-            // left
-            if (objBoundingRect.left < marginRect.left) {
-                console.log("Left");
-
-                // Restauramos la escala anterior válida
-                obj.scaleX = obj._lastScaleX || obj.scaleX;
-                obj.scaleY = obj._lastScaleY || obj.scaleY;
-
-                exceedsMargin = true;
-            }
-            // top
-            if (objBoundingRect.top < marginRect.top) {
-                console.log("Top");
-
-                // Restauramos la escala anterior válida
-                obj.scaleX = obj._lastScaleX || obj.scaleX;
-                obj.scaleY = obj._lastScaleY || obj.scaleY;
-
-                exceedsMargin = true;
-            }
             // esquinaArribaDerecha supera el margen derecho
             if (esquinaArribaDerecha.x > marginRight) {
 
@@ -396,13 +374,15 @@
                     if (scaleXChanged && scaleYChanged) {
                         // Cuando se está escalando horizontal y verticalmente
 
-                        console.log("esquinaArribaDerecha supera el margen derecho escalando horizontal y verticalmente");
+                        //console.log("esquinaArribaDerecha supera el margen derecho escalando horizontal y verticalmente");
 
                         // hallar angulo de la diagonal del objeto
 
                         let diagAngle  = Math.atan(realObjectHeight / realObjectWidth);
 
                         let xOffset = esquinaArribaDerecha.x - marginRight;
+
+                        console.log(diagAngle - degToRad(obj.angle));
 
                         let yOffset = xOffset * Math.tan(diagAngle - degToRad(obj.angle));
 
@@ -456,10 +436,11 @@
 
                         obj.scaleX = desiredScaleX;
 
-                        //obj.scaleY = obj.scaleY;
+                        obj.scaleY = obj.scaleY;
 
-                        obj.left = esquinaArribaIzquierda.x;
-                        obj.top = esquinaArribaIzquierda.y;
+                        // Restauramos la posición anterior válida
+                        obj.left = obj._lastLeft;
+                        obj.top = obj._lastTop;
 
                     } else if (scaleYChanged) {
 
@@ -471,7 +452,7 @@
 
                         obj.scaleY = desiredScaleY;
 
-                        //obj.scaleX = obj.scaleX;
+                        obj.scaleX = obj.scaleX;
 
                         // Calculo del punto top y left 
 
@@ -510,39 +491,20 @@
                     desiredScaleX = desiredObjWidth / obj.width;
 
                     obj.scaleX = desiredScaleX;
+
+                    obj.scaleY = obj.scaleY;
+
                 }
 
-                obj.scaleY = obj._lastScaleY || obj.scaleY;
-
-                exceedsMargin = true;
             }
 
-
-            // bottom
-            if (objBoundingBottom > marginBottom) {
-                console.log("Bottom");
-
-                // Restauramos la escala anterior válida
-                obj.scaleX = obj._lastScaleX || obj.scaleX;
-                obj.scaleY = obj._lastScaleY || obj.scaleY;
-
-                exceedsMargin = true;
-            }
-
-            if (exceedsMargin) {
-
-                // Restauramos la posición anterior válida
-                obj.left = obj._lastLeft || obj.left;
-                obj.top = obj._lastTop || obj.top;
-
-                obj.setCoords();
-            } else {
                 // Guardamos la escala y posición válidas
                 obj._lastScaleX = obj.scaleX;
                 obj._lastScaleY = obj.scaleY;
                 obj._lastLeft = obj.left;
                 obj._lastTop = obj.top;
-            }
+
+            obj.setCoords();
 
             canvas.renderAll();
         });
