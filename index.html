@@ -120,7 +120,7 @@
             return degrees * (Math.PI / 180);
         }
 
-        function createCoordinateMarker(x, y, color = 'red', id = null) {
+        function createCoordinateMarker(x, y, color = 'red') {
             const marker = new fabric.Circle({
                 left: x,
                 top: y,
@@ -132,14 +132,22 @@
                 originY: 'center'
             });
 
-            if (id) {
-                marker.id = id;
-                coordinateMarkers[id] = marker;
-            }
-
             canvas.add(marker);
             canvas.bringToFront(marker);
             return marker;
+        }
+
+        function createCoordinateLine(x1, y1, x2, y2, color = 'red') {
+            const line = new fabric.Line([x1, y1, x2, y2], {
+                stroke: color,
+                strokeWidth: 1,
+                selectable: false,
+                evented: false
+            });
+
+            canvas.add(line);
+            canvas.bringToFront(line);
+            return line;
         }
 
         function resizeCanvas(size, orientation = isVertical) {
@@ -335,7 +343,7 @@
 
                         // hallar angulo de la diagonal del objeto
 
-                        let diagAngle  = Math.atan(realObjectHeight / realObjectWidth);
+                        let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
                         let xOffset = esquinaArribaDerecha.x - marginRight;
 
@@ -433,21 +441,66 @@
 
             if (esquinaAbajoDerecha.x > marginRight) {
                 if (obj.angle >= 270 && obj.angle < 360) {
-                    console.log("esquinaAbajoDerecha supera el margen derecho");
 
-                    restrictedObjWidth = (marginRight - esquinaAbajoIzquierda.x) / Math.cos((360 - obj.angle) * Math.PI / 180);
+                    if (scaleXChanged && scaleYChanged) {
 
-                    restrictedScaleX = restrictedObjWidth / obj.width;
+                        console.log("esquinaAbajoDerecha supera el margen derecho escalando horizontal y verticalmente");
 
-                    obj.scaleX = restrictedScaleX;
+                        let diagAngle = Math.atan(realObjectWidth / realObjectHeight);
+
+                        let xOffset = esquinaAbajoDerecha.x - marginRight;
+
+                        let yOffset = xOffset * Math.tan(diagAngle - degToRad(360 - obj.angle));
+
+                        let yCollision = Math.abs(esquinaAbajoDerecha.y - yOffset);
+
+                        let collisionToAnchorWidth = Math.abs(marginRight - esquinaArribaIzquierda.x);
+
+                        let collisionToAnchorHeight = Math.abs(yCollision - esquinaArribaIzquierda.y);
+
+                        let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
+                        
+                        let restrictedObjectWidth = restrictedObjectDiagonal * Math.cos(diagAngle);
+
+                        let restrictedObjectHeight = restrictedObjectDiagonal * Math.sin(diagAngle);
+
+                        let restrictedScaleX = restrictedObjectWidth / obj.width;
+
+                        let restrictedScaleY = restrictedObjectHeight / obj.height;
+
+                        obj.scaleX = restrictedScaleX;
+
+                        obj.scaleY = restrictedScaleY;
+                    
+                    } else if (scaleXChanged) {
+
+                        console.log("esquinaAbajoDerecha supera el margen derecho escalando horizontalmente");
+
+                        restrictedObjWidth = (marginRight - esquinaAbajoIzquierda.x) / Math.cos(degToRad(360 - obj.angle));
+
+                        restrictedScaleX = restrictedObjWidth / obj.width;
+
+                        obj.scaleX = restrictedScaleX;
+                    } else if (scaleYChanged) {
+
+                        console.log("esquinaAbajoDerecha supera el margen derecho escalando verticalmente");
+
+                        restrictedObjHeight = (marginRight - esquinaArribaDerecha.x) / Math.sin(degToRad(360 - obj.angle));
+
+                        restrictedScaleY = restrictedObjHeight / obj.height;
+
+                        obj.scaleY = restrictedScaleY;
+
+                    }
+
 
                 }
 
             }
 
-                // Guardamos la escala y posición válidas
-                obj._lastScaleX = obj.scaleX;
-                obj._lastScaleY = obj.scaleY;
+            // Guardamos la escala y posición válidas
+            obj._lastScaleX = obj.scaleX;
+            obj._lastScaleY = obj.scaleY;
 
             obj.setCoords();
 
