@@ -309,10 +309,6 @@
 
         canvas.on('object:scaling', function (e) {
             let obj = e.target;
-            let restrictedObjWidth;
-            let restrictedObjHeight;
-            let restrictedScaleX;
-            let restrictedScaleY;
             obj.setCoords();
 
             let realObjectWidth = obj.width * obj.scaleX;
@@ -327,37 +323,37 @@
             let marginRight = (marginRect.left + marginRect.width);
             let marginBottom = (marginRect.top + marginRect.height);
 
-            let esquinaArribaIzquierda = obj.aCoords.tl;
-            let esquinaArribaDerecha = obj.aCoords.tr;
-            let esquinaAbajoIzquierda = obj.aCoords.bl;
-            let esquinaAbajoDerecha = obj.aCoords.br;
+            let TL = obj.aCoords.tl;
+            let TR = obj.aCoords.tr;
+            let BL = obj.aCoords.bl;
+            let BR = obj.aCoords.br;
 
-            // esquinaArribaDerecha supera el margen derecho
-            if (esquinaArribaDerecha.x > marginRight) {
+            // la esquina de arriba a la derecha supera el margen derecho
+            if (TR.x > marginRight) {
 
                 if (obj.angle >= 0 && obj.angle < 90) {
                     if (scaleXChanged && scaleYChanged) {
                         // Cuando se está escalando horizontal y verticalmente
 
-                        console.log("esquinaArribaDerecha supera el margen derecho escalando horizontal y verticalmente");
+                        console.log("La esquina Top Right supera el margen derecho escalando horizontal y verticalmente");
 
                         // hallar angulo de la diagonal del objeto
 
                         let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
-                        let xOffset = esquinaArribaDerecha.x - marginRight;
+                        let xOffset = TR.x - marginRight;
 
                         let yOffset = xOffset * Math.tan(diagAngle - degToRad(obj.angle));
 
-                        let yCollision = Math.abs(esquinaArribaDerecha.y + yOffset);
+                        let yCollision = Math.abs(TR.y + yOffset);
 
                         // Calcular las escalas x y y restringidas
 
                         // Calcular la distancia de la diagonal del objeto
 
-                        let collisionToAnchorWidth = Math.abs(marginRight - esquinaAbajoIzquierda.x);
+                        let collisionToAnchorWidth = Math.abs(marginRight - BL.x);
 
-                        let collisionToAnchorHeight = Math.abs(yCollision - esquinaAbajoIzquierda.y);
+                        let collisionToAnchorHeight = Math.abs(yCollision - BL.y);
 
                         let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
 
@@ -381,33 +377,33 @@
 
                         let boundingTRToTL = restrictedObjectHeight * Math.sin(degToRad(obj.angle));
 
-                        obj.left = esquinaAbajoIzquierda.x + boundingTRToTL;
+                        obj.left = BL.x + boundingTRToTL;
 
-                        obj.top = esquinaAbajoIzquierda.y - blToBoundingTR;
+                        obj.top = BL.y - blToBoundingTR;
 
                     } else if (scaleXChanged) {
 
-                        console.log("esquinaArribaDerecha supera el margen derecho escalando horizontalmente");
+                        console.log("La esquina Top Right supera el margen derecho escalando horizontalmente");
 
-                        let ca = (marginRight - esquinaArribaIzquierda.x);
+                        let ca = (marginRight - TL.x);
 
-                        restrictedObjWidth = ca / Math.cos(degToRad(obj.angle));
+                        let restrictedObjWidth = ca / Math.cos(degToRad(obj.angle));
 
-                        restrictedScaleX = restrictedObjWidth / obj.width;
+                        let restrictedScaleX = restrictedObjWidth / obj.width;
 
                         obj.scaleX = restrictedScaleX;
 
                         // Restauramos la posición anterior válida
-                        obj.left = esquinaArribaIzquierda.x;
-                        obj.top = esquinaArribaIzquierda.y;
+                        obj.left = TL.x;
+                        obj.top = TL.y;
 
                     } else if (scaleYChanged) {
 
-                        console.log("esquinaArribaDerecha supera el margen derecho escalando verticalmente");
+                        console.log("La esquina Top Right supera el margen derecho escalando verticalmente");
 
-                        restrictedObjHeight = (marginRight - esquinaAbajoDerecha.x) / Math.sin(degToRad(obj.angle));
+                        let restrictedObjHeight = (marginRight - BR.x) / Math.sin(degToRad(obj.angle));
 
-                        restrictedScaleY = restrictedObjHeight / obj.height;
+                        let restrictedScaleY = restrictedObjHeight / obj.height;
 
                         obj.scaleY = restrictedScaleY;
 
@@ -419,7 +415,7 @@
 
                         let ca = restrictedObjHeight * Math.cos(degToRad(obj.angle));
 
-                        let TR_y = esquinaAbajoDerecha.y - ca;
+                        let TR_y = BR.y - ca;
 
                         // Segundo calculo del punto deseado de Top Left
 
@@ -439,24 +435,24 @@
 
             }
 
-            if (esquinaAbajoDerecha.x > marginRight) {
+            if (BR.x > marginRight) {
                 if (obj.angle >= 270 && obj.angle < 360) {
 
                     if (scaleXChanged && scaleYChanged) {
 
-                        console.log("esquinaAbajoDerecha supera el margen derecho escalando horizontal y verticalmente");
+                        console.log("La esquina Bottom Right supera el margen derecho escalando horizontal y verticalmente");
 
-                        let diagAngle = Math.atan(realObjectWidth / realObjectHeight);
+                        let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
-                        let xOffset = esquinaAbajoDerecha.x - marginRight;
+                        let xOffset = BR.x - marginRight;
 
                         let yOffset = xOffset * Math.tan(diagAngle - degToRad(360 - obj.angle));
 
-                        let yCollision = Math.abs(esquinaAbajoDerecha.y - yOffset);
+                        let yCollision = BR.y - yOffset;
 
-                        let collisionToAnchorWidth = Math.abs(marginRight - esquinaArribaIzquierda.x);
+                        let collisionToAnchorWidth = Math.abs(marginRight - TL.x);
 
-                        let collisionToAnchorHeight = Math.abs(yCollision - esquinaArribaIzquierda.y);
+                        let collisionToAnchorHeight = Math.abs(yCollision - TL.y);
 
                         let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
                         
@@ -474,20 +470,20 @@
                     
                     } else if (scaleXChanged) {
 
-                        console.log("esquinaAbajoDerecha supera el margen derecho escalando horizontalmente");
+                        console.log("La esquina Bottom Right supera el margen derecho escalando horizontalmente");
 
-                        restrictedObjWidth = (marginRight - esquinaAbajoIzquierda.x) / Math.cos(degToRad(360 - obj.angle));
+                        let restrictedObjWidth = (marginRight - BL.x) / Math.cos(degToRad(360 - obj.angle));
 
-                        restrictedScaleX = restrictedObjWidth / obj.width;
+                        let restrictedScaleX = restrictedObjWidth / obj.width;
 
                         obj.scaleX = restrictedScaleX;
                     } else if (scaleYChanged) {
 
-                        console.log("esquinaAbajoDerecha supera el margen derecho escalando verticalmente");
+                        console.log("La esquina Bottom Right supera el margen derecho escalando verticalmente");
 
-                        restrictedObjHeight = (marginRight - esquinaArribaDerecha.x) / Math.sin(degToRad(360 - obj.angle));
+                        let restrictedObjHeight = (marginRight - TR.x) / Math.sin(degToRad(360 - obj.angle));
 
-                        restrictedScaleY = restrictedObjHeight / obj.height;
+                        let restrictedScaleY = restrictedObjHeight / obj.height;
 
                         obj.scaleY = restrictedScaleY;
 
