@@ -142,31 +142,6 @@
             return marker;
         }
 
-        function updateCoordinateMarker(obj) {
-            // Eliminar marcadores anteriores específicos de este objeto
-            Object.keys(coordinateMarkers).forEach(key => {
-                if (key.startsWith(`marker-${obj.id}`)) {
-                    canvas.remove(coordinateMarkers[key]);
-                    delete coordinateMarkers[key];
-                }
-            });
-
-            // Obtener bounding rect para calcular objBoundingRight y objBoundingBottom
-            const objBoundingRect = obj.getBoundingRect(true);
-
-            // Crear marcadores para top-left
-            createCoordinateMarker(objBoundingRect.left, objBoundingRect.top, 'red', `marker-${obj.id}-top-left`);
-
-            const objBoundingRight = objBoundingRect.left + objBoundingRect.width;
-            const objBoundingBottom = objBoundingRect.top + objBoundingRect.height;
-
-            // Crear marcadores para right-bottom
-            createCoordinateMarker(objBoundingRight, objBoundingBottom, 'blue', `marker-${obj.id}-right-bottom`);
-
-            canvas.renderAll();
-        }
-
-
         function resizeCanvas(size, orientation = isVertical) {
             currentSize = size;
             isVertical = orientation;
@@ -245,9 +220,6 @@
                         canvas.centerObject(img);
                         canvas.setActiveObject(img);
 
-                        // Crear el marcador de coordenadas inicial
-                        updateCoordinateMarker(img);
-
                         canvas.renderAll();
                     });
                 }
@@ -285,11 +257,6 @@
         canvas.on('object:moving', function (e) {
             let obj = e.target;
             obj.setCoords(); // Actualiza las coordenadas del objeto
-
-            // Actualizar el marcador de coordenadas
-            if (obj.id && obj.id.startsWith('image-')) {
-                updateCoordinateMarker(obj);
-            }
 
             // Obtener los puntos del objeto y del margen
             let objPoints = [obj.aCoords.tl, obj.aCoords.tr, obj.aCoords.br, obj.aCoords.bl];
@@ -340,14 +307,6 @@
             let restrictedScaleY;
             obj.setCoords();
 
-            // Actualizar el marcador de coordenadas
-            if (obj.id && obj.id.startsWith('image-')) {
-                updateCoordinateMarker(obj);
-            }
-
-            // Obtenemos el bounding rect del objeto, considerando la rotación
-            let objBoundingRect = obj.getBoundingRect(true);
-
             let realObjectWidth = obj.width * obj.scaleX;
             let realObjectHeight = obj.height * obj.scaleY;
 
@@ -356,8 +315,6 @@
             const scaleYChanged = obj.scaleY !== obj._lastScaleY;
 
             // Verificamos si el objeto excede los márgenes
-
-            let objBoundingBottom = (objBoundingRect.top + objBoundingRect.height);
 
             let marginRight = (marginRect.left + marginRect.width);
             let marginBottom = (marginRect.top + marginRect.height);
@@ -384,11 +341,7 @@
 
                         let yOffset = xOffset * Math.tan(diagAngle - degToRad(obj.angle));
 
-                        //let xCollision = Math.abs(esquinaArribaDerecha.x - xOffset);
-
                         let yCollision = Math.abs(esquinaArribaDerecha.y + yOffset);
-
-                        createCoordinateMarker(marginRight, yCollision, 'green', 'collision');
 
                         // Calcular las escalas x y y restringidas
 
@@ -436,8 +389,6 @@
 
                         obj.scaleX = restrictedScaleX;
 
-                        obj.scaleY = obj.scaleY;
-
                         // Restauramos la posición anterior válida
                         obj.left = esquinaArribaIzquierda.x;
                         obj.top = esquinaArribaIzquierda.y;
@@ -451,8 +402,6 @@
                         restrictedScaleY = restrictedObjHeight / obj.height;
 
                         obj.scaleY = restrictedScaleY;
-
-                        obj.scaleX = obj.scaleX;
 
                         // Calculo del punto top y left 
 
@@ -492,8 +441,6 @@
 
                     obj.scaleX = restrictedScaleX;
 
-                    obj.scaleY = obj.scaleY;
-
                 }
 
             }
@@ -511,10 +458,6 @@
             let obj = e.target;
             obj.setCoords(); // Actualiza las coordenadas del objeto
 
-            // Actualizar el marcador de coordenadas
-            if (obj.id && obj.id.startsWith('image-')) {
-                updateCoordinateMarker(obj);
-            }
         });
 
         function rotateImage(deg) {
@@ -522,9 +465,6 @@
             if (activeObject) {
                 activeObject.rotate((activeObject.angle + deg) % 360);
                 activeObject.setCoords();
-
-                // Actualizar marcadores de coordenadas después de rotar
-                updateCoordinateMarker(activeObject);
 
                 canvas.renderAll();
             }
