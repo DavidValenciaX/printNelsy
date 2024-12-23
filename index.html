@@ -387,10 +387,13 @@
 
             // Para establecer la posición y el escalado de objeto hay que darle las propiedades left, top, scaleX y scaleY
 
-            // Handle case when top right corner exceeds right margin
-            if (TR.x > marginRight) {
 
-                if (obj.angle >= 0 && obj.angle < 90) {
+
+            if (obj.angle >= 0 && obj.angle < 90) {
+
+                // Handle case when top right corner exceeds right margin
+                if (TR.x > marginRight) {
+
                     if (scaleXChanged && scaleYChanged) {
 
                         console.log("La esquina Top Right supera el margen derecho escalando horizontal y verticalmente");
@@ -480,10 +483,10 @@
 
             }
 
-            // Handle case when bottom right corner exceeds right margin
-            if (BR.x > marginRight) {
+            if (obj.angle >= 270 && obj.angle < 360) {
 
-                if (obj.angle >= 270 && obj.angle < 360) {
+                // Handle case when bottom right corner exceeds right margin
+                if (BR.x > marginRight) {
 
                     if (scaleXChanged && scaleYChanged) {
 
@@ -545,9 +548,10 @@
 
             }
 
-            // Handle case when bottom left corner exceeds right margin
-            if (BL.x > marginRight) {
-                if (obj.angle >= 180 && obj.angle < 270) {
+            if (obj.angle >= 180 && obj.angle < 270) {
+
+                // Handle case when bottom left corner exceeds right margin
+                if (BL.x > marginRight) {
 
                     if (scaleXChanged && scaleYChanged) {
 
@@ -626,9 +630,12 @@
                 }
             }
 
-            // Handle case when top left corner exceeds right margin
-            if (TL.x > marginRight) {
-                if (obj.angle >= 90 && obj.angle < 180) {
+            
+
+            if (obj.angle >= 90 && obj.angle < 180) {
+
+                // Handle case when top left corner exceeds right margin
+                if (TL.x > marginRight) {
 
                     if (scaleXChanged && scaleYChanged) {
 
