@@ -517,7 +517,7 @@
 
                         obj.scaleY = restrictedScaleY;
 
-                        // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla
+                        // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla, es decir que no se mueve
 
                     } else if (scaleXChanged) {
 
@@ -662,8 +662,6 @@
 
                         obj.scaleY = restrictedScaleY;
 
-                        // No hay necesidad de calcular el punto deseado de Bottom Right porque el punto Bottom Right es el ancla
-
                     } else if (scaleXChanged) {
 
                         console.log("La esquina Top Left supera el margen derecho escalando horizontalmente");
@@ -678,7 +676,7 @@
 
                         obj.scaleX = restrictedScaleX;
 
-                        // Encontrar el punto deseado de Top Left
+                        // Calculo del punto top y left
 
                         obj.left = marginRight;
 
@@ -688,11 +686,21 @@
 
                         console.log("La esquina Top Left supera el margen derecho escalando verticalmente");
 
-                        let restrictedObjHeight = (marginRight - BR.x) / Math.sin(degToRad(obj.angle - 90));
+                        let ca = marginRight - BL.x;
+
+                        let restrictedObjHeight = ca / Math.cos(degToRad(obj.angle - 90));
+
+                        let co = restrictedObjHeight * Math.sin(degToRad(obj.angle - 90));
 
                         let restrictedScaleY = restrictedObjHeight / obj.height;
 
                         obj.scaleY = restrictedScaleY;
+
+                        // Calculo del punto top y left
+
+                        obj.left = marginRight;
+
+                        obj.top = BL.y + co;
 
                     }
 
