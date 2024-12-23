@@ -725,17 +725,16 @@
                 if (TR.y > marginBottom) {
                     if (scaleXChanged && scaleYChanged) {
 
-                        // TO DO
 
                         console.log("La esquina Top Right supera el margen inferior escalando horizontal y verticalmente");
 
                         let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
-                        let offsetAngle = diagAngle - degToRad(obj.angle);
+                        let offsetAngle = diagAngle - degToRad(obj.angle - 90);
 
                         let yOffset = TR.y - marginBottom;
 
-                        let xOffset = yOffset / Math.tan(offsetAngle);
+                        let xOffset = yOffset * Math.tan(offsetAngle);
 
                         let xCollision = TR.x - xOffset;
 
@@ -759,13 +758,13 @@
 
                         // Calculo del punto top y left
 
-                        let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle));
+                        let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle - 90));
 
-                        let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle));
+                        let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle - 90));
 
-                        obj.left = BL.x + co;
+                        obj.left = BL.x + ca;
 
-                        obj.top = BL.y + ca;
+                        obj.top = BL.y + co;
 
                     } else if (scaleXChanged) {
 
