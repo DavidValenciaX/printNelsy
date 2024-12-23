@@ -636,7 +636,9 @@
 
                         let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
-                        let offsetAngle = diagAngle - degToRad(obj.angle - 90);
+                        let complementDiagAngle = degToRad(90) - diagAngle;
+
+                        let offsetAngle = complementDiagAngle - degToRad(obj.angle - 90);
 
                         let xOffset = TL.x - marginRight;
 
@@ -650,9 +652,9 @@
 
                         let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
 
-                        let restrictedObjectWidth = restrictedObjectDiagonal * Math.cos(diagAngle);
+                        let restrictedObjectWidth = restrictedObjectDiagonal * Math.sin(complementDiagAngle);
 
-                        let restrictedObjectHeight = restrictedObjectDiagonal * Math.sin(diagAngle);
+                        let restrictedObjectHeight = restrictedObjectDiagonal * Math.cos(complementDiagAngle);
 
                         let restrictedScaleX = restrictedObjectWidth / obj.width;
 
