@@ -120,6 +120,24 @@
             return degrees * (Math.PI / 180);
         }
 
+        function radToDeg(radians) {
+            return radians * (180 / Math.PI);
+        }
+
+        function createCoordinateMarkers(obj) {
+            const tl = createCoordinateMarker(obj.aCoords.tl.x, obj.aCoords.tl.y);
+            const tr = createCoordinateMarker(obj.aCoords.tr.x, obj.aCoords.tr.y);
+            const br = createCoordinateMarker(obj.aCoords.br.x, obj.aCoords.br.y);
+            const bl = createCoordinateMarker(obj.aCoords.bl.x, obj.aCoords.bl.y);
+
+            const tl_tr = createCoordinateLine(tl.left, tl.top, tr.left, tr.top);
+            const tr_br = createCoordinateLine(tr.left, tr.top, br.left, br.top);
+            const br_bl = createCoordinateLine(br.left, br.top, bl.left, bl.top);
+            const bl_tl = createCoordinateLine(bl.left, bl.top, tl.left, tl.top);
+
+            coordinateMarkers = { tl, tr, br, bl, tl_tr, tr_br, br_bl, bl_tl };
+        }
+
         function createCoordinateMarker(x, y, color = 'red') {
             const marker = new fabric.Circle({
                 left: x,
@@ -393,7 +411,6 @@
 
                         obj.scaleX = restrictedScaleX;
 
-                        // Restauramos la posición anterior válida
                         obj.left = TL.x;
                         obj.top = TL.y;
 
@@ -493,15 +510,17 @@
 
                         let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
+                        let offsetAngle = diagAngle - degToRad(obj.angle - 180);
+
                         let xOffset = BL.x - marginRight;
 
-                        let yOffset = xOffset * Math.tan(diagAngle - degToRad(obj.angle - 180));
+                        let yOffset = xOffset * Math.tan(offsetAngle);
 
-                        let yCollision = BL.y - yOffset;
+                        let yCollision = BL.y + yOffset;
 
-                        let collisionToAnchorWidth = Math.abs(marginRight - TL.x);
+                        let collisionToAnchorWidth = Math.abs(marginRight - TR.x);
 
-                        let collisionToAnchorHeight = Math.abs(yCollision - TL.y);
+                        let collisionToAnchorHeight = Math.abs(TR.y - yCollision);
 
                         let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
 
@@ -516,6 +535,20 @@
                         obj.scaleX = restrictedScaleX;
 
                         obj.scaleY = restrictedScaleY;
+
+                        // Encontrar el punto deseado de Top Left
+
+                        let co = restrictedObjectWidth * Math.sin(degToRad(obj.angle - 180));
+
+                        let ca = restrictedObjectWidth * Math.cos(degToRad(obj.angle - 180));
+
+                        let TL_x = TR.x + ca;
+
+                        let TL_y = TR.y + co;
+
+                        obj.left = TL_x;
+
+                        obj.top = TL_y;
 
                     } else if (scaleXChanged) {
 
@@ -569,7 +602,7 @@
             let obj = e.target;
             obj.setCoords(); // Actualiza las coordenadas del objeto
 
-            console.log("object angle: ", obj.angle);
+            //console.log("object angle: ", obj.angle);
 
         });
 
