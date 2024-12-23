@@ -494,6 +494,78 @@
 
             }
 
+            if(BL.x > marginRight) {
+                if(obj.angle >= 180 && obj.angle < 270) {
+
+                    if(scaleXChanged && scaleYChanged) {
+
+                        console.log("La esquina Bottom Left supera el margen derecho escalando horizontal y verticalmente");
+
+                        let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
+
+                        let xOffset = BL.x - marginRight;
+
+                        let yOffset = xOffset * Math.tan(diagAngle - degToRad(obj.angle - 180));
+
+                        let yCollision = BL.y - yOffset;
+
+                        let collisionToAnchorWidth = Math.abs(marginRight - TL.x);
+
+                        let collisionToAnchorHeight = Math.abs(yCollision - TL.y);
+
+                        let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
+
+                        let restrictedObjectWidth = restrictedObjectDiagonal * Math.cos(diagAngle);
+
+                        let restrictedObjectHeight = restrictedObjectDiagonal * Math.sin(diagAngle);
+
+                        let restrictedScaleX = restrictedObjectWidth / obj.width;
+
+                        let restrictedScaleY = restrictedObjectHeight / obj.height;
+
+                        obj.scaleX = restrictedScaleX;
+
+                        obj.scaleY = restrictedScaleY;
+
+                    } else if (scaleXChanged) {
+
+                        console.log("La esquina Bottom Left supera el margen derecho escalando horizontalmente");
+
+                        let ca = (marginRight - BR.x);
+
+                        let restrictedObjWidth = ca / Math.cos(degToRad(obj.angle - 180));
+
+                        let co = restrictedObjWidth * Math.sin(degToRad(obj.angle - 180));
+
+                        let restrictedScaleX = restrictedObjWidth / obj.width;
+
+                        obj.scaleX = restrictedScaleX;
+
+                        // Encontrar el punto deseado de Top Left
+
+                        let TL_x = TR.x + ca;
+
+                        let TL_y = TR.y + co;
+
+                        obj.left = TL_x;
+
+                        obj.top = TL_y;
+
+                    } else if (scaleYChanged) {
+
+                        console.log("La esquina Bottom Left supera el margen derecho escalando verticalmente");
+
+                        let restrictedObjHeight = (marginRight - TL.x) / Math.sin(degToRad(obj.angle - 180));
+
+                        let restrictedScaleY = restrictedObjHeight / obj.height;
+
+                        obj.scaleY = restrictedScaleY;
+
+                    }
+
+                }
+            }
+
             // Guardamos la escala y posición válidas
             obj._lastScaleX = obj.scaleX;
             obj._lastScaleY = obj.scaleY;
@@ -506,6 +578,8 @@
         canvas.on('object:rotating', function (e) {
             let obj = e.target;
             obj.setCoords(); // Actualiza las coordenadas del objeto
+
+            console.log("object angle: ", obj.angle);
 
         });
 
