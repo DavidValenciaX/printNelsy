@@ -351,23 +351,24 @@
 
                 if (obj.angle >= 0 && obj.angle < 90) {
                     if (scaleXChanged && scaleYChanged) {
-                        // Cuando se está escalando horizontal y verticalmente
 
                         console.log("La esquina Top Right supera el margen derecho escalando horizontal y verticalmente");
 
-                        // hallar angulo de la diagonal del objeto
+                        // hallar angulo de la diagonal desde la base a la diagonal del rectangulo
 
                         let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
+                        let offsetAngle = diagAngle - degToRad(obj.angle);
+
                         let xOffset = TR.x - marginRight;
 
-                        let yOffset = xOffset * Math.tan(diagAngle - degToRad(obj.angle));
+                        let yOffset = xOffset * Math.tan(offsetAngle);
 
                         let yCollision = Math.abs(TR.y + yOffset);
 
                         // Calcular las escalas x y y restringidas
 
-                        // Calcular la distancia de la diagonal del objeto
+                        // Calcular la distancia de la diagonal del rectangulo restringido
 
                         let collisionToAnchorWidth = Math.abs(marginRight - BL.x);
 
@@ -389,15 +390,13 @@
 
                         // Calculo del punto top y left
 
-                        // Primero calculo del punto deseado de Top Right del bounding rect
+                        let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle));
 
-                        let blToBoundingTR = restrictedObjectHeight * Math.cos(degToRad(obj.angle));
+                        let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle));
 
-                        let boundingTRToTL = restrictedObjectHeight * Math.sin(degToRad(obj.angle));
+                        obj.left = BL.x + co;
 
-                        obj.left = BL.x + boundingTRToTL;
-
-                        obj.top = BL.y - blToBoundingTR;
+                        obj.top = BL.y - ca;
 
                     } else if (scaleXChanged) {
 
@@ -451,9 +450,11 @@
 
                         let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
+                        let offsetAngle = diagAngle - degToRad(360 - obj.angle);
+
                         let xOffset = BR.x - marginRight;
 
-                        let yOffset = xOffset * Math.tan(diagAngle - degToRad(360 - obj.angle));
+                        let yOffset = xOffset * Math.tan(offsetAngle);
 
                         let yCollision = BR.y - yOffset;
 
@@ -474,6 +475,8 @@
                         obj.scaleX = restrictedScaleX;
 
                         obj.scaleY = restrictedScaleY;
+
+                        // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla
                     
                     } else if (scaleXChanged) {
 
@@ -536,7 +539,7 @@
 
                         obj.scaleY = restrictedScaleY;
 
-                        // Encontrar el punto deseado de Top Left
+                        // Calculo del punto top y left
 
                         let co = restrictedObjectWidth * Math.sin(degToRad(obj.angle - 180));
 
