@@ -401,31 +401,21 @@
 
                         console.log("La esquina Top Right supera el margen derecho escalando verticalmente");
 
-                        let restrictedObjHeight = (marginRight - BR.x) / Math.sin(degToRad(obj.angle));
+                        let co = marginRight - BR.x;
+
+                        let restrictedObjHeight = co / Math.sin(degToRad(obj.angle));
+
+                        let ca = restrictedObjHeight * Math.cos(degToRad(obj.angle));
 
                         let restrictedScaleY = restrictedObjHeight / obj.height;
 
                         obj.scaleY = restrictedScaleY;
 
-                        // Calculo del punto top y left 
+                        // Calculo del punto top y left
 
-                        // Primero calculo del punto deseado de Top Right
+                        let TL_x = BL.x + co;
 
-                        let TR_x = marginRight;
-
-                        let ca = restrictedObjHeight * Math.cos(degToRad(obj.angle));
-
-                        let TR_y = BR.y - ca;
-
-                        // Segundo calculo del punto deseado de Top Left
-
-                        let top_ca = realObjectWidth * Math.cos(degToRad(obj.angle));
-
-                        let TL_x = TR_x - top_ca;
-
-                        let top_co = realObjectWidth * Math.sin(degToRad(obj.angle));
-
-                        let TL_y = TR_y - top_co;
+                        let TL_y = BL.y - ca;
 
                         obj.left = TL_x;
                         obj.top = TL_y;
