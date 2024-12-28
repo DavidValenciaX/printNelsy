@@ -405,6 +405,12 @@
                 if (activeRestriction === 'BR_BOTTOM' && BR.y <= marginBottom) {
                     activeRestriction = null;
                 }
+                if (activeRestriction === 'BR_RIGHT' && BR.x <= marginRight) {
+                    activeRestriction = null;
+                }
+                if (activeRestriction === 'BL_BOTTOM' && BL.y <= marginBottom) {
+                    activeRestriction = null;
+                }
 
 
                 // Check positions and set activeRestriction if not set
@@ -413,10 +419,14 @@
                         activeRestriction = 'TL_RIGHT';
                     } else if (TR.y > marginBottom && obj.angle > 90 && obj.angle <= 180) {
                         activeRestriction = 'TR_BOTTOM';
-                    } else if (TR.x > marginRight && obj.angle > 0 && obj.angle <= 90) {
+                    } else if (TR.x > marginRight && obj.angle >= 0 && obj.angle <= 90) {
                         activeRestriction = 'TR_RIGHT';
-                    } else if (BR.y > marginBottom && obj.angle > 0 && obj.angle <= 90) {
+                    } else if (BR.y > marginBottom && obj.angle >= 0 && obj.angle <= 90) {
                         activeRestriction = 'BR_BOTTOM';
+                    } else if (BR.x > marginRight && obj.angle >= 270 && obj.angle < 360) {
+                        activeRestriction = 'BR_RIGHT';
+                    } else if (BL.y > marginBottom && obj.angle >= 270 && obj.angle < 360) {
+                        activeRestriction = 'BL_BOTTOM';
                     }
                 }
 
@@ -754,6 +764,149 @@
 
                         break;
 
+                    case 'BR_RIGHT':
+
+                        // Handle BR.x > marginRight case
+                        if (scaleXChanged && scaleYChanged) {
+
+                            console.log("La esquina Bottom Right supera el margen derecho escalando horizontal y verticalmente");
+
+                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
+
+                            let offsetAngle = diagAngle - degToRad(360 - obj.angle);
+
+                            let xOffset = BR.x - marginRight;
+
+                            let yOffset = xOffset * Math.tan(offsetAngle);
+
+                            let yCollision = BR.y - yOffset;
+
+                            let collisionToAnchorWidth = Math.abs(marginRight - TL.x);
+
+                            let collisionToAnchorHeight = Math.abs(yCollision - TL.y);
+
+                            let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
+
+                            let restrictedObjectWidth = restrictedObjectDiagonal * Math.cos(diagAngle);
+
+                            let restrictedObjectHeight = restrictedObjectDiagonal * Math.sin(diagAngle);
+
+                            let restrictedScaleX = restrictedObjectWidth / obj.width;
+
+                            let restrictedScaleY = restrictedObjectHeight / obj.height;
+
+                            obj.scaleX = restrictedScaleX;
+
+                            obj.scaleY = restrictedScaleY;
+
+                            // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla, es decir que no se mueve
+
+                        } else if (scaleXChanged) {
+
+                            console.log("La esquina Bottom Right supera el margen derecho escalando horizontalmente");
+
+                            let restrictedObjWidth = (marginRight - BL.x) / Math.cos(degToRad(360 - obj.angle));
+
+                            let restrictedScaleX = restrictedObjWidth / obj.width;
+
+                            obj.scaleX = restrictedScaleX;
+                        } else if (scaleYChanged) {
+
+                            console.log("La esquina Bottom Right supera el margen derecho escalando verticalmente");
+
+                            let restrictedObjectHeight = (marginRight - TR.x) / Math.sin(degToRad(360 - obj.angle));
+
+                            let restrictedScaleY = restrictedObjectHeight / obj.height;
+
+                            obj.scaleY = restrictedScaleY;
+
+                        }
+
+                        break;
+
+                    case 'BL_BOTTOM':
+
+                        // Handle BL.y > marginBottom case
+                        if (scaleXChanged && scaleYChanged) {
+
+                            console.log("La esquina Bottom Right supera el margen inferior escalando horizontal y verticalmente");
+
+                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
+
+                            let offsetAngle = diagAngle - degToRad(obj.angle - 270);
+
+                            let yOffset = BL.y - marginBottom;
+
+                            let xOffset = yOffset * Math.tan(offsetAngle);
+
+                            let xCollision = BL.x - xOffset;
+
+                            let collisionToAnchorWidth = Math.abs(xCollision - TR.x);
+
+                            let collisionToAnchorHeight = Math.abs(marginBottom - TR.y);
+
+                            let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
+
+                            let restrictedObjectWidth = restrictedObjectDiagonal * Math.cos(diagAngle);
+
+                            let restrictedObjectHeight = restrictedObjectDiagonal * Math.sin(diagAngle);
+
+                            let restrictedScaleX = restrictedObjectWidth / obj.width;
+
+                            let restrictedScaleY = restrictedObjectHeight / obj.height;
+
+                            obj.scaleX = restrictedScaleX;
+
+                            obj.scaleY = restrictedScaleY;
+
+                            // Calculo del punto top y left
+
+                            let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle - 270));
+
+                            let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle - 270));
+
+                            obj.left = xCollision - ca;
+
+                            obj.top = marginBottom - co;
+
+                        } else if (scaleXChanged) {
+
+                            console.log("La esquina Bottom Right supera el margen inferior escalando horizontalmente");
+
+                            let ca = marginBottom - BR.y;
+
+                            let restrictedObjWidth = ca / Math.cos(degToRad(obj.angle - 270));
+
+                            let co = restrictedObjWidth * Math.sin(degToRad(obj.angle - 270));
+
+                            let restrictedScaleX = restrictedObjWidth / obj.width;
+
+                            obj.scaleX = restrictedScaleX;
+
+                            // Calculo del punto top y left
+
+                            obj.left = TR.x - co;
+
+                            obj.top = TR.y + ca;
+
+                        } else if (scaleYChanged) {
+
+                            console.log("La esquina Bottom Right supera el margen inferior escalando verticalmente");
+
+                            let co = (marginBottom - TL.y);
+
+                            let restrictedObjectHeight = co / Math.sin(degToRad(obj.angle - 270));
+
+                            let restrictedScaleY = restrictedObjectHeight / obj.height;
+
+                            obj.scaleY = restrictedScaleY;
+
+                            // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla, es decir que no se mueve
+
+                        }
+
+                        break;
+
                     default:
                         // Handle default case
                         break;
@@ -761,153 +914,6 @@
             }
 
             checkPosition();
-
-            if (obj.angle >= 270 && obj.angle < 360) {
-
-                // Handle case when bottom right corner exceeds right margin
-                if (BR.x > marginRight) {
-
-                    if (scaleXChanged && scaleYChanged) {
-
-                        console.log("La esquina Bottom Right supera el margen derecho escalando horizontal y verticalmente");
-
-                        let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
-
-                        let offsetAngle = diagAngle - degToRad(360 - obj.angle);
-
-                        let xOffset = BR.x - marginRight;
-
-                        let yOffset = xOffset * Math.tan(offsetAngle);
-
-                        let yCollision = BR.y - yOffset;
-
-                        let collisionToAnchorWidth = Math.abs(marginRight - TL.x);
-
-                        let collisionToAnchorHeight = Math.abs(yCollision - TL.y);
-
-                        let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
-
-                        let restrictedObjectWidth = restrictedObjectDiagonal * Math.cos(diagAngle);
-
-                        let restrictedObjectHeight = restrictedObjectDiagonal * Math.sin(diagAngle);
-
-                        let restrictedScaleX = restrictedObjectWidth / obj.width;
-
-                        let restrictedScaleY = restrictedObjectHeight / obj.height;
-
-                        obj.scaleX = restrictedScaleX;
-
-                        obj.scaleY = restrictedScaleY;
-
-                        // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla, es decir que no se mueve
-
-                    } else if (scaleXChanged) {
-
-                        console.log("La esquina Bottom Right supera el margen derecho escalando horizontalmente");
-
-                        let restrictedObjWidth = (marginRight - BL.x) / Math.cos(degToRad(360 - obj.angle));
-
-                        let restrictedScaleX = restrictedObjWidth / obj.width;
-
-                        obj.scaleX = restrictedScaleX;
-                    } else if (scaleYChanged) {
-
-                        console.log("La esquina Bottom Right supera el margen derecho escalando verticalmente");
-
-                        let restrictedObjectHeight = (marginRight - TR.x) / Math.sin(degToRad(360 - obj.angle));
-
-                        let restrictedScaleY = restrictedObjectHeight / obj.height;
-
-                        obj.scaleY = restrictedScaleY;
-
-                    }
-
-
-                }
-
-                if (BL.y > marginBottom) {
-
-                    if (scaleXChanged && scaleYChanged) {
-
-                        console.log("La esquina Bottom Right supera el margen inferior escalando horizontal y verticalmente");
-
-                        let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
-
-                        let offsetAngle = diagAngle - degToRad(obj.angle - 270);
-
-                        let yOffset = BL.y - marginBottom;
-
-                        let xOffset = yOffset * Math.tan(offsetAngle);
-
-                        let xCollision = BL.x - xOffset;
-
-                        let collisionToAnchorWidth = Math.abs(xCollision - TR.x);
-
-                        let collisionToAnchorHeight = Math.abs(marginBottom - TR.y);
-
-                        let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
-
-                        let restrictedObjectWidth = restrictedObjectDiagonal * Math.cos(diagAngle);
-
-                        let restrictedObjectHeight = restrictedObjectDiagonal * Math.sin(diagAngle);
-
-                        let restrictedScaleX = restrictedObjectWidth / obj.width;
-
-                        let restrictedScaleY = restrictedObjectHeight / obj.height;
-
-                        obj.scaleX = restrictedScaleX;
-
-                        obj.scaleY = restrictedScaleY;
-
-                        // Calculo del punto top y left
-
-                        let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle - 270));
-
-                        let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle - 270));
-
-                        obj.left = xCollision - ca;
-
-                        obj.top = marginBottom - co;
-
-                    } else if (scaleXChanged) {
-
-                        console.log("La esquina Bottom Right supera el margen inferior escalando horizontalmente");
-
-                        let ca = marginBottom - BR.y;
-
-                        let restrictedObjWidth = ca / Math.cos(degToRad(obj.angle - 270));
-
-                        let co = restrictedObjWidth * Math.sin(degToRad(obj.angle - 270));
-
-                        let restrictedScaleX = restrictedObjWidth / obj.width;
-
-                        obj.scaleX = restrictedScaleX;
-
-                        // Calculo del punto top y left
-
-                        obj.left = TR.x - co;
-
-                        obj.top = TR.y + ca;
-
-                    } else if (scaleYChanged) {
-
-                        console.log("La esquina Bottom Right supera el margen inferior escalando verticalmente");
-
-                        let co = (marginBottom - TL.y);
-
-                        let restrictedObjectHeight = co / Math.sin(degToRad(obj.angle - 270));
-
-                        let restrictedScaleY = restrictedObjectHeight / obj.height;
-
-                        obj.scaleY = restrictedScaleY;
-
-                        // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla, es decir que no se mueve
-
-                    }
-
-                }
-
-            }
 
             if (obj.angle >= 180 && obj.angle < 270) {
 
