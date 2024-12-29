@@ -370,6 +370,9 @@
                 if (activeRestriction === 'TR_LEFT' && TR.x >= marginRect.left) {
                     activeRestriction = null;
                 }
+                if (activeRestriction === 'BR_LEFT' && BR.x >= marginRect.left) {
+                    activeRestriction = null;
+                }
 
 
                 // Check positions and set activeRestriction if not set
@@ -394,6 +397,10 @@
                         activeRestriction = 'TL_LEFT';
                     } else if (TR.x < marginRect.left && obj.angle >= 180 && obj.angle < 270) {
                         activeRestriction = 'TR_LEFT';
+                    } else if (BR.x < marginRect.left && obj.angle >= 90 && obj.angle < 180) {
+                        activeRestriction = 'BR_LEFT';
+                    } else if (BL.x < marginRect.left && obj.angle >= 0 && obj.angle < 90) {
+                        activeRestriction = 'BL_LEFT';
                     }
                 }
 
@@ -1201,6 +1208,76 @@
                             obj.left = BL.x - co;
 
                             obj.top = BL.y + ca;
+
+                        }
+
+                        break;
+
+                    case 'BR_LEFT':
+
+                        if (scaleXChanged && scaleYChanged) {
+
+                            console.log("La esquina Bottom Right supera el margen izquierdo escalando horizontal y verticalmente");
+
+                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
+
+                            let complementDiagAngle = degToRad(90) - diagAngle;
+
+                            let offsetAngle = complementDiagAngle - degToRad(obj.angle - 90);
+
+                            let xOffset = marginRect.left - BR.x;
+
+                            let yOffset = xOffset * Math.tan(offsetAngle);
+
+                            let yCollision = BR.y - yOffset;
+
+                            let collisionToAnchorWidth = Math.abs(TL.x - marginRect.left);
+
+                            let collisionToAnchorHeight = Math.abs(yCollision - TL.y);
+
+                            let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
+
+                            let restrictedObjectWidth = restrictedObjectDiagonal * Math.cos(diagAngle);
+
+                            let restrictedObjectHeight = restrictedObjectDiagonal * Math.sin(diagAngle);
+
+                            let restrictedScaleX = restrictedObjectWidth / obj.width;
+
+                            let restrictedScaleY = restrictedObjectHeight / obj.height;
+
+                            obj.scaleX = restrictedScaleX;
+
+                            obj.scaleY = restrictedScaleY;
+
+                            // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla, es decir que no se mueve
+
+                        } else if (scaleXChanged) {
+
+                            console.log("La esquina Bottom Right supera el margen izquierdo escalando horizontalmente");
+
+                            let co = BL.x - marginRect.left;
+
+                            let restrictedObjWidth = co / Math.sin(degToRad(obj.angle - 90));
+
+                            let restrictedScaleX = restrictedObjWidth / obj.width;
+
+                            obj.scaleX = restrictedScaleX;
+
+                            // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla, es decir que no se mueve
+
+                        } else if (scaleYChanged) {
+
+                            console.log("La esquina Bottom Right supera el margen izquierdo escalando verticalmente");
+
+                            let ca = TR.x - marginRect.left;
+
+                            let restrictedObjectHeight = ca / Math.cos(degToRad(obj.angle - 90));
+
+                            let restrictedScaleY = restrictedObjectHeight / obj.height;
+
+                            obj.scaleY = restrictedScaleY;
+
+                            // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla, es decir que no se mueve
 
                         }
 
