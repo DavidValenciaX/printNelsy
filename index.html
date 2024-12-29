@@ -124,59 +124,6 @@
             return radians * (180 / Math.PI);
         }
 
-        function createCoordinateMarkers(obj) {
-            const tl = createCoordinateMarker(obj.aCoords.tl.x, obj.aCoords.tl.y);
-            const tr = createCoordinateMarker(obj.aCoords.tr.x, obj.aCoords.tr.y);
-            const br = createCoordinateMarker(obj.aCoords.br.x, obj.aCoords.br.y);
-            const bl = createCoordinateMarker(obj.aCoords.bl.x, obj.aCoords.bl.y);
-
-            const tl_tr = createCoordinateLine(tl.left, tl.top, tr.left, tr.top);
-            const tr_br = createCoordinateLine(tr.left, tr.top, br.left, br.top);
-            const br_bl = createCoordinateLine(br.left, br.top, bl.left, bl.top);
-            const bl_tl = createCoordinateLine(bl.left, bl.top, tl.left, tl.top);
-
-            coordinateMarkers = { tl, tr, br, bl, tl_tr, tr_br, br_bl, bl_tl };
-
-            // Draw the letters for each point
-
-            const tlText = new fabric.Text('TL', {
-                left: tl.left + 10,
-                top: tl.top - 10,
-                fill: 'red',
-                selectable: false,
-                evented: false
-            });
-
-            const trText = new fabric.Text('TR', {
-                left: tr.left + 10,
-                top: tr.top - 10,
-                fill: 'red',
-                selectable: false,
-                evented: false
-            });
-
-            const brText = new fabric.Text('BR', {
-                left: br.left + 10,
-                top: br.top - 10,
-                fill: 'red',
-                selectable: false,
-                evented: false
-            });
-
-            const blText = new fabric.Text('BL', {
-                left: bl.left + 10,
-                top: bl.top - 10,
-                fill: 'red',
-                selectable: false,
-                evented: false
-            });
-
-            canvas.add(tlText);
-            canvas.add(trText);
-            canvas.add(brText);
-            canvas.add(blText);
-        }
-
         function createCoordinateMarker(x, y, color = 'red') {
             const marker = new fabric.Circle({
                 left: x,
@@ -1286,8 +1233,6 @@
             obj.setCoords(); // Actualiza las coordenadas del objeto
 
             //console.log("object angle: ", obj.angle);
-
-            //createCoordinateMarkers(obj);
 
         });
 
