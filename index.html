@@ -65,6 +65,24 @@
             display: inline-block;
             text-align: center;
         }
+
+        .control-group input[type="checkbox"] {
+            margin-right: 8px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .control-group input[type="checkbox"]:checked {
+            background-color: #3e8e41;
+            border-color: #3e8e41;
+        }
+
+        .control-group label {
+            font-family: Arial, sans-serif;
+            color: #333;
+            cursor: pointer;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 </head>
@@ -75,6 +93,10 @@
             <label for="imageLoader" class="control-button">Cargar imágenes</label>
             <input type="file" id="imageLoader" accept="image/*" multiple aria-label="Cargar imágenes">
             <button type="button" id="printButton" class="control-button">Imprimir</button>
+            <div class="control-group">
+                <input type="checkbox" id="rotateControl" checked>
+                <label for="rotateControl">Permitir rotación libre</label>
+            </div>
         </div>
         <div id="canvas-container">
             <canvas id="canvas"></canvas>
@@ -1742,6 +1764,21 @@
                 canvas.renderAll();
             }
         }
+
+        // Get checkbox element
+        const rotateCheckbox = document.getElementById('rotateControl');
+
+        // Add event listener
+        rotateCheckbox.addEventListener('change', function(e) {
+            const controls = fabric.Object.prototype.controls;
+            controls.mtr.visible = this.checked;
+            canvas.getObjects().forEach(obj => {
+                obj.setControlsVisibility({
+                    mtr: this.checked
+                });
+            });
+            canvas.requestRenderAll();
+        });
 
         resizeCanvas('carta');
     </script>
