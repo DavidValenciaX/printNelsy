@@ -1258,15 +1258,13 @@
 
                             let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
-                            let complementDiagAngle = degToRad(90) - diagAngle;
-
-                            let offsetAngle = complementDiagAngle - degToRad(obj.angle - 90);
+                            let offsetAngle = diagAngle - degToRad(180 - obj.angle);
 
                             let xOffset = marginRect.left - BR.x;
 
                             let yOffset = xOffset * Math.tan(offsetAngle);
 
-                            let yCollision = BR.y - yOffset;
+                            let yCollision = BR.y + yOffset;
 
                             let collisionToAnchorWidth = Math.abs(TL.x - marginRect.left);
 
