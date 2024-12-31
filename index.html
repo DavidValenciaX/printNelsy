@@ -137,6 +137,19 @@
         let isVertical = true;
         let marginRect;
 
+        document.body.addEventListener('click', function (event) {
+            const canvasElement = canvas.getElement();
+            const isOnCanvasElement = event.target === canvasElement;
+            const isOnFabricControls = event.target.classList.contains('canvas-container') ||
+                event.target.classList.contains('upper-canvas') ||
+                event.target.classList.contains('lower-canvas');
+
+            if (!isOnCanvasElement && !isOnFabricControls) {
+                canvas.discardActiveObject();
+                canvas.requestRenderAll();
+            }
+        });
+
         deleteButton.addEventListener('click', function () {
             const activeObject = canvas.getActiveObject();
             if (activeObject) {
