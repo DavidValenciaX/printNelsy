@@ -463,7 +463,7 @@
                         activeRestriction = 'TL_RIGHT';
                     } else if (TR.y > marginBottom && obj.angle > 90 && obj.angle <= 180) {
                         activeRestriction = 'TR_BOTTOM';
-                    } else if (TR.x > marginRight) {
+                    } else if (TR.x > marginRight && obj.angle >= 0 && obj.angle <= 90) {
                         activeRestriction = 'TR_RIGHT';
                     } else if (BR.y > marginBottom && obj.angle >= 0 && obj.angle <= 90) {
                         activeRestriction = 'BR_BOTTOM';
@@ -667,7 +667,7 @@
                     case 'TR_RIGHT':
 
                         // Handle TR.x > marginRight case
-                        if (scaleXChanged && scaleYChanged && obj.angle >= 0 && obj.angle <= 90) {
+                        if (scaleXChanged && scaleYChanged) {
 
                             console.log("La esquina Top Right supera el margen derecho escalando horizontal y verticalmente");
 
@@ -715,7 +715,7 @@
 
                             obj.top = BL.y - ca;
 
-                        } else if (scaleXChanged && obj.angle >= 0 && obj.angle < 90) {
+                        } else if (scaleXChanged) {
 
                             console.log("La esquina Top Right supera el margen derecho escalando horizontalmente");
 
@@ -731,7 +731,7 @@
 
                             obj.top = TL.y;
 
-                        } else if (scaleYChanged && obj.angle > 0 && obj.angle <= 90) {
+                        } else if (scaleYChanged) {
 
                             console.log("La esquina Top Right supera el margen derecho escalando verticalmente");
 
