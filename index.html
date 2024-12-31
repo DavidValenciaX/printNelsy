@@ -262,12 +262,20 @@
         }
 
         function printCanvas() {
+
+            // Store original opacity
+            const originalOpacity = marginRect.opacity;
+
+            // Make margin invisible for printing
+            marginRect.opacity = 0;
+            canvas.renderAll();
+
             const dataUrl = canvas.toDataURL({
                 format: 'png',
                 quality: 1,
                 multiplier: 1 / canvas.getZoom()
             });
-            
+
             const windowContent = `
                 <!DOCTYPE html>
                 <html>
@@ -304,6 +312,8 @@
                 printWin.focus();
                 printWin.print();
                 printWin.close();
+                marginRect.opacity = originalOpacity;
+                canvas.renderAll();
             }, 250);
         }
 
@@ -322,7 +332,7 @@
             const TR = obj.getPointByOrigin(1, 0);
             const BL = obj.getPointByOrigin(0, 1);
             const BR = obj.getPointByOrigin(1, 1);
-            
+
             console.log('=== Object State ===');
             console.log(`Angle: ${obj.angle.toFixed(2)}°`);
             console.log(`Scale: X=${obj.scaleX.toFixed(2)}, Y=${obj.scaleY.toFixed(2)}`);
@@ -337,7 +347,7 @@
 
         canvas.on('object:moving', function (e) {
             let obj = e.target;
-            logObjectState(obj);
+            //logObjectState(obj);
             obj.setCoords(); // Actualiza las coordenadas del objeto
 
             // Obtener los puntos del objeto y del margen
@@ -382,7 +392,7 @@
 
         canvas.on('object:scaling', function (e) {
             let obj = e.target;
-            logObjectState(obj);
+            //logObjectState(obj);
             obj.setCoords();
 
             let realObjectWidth = obj.width * obj.scaleX;
@@ -1804,7 +1814,7 @@
         const rotateCheckbox = document.getElementById('rotateControl');
 
         // Add event listener
-        rotateCheckbox.addEventListener('change', function(e) {
+        rotateCheckbox.addEventListener('change', function (e) {
             const controls = fabric.Object.prototype.controls;
             controls.mtr.visible = this.checked;
             canvas.getObjects().forEach(obj => {
