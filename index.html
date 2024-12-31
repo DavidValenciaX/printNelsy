@@ -92,6 +92,7 @@
         <div class="button-container">
             <label for="imageLoader" class="control-button">Cargar imágenes</label>
             <input type="file" id="imageLoader" accept="image/*" multiple aria-label="Cargar imágenes">
+            <button type="button" id="deleteButton" class="control-button">Eliminar imagen</button>
             <button type="button" id="printButton" class="control-button">Imprimir</button>
             <div class="control-group">
                 <input type="checkbox" id="rotateControl" checked>
@@ -115,6 +116,7 @@
         const canvasElement = document.getElementById('canvas');
         let canvas = new fabric.Canvas('canvas');
         const imageLoader = document.getElementById('imageLoader');
+        const deleteButton = document.getElementById('deleteButton');
         const printButton = document.getElementById('printButton');
         const cartaButton = document.getElementById('cartaButton');
         const oficioButton = document.getElementById('oficioButton');
@@ -135,8 +137,13 @@
         let isVertical = true;
         let marginRect;
 
-        // Variable para almacenar los puntos rojos
-        let coordinateMarkers = {};
+        deleteButton.addEventListener('click', function () {
+            const activeObject = canvas.getActiveObject();
+            if (activeObject) {
+                canvas.remove(activeObject);
+                canvas.renderAll();
+            }
+        });
 
         function degToRad(degrees) {
             return degrees * (Math.PI / 180);
