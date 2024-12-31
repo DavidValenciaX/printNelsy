@@ -342,30 +342,26 @@
 
             // Obtener los puntos del objeto y del margen
             let objPoints = [obj.aCoords.tl, obj.aCoords.tr, obj.aCoords.br, obj.aCoords.bl];
-            let marginPoints = marginRect.aCoords;
 
-            // Calcular los límites del margen
-            let marginMinX = Math.min(marginPoints.tl.x, marginPoints.tr.x, marginPoints.br.x, marginPoints.bl.x);
-            let marginMaxX = Math.max(marginPoints.tl.x, marginPoints.tr.x, marginPoints.br.x, marginPoints.bl.x);
-            let marginMinY = Math.min(marginPoints.tl.y, marginPoints.tr.y, marginPoints.br.y, marginPoints.bl.y);
-            let marginMaxY = Math.max(marginPoints.tl.y, marginPoints.tr.y, marginPoints.br.y, marginPoints.bl.y);
+            let marginRight = (marginRect.left + marginRect.width);
+            let marginBottom = (marginRect.top + marginRect.height);
 
             // Inicializar desplazamientos
             let offsetX = 0, offsetY = 0;
 
             // Comprobar cada punto del objeto
             objPoints.forEach(function (point) {
-                if (point.x < marginMinX) {
-                    offsetX = Math.max(offsetX, marginMinX - point.x);
+                if (point.x < marginRect.left) {
+                    offsetX = Math.max(offsetX, marginRect.left - point.x);
                 }
-                if (point.x > marginMaxX) {
-                    offsetX = Math.min(offsetX, marginMaxX - point.x);
+                if (point.x > marginRight) {
+                    offsetX = Math.min(offsetX, marginRight - point.x);
                 }
-                if (point.y < marginMinY) {
-                    offsetY = Math.max(offsetY, marginMinY - point.y);
+                if (point.y < marginRect.top) {
+                    offsetY = Math.max(offsetY, marginRect.top - point.y);
                 }
-                if (point.y > marginMaxY) {
-                    offsetY = Math.min(offsetY, marginMaxY - point.y);
+                if (point.y > marginBottom) {
+                    offsetY = Math.min(offsetY, marginBottom - point.y);
                 }
             });
 
