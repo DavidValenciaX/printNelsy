@@ -158,6 +158,17 @@
             }
         });
 
+        // Add keyboard delete support
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Delete') {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject) {
+                    canvas.remove(activeObject);
+                    canvas.renderAll();
+                }
+            }
+        });
+
         function degToRad(degrees) {
             return degrees * (Math.PI / 180);
         }
