@@ -135,6 +135,9 @@
                 <input type="file" id="imageLoader" accept="image/*" multiple aria-label="Cargar imágenes">
                 <button type="button" id="deleteButton" class="control-button">Eliminar imagen</button>
                 <button type="button" id="printButton" class="control-button">Imprimir</button>
+                <button id="cropButton">Crop Image</button>
+                <button id="confirmCrop" style="display: none;">✓</button>
+                <button id="cancelCrop" style="display: none;">✗</button>
                 <div class="control-group">
                     <input type="checkbox" id="rotateControl">
                     <label for="rotateControl">Permitir rotación libre</label>
@@ -212,6 +215,94 @@
         let currentSize = 'carta';
         let isVertical = true;
         let marginRect;
+
+        let cropRect = null;
+        let activeImage = null;
+        let isCropping = false;
+
+        document.getElementById('cropButton').addEventListener('click', function () {
+            const activeObject = canvas.getActiveObject();
+            if (!activeObject || activeObject.type !== 'image') return;
+
+            enterCropMode(activeObject);
+        });
+
+        function enterCropMode(imgObject) {
+            activeImage = imgObject;
+            isCropping = true;
+
+            // Create crop rectangle
+            cropRect = new fabric.Rect({
+                left: imgObject.left,
+                top: imgObject.top,
+                width: imgObject.width * imgObject.scaleX,
+                height: imgObject.height * imgObject.scaleY,
+                angle: imgObject.angle,
+                fill: 'transparent',
+                stroke: '#000',
+                strokeWidth: 1,
+                strokeDashArray: [5, 5],
+                absolutePositioned: true,
+                lockMovementX: true,
+                lockMovementY: true,
+                lockRotation: true,
+            });
+
+            console.log(cropRect.type);
+
+            canvas.add(cropRect);
+            canvas.setActiveObject(cropRect);
+
+            // Show crop control buttons
+            document.getElementById('confirmCrop').style.display = 'inline';
+            document.getElementById('cancelCrop').style.display = 'inline';
+            document.getElementById('cropButton').style.display = 'none';
+        }
+
+        document.getElementById('confirmCrop').addEventListener('click', function () {
+            if (!isCropping || !cropRect || !activeImage) return;
+
+            const rect = cropRect;
+            const img = activeImage;
+
+            // Calculate crop dimensions
+            const scaleX = img.scaleX;
+            const scaleY = img.scaleY;
+
+            const cropX = (rect.left - img.left) / scaleX;
+            const cropY = (rect.top - img.top) / scaleY;
+            const cropWidth = rect.width / scaleX;
+            const cropHeight = rect.height / scaleY;
+
+            // Apply crop
+            img.clipPath = new fabric.Rect({
+                left: cropX,
+                top: cropY,
+                width: cropWidth,
+                height: cropHeight,
+                absolutePositioned: false
+            });
+
+            exitCropMode();
+            canvas.renderAll();
+        });
+
+        document.getElementById('cancelCrop').addEventListener('click', exitCropMode);
+
+        function exitCropMode() {
+            if (cropRect) {
+                canvas.remove(cropRect);
+                cropRect = null;
+            }
+
+            isCropping = false;
+            activeImage = null;
+
+            // Hide crop control buttons
+            document.getElementById('confirmCrop').style.display = 'none';
+            document.getElementById('cancelCrop').style.display = 'none';
+            document.getElementById('cropButton').style.display = 'inline';
+        }
 
         document.body.addEventListener('click', function (event) {
             const canvasElement = canvas.getElement();
@@ -1930,12 +2021,13 @@
 
         // Add event listener
         rotateCheckbox.addEventListener('change', function (e) {
-            const controls = fabric.Object.prototype.controls;
-            controls.mtr.visible = this.checked;
             canvas.getObjects().forEach(obj => {
-                obj.setControlsVisibility({
-                    mtr: this.checked
-                });
+
+                if(obj.type === 'image') {
+                    obj.setControlsVisibility({
+                        mtr: this.checked
+                    });
+                }
             });
             canvas.requestRenderAll();
         });
