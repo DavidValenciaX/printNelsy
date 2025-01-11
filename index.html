@@ -96,11 +96,17 @@
         .zoom-btn {
             padding: 10px 15px;
             font-size: 18px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
             cursor: pointer;
             background-color: #4CAF50;
             color: white;
             border: none;
-            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .zoom-btn:hover {
@@ -112,6 +118,7 @@
             transition: transform 0.3s ease;
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 </head>
 
@@ -143,8 +150,12 @@
     </div>
 
     <div class="zoom-controls">
-        <button class="zoom-btn" onclick="zoomIn()">+</button>
-        <button class="zoom-btn" onclick="zoomOut()">-</button>
+        <button type="button" class="zoom-btn" onclick="zoomIn()" title="Aumentar zoom">
+            <i class="fas fa-search-plus"></i>
+        </button>
+        <button type="button" class="zoom-btn" onclick="zoomOut()" title="Reducir zoom">
+            <i class="fas fa-search-minus"></i>
+        </button>
     </div>
 
     <script>
