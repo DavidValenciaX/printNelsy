@@ -86,18 +86,18 @@
 
         .zoom-controls {
             position: fixed;
-            bottom: 1.25rem;
-            right: 1.25rem;
+            bottom: 2rem;
+            right: 2rem;
             display: flex;
-            gap: 0.625rem;
+            gap: 1rem;
             z-index: 1000;
         }
 
         .zoom-btn {
-            padding: 0.625rem 0.938rem;
-            font-size: 1.125rem;
-            width: 2.5rem;
-            height: 2.5rem;
+            padding: 1.25rem 1.875rem;
+            font-size: 1.5rem;
+            width: 4rem;
+            height: 4rem;
             border-radius: 50%;
             background: white;
             cursor: pointer;
@@ -107,6 +107,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .zoom-btn i {
+            font-size: 2rem;
         }
 
         .zoom-btn:hover {
@@ -143,8 +148,10 @@
                 <button type="button" class="size-button" id="oficioButton">OFICIO</button>
                 <button type="button" class="orientation-button" id="verticalButton">▯ Vertical</button>
                 <button type="button" class="orientation-button" id="horizontalButton">▭ Horizontal</button>
-                <button type="button" id="rotateButton+90" class="control-button">Girar 90 grados a la derecha ↻</button>
-                <button type="button" id="rotateButton-90" class="control-button">Girar 90 grados a la izquierda ↺</button>
+                <button type="button" id="rotateButton+90" class="control-button">Girar 90 grados a la derecha
+                    ↻</button>
+                <button type="button" id="rotateButton-90" class="control-button">Girar 90 grados a la izquierda
+                    ↺</button>
             </div>
         </div>
     </div>
