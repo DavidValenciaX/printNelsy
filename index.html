@@ -219,8 +219,10 @@
             const isOnFabricControls = event.target.classList.contains('canvas-container') ||
                 event.target.classList.contains('upper-canvas') ||
                 event.target.classList.contains('lower-canvas');
+            const isOnButton = event.target.tagName === 'BUTTON' ||
+                event.target.closest('button') !== null;
 
-            if (!isOnCanvasElement && !isOnFabricControls) {
+            if (!isOnCanvasElement && !isOnFabricControls && !isOnButton) {
                 canvas.discardActiveObject();
                 canvas.requestRenderAll();
             }
