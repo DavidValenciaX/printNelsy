@@ -222,7 +222,13 @@
             const isOnButton = event.target.tagName === 'BUTTON' ||
                 event.target.closest('button') !== null;
 
-            if (!isOnCanvasElement && !isOnFabricControls && !isOnButton) {
+            const isOnCheckbox = event.target.tagName === 'INPUT' &&
+                event.target.type === 'checkbox';
+
+            const isOnCheckBoxLabel = event.target.tagName === 'LABEL' &&
+                event.target.htmlFor === 'rotateControl';
+
+            if (!isOnCanvasElement && !isOnFabricControls && !isOnButton && !isOnCheckbox && !isOnCheckBoxLabel) {
                 canvas.discardActiveObject();
                 canvas.requestRenderAll();
             }
