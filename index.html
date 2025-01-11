@@ -83,36 +83,94 @@
             color: #333;
             cursor: pointer;
         }
+
+        .zoom-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .zoom-btn {
+            padding: 10px 15px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .zoom-btn:hover {
+            background-color: #45a049;
+        }
+
+        #main-content {
+            transform-origin: center top;
+            transition: transform 0.3s ease;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 </head>
 
 <body>
-    <div class="main-container">
-        <div class="button-container">
-            <label for="imageLoader" class="control-button">Cargar imágenes</label>
-            <input type="file" id="imageLoader" accept="image/*" multiple aria-label="Cargar imágenes">
-            <button type="button" id="deleteButton" class="control-button">Eliminar imagen</button>
-            <button type="button" id="printButton" class="control-button">Imprimir</button>
-            <div class="control-group">
-                <input type="checkbox" id="rotateControl" checked>
-                <label for="rotateControl">Permitir rotación libre</label>
+    <div id="main-content">
+        <div class="main-container">
+            <div class="button-container">
+                <label for="imageLoader" class="control-button">Cargar imágenes</label>
+                <input type="file" id="imageLoader" accept="image/*" multiple aria-label="Cargar imágenes">
+                <button type="button" id="deleteButton" class="control-button">Eliminar imagen</button>
+                <button type="button" id="printButton" class="control-button">Imprimir</button>
+                <div class="control-group">
+                    <input type="checkbox" id="rotateControl">
+                    <label for="rotateControl">Permitir rotación libre</label>
+                </div>
             </div>
-        </div>
-        <div id="canvas-container">
-            <canvas id="canvas"></canvas>
-        </div>
-        <div class="button-container">
-            <button type="button" class="size-button" id="cartaButton">CARTA</button>
-            <button type="button" class="size-button" id="oficioButton">OFICIO</button>
-            <button type="button" class="orientation-button" id="verticalButton">▯ Vertical</button>
-            <button type="button" class="orientation-button" id="horizontalButton">▭ Horizontal</button>
-            <button type="button" id="rotateButton+90" class="control-button">Girar 90 grados a la derecha ↻</button>
-            <button type="button" id="rotateButton-90" class="control-button">Girar 90 grados a la izquierda ↺</button>
+            <div id="canvas-container">
+                <canvas id="canvas"></canvas>
+            </div>
+            <div class="button-container">
+                <button type="button" class="size-button" id="cartaButton">CARTA</button>
+                <button type="button" class="size-button" id="oficioButton">OFICIO</button>
+                <button type="button" class="orientation-button" id="verticalButton">▯ Vertical</button>
+                <button type="button" class="orientation-button" id="horizontalButton">▭ Horizontal</button>
+                <button type="button" id="rotateButton+90" class="control-button">Girar 90 grados a la derecha ↻</button>
+                <button type="button" id="rotateButton-90" class="control-button">Girar 90 grados a la izquierda ↺</button>
+            </div>
         </div>
     </div>
 
+    <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomIn()">+</button>
+        <button class="zoom-btn" onclick="zoomOut()">-</button>
+    </div>
+
     <script>
+        let currentZoom = 1;
+        const zoomFactor = 0.1;
+        const maxZoom = 2;
+        const minZoom = 0.5;
+
+        function zoomIn() {
+            if (currentZoom < maxZoom) {
+                currentZoom += zoomFactor;
+                applyZoom();
+            }
+        }
+
+        function zoomOut() {
+            if (currentZoom > minZoom) {
+                currentZoom -= zoomFactor;
+                applyZoom();
+            }
+        }
+
+        function applyZoom() {
+            document.getElementById('main-content').style.transform = `scale(${currentZoom})`;
+        }
+
         const canvasElement = document.getElementById('canvas');
         let canvas = new fabric.Canvas('canvas');
         const imageLoader = document.getElementById('imageLoader');
@@ -353,9 +411,9 @@
         fabric.Object.prototype.cornerStrokeColor = 'black';
         fabric.Object.prototype.cornerStyle = 'rect';
         fabric.Object.prototype.cornerSize = 12;
-        const controls = fabric.Object.prototype.controls
-        const rotateControls = controls.mtr
-        rotateControls.visible = true
+        const controls = fabric.Object.prototype.controls;
+        const rotateControls = controls.mtr;
+        rotateControls.visible = false;
 
         // Add this logging function
         function logObjectState(obj) {
