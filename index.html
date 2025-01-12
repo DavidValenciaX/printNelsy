@@ -260,17 +260,36 @@
         document.getElementById('confirmCrop').addEventListener('click', function () {
             if (!isCropping || !cropRect || !activeImage) return;
 
+            // Get the cropping rectangle
             const rect = cropRect;
             const img = activeImage;
 
-            rect.set("fill", 'black');
+            // Create new cropped image
+            const cropped = new Image();
+            cropped.src = canvas.toDataURL({
+                left: rect.left,
+                top: rect.top,
+                width: rect.width * rect.scaleX,
+                height: rect.height * rect.scaleY
+            });
 
-            // Apply crop
+            cropped.onload = function () {
+                // Remove old image and crop rectangle
+                canvas.remove(img);
+                canvas.remove(rect);
 
-            img.clipPath = rect;
+                // Create and add new cropped image
+                const newImage = new fabric.Image(cropped);
+                newImage.set({
+                    left: rect.left,
+                    top: rect.top,
+                });
+                newImage.setCoords();
+                canvas.add(newImage);
+                canvas.renderAll();
+            };
 
             exitCropMode();
-            canvas.renderAll();
         });
 
         document.getElementById('cancelCrop').addEventListener('click', exitCropMode);
@@ -2009,7 +2028,7 @@
         rotateCheckbox.addEventListener('change', function (e) {
             canvas.getObjects().forEach(obj => {
 
-                if(obj.type === 'image') {
+                if (obj.type === 'image') {
                     obj.setControlsVisibility({
                         mtr: this.checked
                     });
