@@ -264,6 +264,8 @@
             const rect = cropRect;
             const img = activeImage;
 
+            rect.set('stroke', 'transparent');
+
             // Create new cropped image
             const cropped = new Image();
             cropped.src = canvas.toDataURL({
