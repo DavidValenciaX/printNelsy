@@ -135,9 +135,9 @@
                 <input type="file" id="imageLoader" accept="image/*" multiple aria-label="Cargar imágenes">
                 <button type="button" id="deleteButton" class="control-button">Eliminar imagen</button>
                 <button type="button" id="printButton" class="control-button">Imprimir</button>
-                <button id="cropButton">Crop Image</button>
-                <button id="confirmCrop" style="display: none;">✓</button>
-                <button id="cancelCrop" style="display: none;">✗</button>
+                <button id="cropButton">Recortar imagen</button>
+                <button id="confirmCrop" style="display: none;">✓ Confirmar</button>
+                <button id="cancelCrop" style="display: none;">✗ Cancelar</button>
                 <div class="control-group">
                     <input type="checkbox" id="rotateControl">
                     <label for="rotateControl">Permitir rotación libre</label>
@@ -248,8 +248,6 @@
                 lockRotation: true,
             });
 
-            console.log(cropRect.type);
-
             canvas.add(cropRect);
             canvas.setActiveObject(cropRect);
 
@@ -265,23 +263,11 @@
             const rect = cropRect;
             const img = activeImage;
 
-            // Calculate crop dimensions
-            const scaleX = img.scaleX;
-            const scaleY = img.scaleY;
-
-            const cropX = (rect.left - img.left) / scaleX;
-            const cropY = (rect.top - img.top) / scaleY;
-            const cropWidth = rect.width / scaleX;
-            const cropHeight = rect.height / scaleY;
+            rect.set("fill", 'black');
 
             // Apply crop
-            img.clipPath = new fabric.Rect({
-                left: cropX,
-                top: cropY,
-                width: cropWidth,
-                height: cropHeight,
-                absolutePositioned: false
-            });
+
+            img.clipPath = rect;
 
             exitCropMode();
             canvas.renderAll();
