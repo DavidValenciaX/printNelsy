@@ -122,6 +122,7 @@
             transform-origin: center top;
             transition: transform 0.3s ease;
         }
+        
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
@@ -135,9 +136,9 @@
                 <input type="file" id="imageLoader" accept="image/*" multiple aria-label="Cargar imágenes">
                 <button type="button" id="deleteButton" class="control-button">Eliminar imagen</button>
                 <button type="button" id="printButton" class="control-button">Imprimir</button>
-                <button id="cropButton">Recortar imagen</button>
-                <button id="confirmCrop" style="display: none;">✓ Confirmar</button>
-                <button id="cancelCrop" style="display: none;">✗ Cancelar</button>
+                <button type="button" id="cropButton" class="control-button">Recortar imagen</button>
+                <button type="button" id="confirmCrop" class="control-button" style="display: none; background-color: #4CAF50;">✓ Confirmar</button>
+                <button type="button" id="cancelCrop" class="control-button" style="display: none; background-color: #f44336;">✗ Cancelar</button>
                 <div class="control-group">
                     <input type="checkbox" id="rotateControl">
                     <label for="rotateControl">Permitir rotación libre</label>
