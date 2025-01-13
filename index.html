@@ -241,13 +241,18 @@
 
         function disableOtherObjects() {
             canvas.getObjects().forEach(obj => {
-                if (obj !== activeImage && obj !== cropRect) {
+                if (obj !== cropRect) {
                     inactivatedObjects.push({
                         object: obj,
                         originalOpacity: obj.opacity
                     });
+
+                    if (obj !== activeImage) {
+                        obj.set({
+                            opacity: 0.3,
+                        });
+                    }
                     obj.set({
-                        opacity: 0.3,
                         selectable: false,
                         evented: false
                     });
@@ -688,10 +693,10 @@
         rotateCheckbox.addEventListener('change', function (e) {
             canvas.getObjects().forEach(obj => {
 
-                    obj.setControlsVisibility({
-                        mtr: this.checked
-                    });
-                
+                obj.setControlsVisibility({
+                    mtr: this.checked
+                });
+
             });
             canvas.requestRenderAll();
         });
