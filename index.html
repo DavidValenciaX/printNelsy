@@ -291,9 +291,6 @@
                 strokeWidth: 1,
                 strokeDashArray: [5, 5],
                 absolutePositioned: true,
-                lockMovementX: true,
-                lockMovementY: true,
-                lockRotation: true,
                 transparentCorners: false,
                 cornerColor: 'DodgerBlue',
                 cornerStyle: 'circle',
@@ -662,6 +659,42 @@
         function bringToFront(options) {
             options.target.bringToFront();
         }
+
+        // Reset activeRestriction when scaling ends
+        canvas.on('object:modified', function (e) {
+            activeRestriction = null;
+        });
+
+        canvas.on('object:rotating', function (e) {
+            let obj = e.target;
+            obj.setCoords(); // Actualiza las coordenadas del objeto
+
+        });
+
+        function rotateImage(deg) {
+            const activeObject = canvas.getActiveObject();
+            if (activeObject) {
+                activeObject.rotate((activeObject.angle + deg) % 360);
+                activeObject.setCoords();
+
+                canvas.renderAll();
+            }
+        }
+
+        // Get checkbox element
+        const rotateCheckbox = document.getElementById('rotateControl');
+
+        // Add event listener
+        rotateCheckbox.addEventListener('change', function (e) {
+            canvas.getObjects().forEach(obj => {
+
+                    obj.setControlsVisibility({
+                        mtr: this.checked
+                    });
+                
+            });
+            canvas.requestRenderAll();
+        });
 
         // Add this variable outside the event handler
         let activeRestriction = null;
@@ -2060,43 +2093,6 @@
             obj.setCoords();
 
             canvas.renderAll();
-        });
-
-        // Reset activeRestriction when scaling ends
-        canvas.on('object:modified', function (e) {
-            activeRestriction = null;
-        });
-
-        canvas.on('object:rotating', function (e) {
-            let obj = e.target;
-            obj.setCoords(); // Actualiza las coordenadas del objeto
-
-        });
-
-        function rotateImage(deg) {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject) {
-                activeObject.rotate((activeObject.angle + deg) % 360);
-                activeObject.setCoords();
-
-                canvas.renderAll();
-            }
-        }
-
-        // Get checkbox element
-        const rotateCheckbox = document.getElementById('rotateControl');
-
-        // Add event listener
-        rotateCheckbox.addEventListener('change', function (e) {
-            canvas.getObjects().forEach(obj => {
-
-                if (obj.type === 'image') {
-                    obj.setControlsVisibility({
-                        mtr: this.checked
-                    });
-                }
-            });
-            canvas.requestRenderAll();
         });
 
         resizeCanvas('carta');
