@@ -241,7 +241,7 @@
 
         function disableOtherObjects() {
             canvas.getObjects().forEach(obj => {
-                if (obj !== cropRect) {
+                if (obj !== cropRect && obj !== marginRect) {
                     inactivatedObjects.push({
                         object: obj,
                         originalOpacity: obj.opacity
