@@ -229,6 +229,36 @@
         let cropRect = null;
         let activeImage = null;
         let isCropping = false;
+        let inactivatedObjects = [];
+
+        function disableOtherObjects() {
+            canvas.getObjects().forEach(obj => {
+                if (obj !== activeImage && obj !== cropRect) {
+                    inactivatedObjects.push({
+                        object: obj,
+                        originalOpacity: obj.opacity
+                    });
+                    obj.set({
+                        opacity: 0.3,
+                        selectable: false,
+                        evented: false
+                    });
+                }
+            });
+            canvas.requestRenderAll();
+        }
+
+        function restoreOtherObjects() {
+            inactivatedObjects.forEach(item => {
+                item.object.set({
+                    opacity: item.originalOpacity,
+                    selectable: true,
+                    evented: true
+                });
+            });
+            inactivatedObjects = [];
+            canvas.requestRenderAll();
+        }
 
         document.getElementById('cropButton').addEventListener('click', function () {
             const activeObject = canvas.getActiveObject();
@@ -269,15 +299,10 @@
             imgObject.bringToFront();
             cropRect.bringToFront();
 
-            canvas.setActiveObject(cropRect);
+            // Disable other objects
+            disableOtherObjects();
 
-            // Add event listener to keep objects on top
-            canvas.on('object:modified', function () {
-                if (isCropping && activeImage && cropRect) {
-                    activeImage.bringToFront();
-                    cropRect.bringToFront();
-                }
-            });
+            canvas.setActiveObject(cropRect);
 
             // Show crop control buttons
             document.getElementById('confirmCrop').style.display = 'inline';
@@ -332,6 +357,9 @@
 
             isCropping = false;
             activeImage = null;
+
+            // Restore other objects
+            restoreOtherObjects();
 
             // Hide crop control buttons
             document.getElementById('confirmCrop').style.display = 'none';
