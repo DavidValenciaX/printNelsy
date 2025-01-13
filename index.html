@@ -132,6 +132,13 @@
             display: none;
             background-color: #f44336;
         }
+
+        hr {
+            border: none;
+            border-top: 2px dashed darkgray;
+            margin: 1.25rem 0;
+            width: 12.5rem;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
@@ -145,6 +152,7 @@
                 <input type="file" id="imageLoader" accept="image/*" multiple aria-label="Cargar imágenes">
                 <button type="button" id="deleteButton" class="control-button">Eliminar imagen</button>
                 <button type="button" id="printButton" class="control-button">Imprimir</button>
+                <hr>
                 <button type="button" id="cropButton" class="control-button">Recortar imagen</button>
                 <button type="button" id="confirmCrop" class="control-button">✓ Confirmar</button>
                 <button type="button" id="cancelCrop" class="control-button">✗ Cancelar</button>
