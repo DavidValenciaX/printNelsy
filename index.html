@@ -152,6 +152,7 @@
                 <input type="file" id="imageLoader" accept="image/*" multiple aria-label="Cargar imágenes">
                 <button type="button" id="deleteButton" class="control-button">Eliminar imagen</button>
                 <button type="button" id="printButton" class="control-button">Imprimir</button>
+                <button type="button" id="resetImageButton" class="control-button">Restablecer imagen</button>
                 <hr>
                 <button type="button" id="cropButton" class="control-button">Recortar imagen</button>
                 <button type="button" id="confirmCrop" class="control-button">✓ Confirmar</button>
@@ -221,6 +222,7 @@
         const horizontalButton = document.getElementById('horizontalButton');
         const rotateButton_p90 = document.getElementById('rotateButton+90');
         const rotateButton_n90 = document.getElementById('rotateButton-90');
+        const resetImageButton = document.getElementById('resetImageButton');
 
         const dpi = 300;
         const marginInches = 0.2;
@@ -323,9 +325,10 @@
         document.getElementById('confirmCrop').addEventListener('click', function () {
             if (!isCropping || !cropRect || !activeImage) return;
 
-            // Get the cropping rectangle
+            // Get the cropping rectangle and original image's ID
             const rect = cropRect;
             const img = activeImage;
+            const originalId = img.id; // Save original ID
 
             rect.set('stroke', 'transparent');
 
@@ -346,6 +349,7 @@
                 // Create and add new cropped image
                 const newImage = new fabric.Image(cropped);
                 newImage.set({
+                    id: originalId, // Transfer the original ID
                     left: rect.left,
                     top: rect.top,
                 });
@@ -507,6 +511,7 @@
         horizontalButton.addEventListener('click', () => changeOrientation(false));
 
         imageLoader.addEventListener('change', handleImageUpload);
+        resetImageButton.addEventListener('click', resetActiveImage);
         printButton.addEventListener('click', printCanvas);
         rotateButton_p90.addEventListener('click', function () {
             rotateImage(90);
@@ -517,6 +522,10 @@
         });
 
 
+        // Add this at the top with other variables
+        const originalImages = {};
+
+        // Modified handleImageUpload function
         function handleImageUpload(e) {
             const files = e.target.files;
             for (const element of files) {
@@ -524,20 +533,50 @@
                 const reader = new FileReader();
                 reader.onload = function (event) {
                     fabric.Image.fromURL(event.target.result, function (img) {
+                        const imageId = `image-${Date.now()}`;
+                        img.id = imageId;
 
-                        // Asignar un ID único a la imagen
-                        img.id = `image-${Date.now()}`;
+                        // Store original state
+                        originalImages[imageId] = {
+                            url: event.target.result,
+                            width: img.width,
+                            height: img.height,
+                            scaleX: img.scaleX,
+                            scaleY: img.scaleY,
+                            angle: img.angle,
+                            left: img.left,
+                            top: img.top
+                        };
 
                         img.scaleToWidth(canvas.width / 2);
                         canvas.add(img);
                         canvas.centerObject(img);
                         canvas.setActiveObject(img);
-
                         canvas.renderAll();
                     });
                 }
                 reader.readAsDataURL(file);
             }
+        }
+
+        // Add this new function
+        function resetActiveImage() {
+            const activeObject = canvas.getActiveObject();
+            if (!activeObject || !activeObject.id || !originalImages[activeObject.id]) {
+                alert('Por favor seleccione una imagen para restablecer');
+                return;
+            }
+
+            const original = originalImages[activeObject.id];
+            fabric.Image.fromURL(original.url, function (img) {
+                img.id = activeObject.id;
+                img.scaleToWidth(canvas.width / 2);
+                canvas.remove(activeObject);
+                canvas.add(img);
+                canvas.centerObject(img);
+                canvas.setActiveObject(img);
+                canvas.renderAll();
+            });
         }
 
         function printCanvas() {
