@@ -256,7 +256,6 @@
                 lockMovementX: true,
                 lockMovementY: true,
                 lockRotation: true,
-                // Add corner styling
                 transparentCorners: false,
                 cornerColor: 'DodgerBlue',
                 cornerStyle: 'circle',
@@ -265,7 +264,20 @@
             });
 
             canvas.add(cropRect);
+
+            // Bring both objects to front
+            imgObject.bringToFront();
+            cropRect.bringToFront();
+
             canvas.setActiveObject(cropRect);
+
+            // Add event listener to keep objects on top
+            canvas.on('object:modified', function () {
+                if (isCropping && activeImage && cropRect) {
+                    activeImage.bringToFront();
+                    cropRect.bringToFront();
+                }
+            });
 
             // Show crop control buttons
             document.getElementById('confirmCrop').style.display = 'inline';
