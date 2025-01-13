@@ -263,13 +263,17 @@
             canvas.requestRenderAll();
         }
 
+        // Modify the restore function
         function restoreOtherObjects() {
             inactivatedObjects.forEach(item => {
-                item.object.set({
-                    opacity: item.originalOpacity,
-                    selectable: true,
-                    evented: true
-                });
+                // Don't restore properties for background
+                if (item.object.name !== 'background') {
+                    item.object.set({
+                        opacity: item.originalOpacity,
+                        selectable: true,
+                        evented: true
+                    });
+                }
             });
             inactivatedObjects = [];
             canvas.requestRenderAll();
@@ -322,6 +326,31 @@
             document.getElementById('cropButton').style.display = 'none';
         }
 
+        // Add this global variable at the top of your script
+        let canvasBackground = null;
+
+        // Modify the background creation function
+        function createCanvasBackground() {
+            // Remove existing background if it exists
+            if (canvasBackground) {
+                canvas.remove(canvasBackground);
+            }
+
+            canvasBackground = new fabric.Rect({
+                left: 0,
+                top: 0,
+                width: canvas.width,
+                height: canvas.height,
+                fill: 'white',
+                selectable: false,
+                evented: false,
+                name: 'background' // Add an identifier
+            });
+
+            canvas.add(canvasBackground);
+            canvas.sendToBack(canvasBackground);
+        }
+
         document.getElementById('confirmCrop').addEventListener('click', function () {
             if (!isCropping || !cropRect || !activeImage) return;
 
@@ -330,22 +359,13 @@
             const img = activeImage;
             const originalId = img.id; // Save original ID
 
+            // Set the crop rectangle stroke to transparent so that it doesn't bleed into the final image
             rect.set('stroke', 'transparent');
 
-            // Add this code before the opacity setting loop
-            const canvasBackground = new fabric.Rect({
-                left: 0,
-                top: 0,
-                width: canvas.width,
-                height: canvas.height,
-                fill: 'white',
-                selectable: false,
-                evented: false
-            });
-            canvas.add(canvasBackground);
-            canvas.sendToBack(canvasBackground);
+            // Create a background to fill the canvas with white color
+            createCanvasBackground();
 
-            // Modify the existing loop to exclude the background
+            // Hide other objects
             canvas.getObjects().forEach(obj => {
                 if (obj !== cropRect && obj !== marginRect && obj !== activeImage && obj !== canvasBackground) {
                     obj.set({
