@@ -332,6 +332,28 @@
 
             rect.set('stroke', 'transparent');
 
+            // Add this code before the opacity setting loop
+            const canvasBackground = new fabric.Rect({
+                left: 0,
+                top: 0,
+                width: canvas.width,
+                height: canvas.height,
+                fill: 'white',
+                selectable: false,
+                evented: false
+            });
+            canvas.add(canvasBackground);
+            canvas.sendToBack(canvasBackground);
+
+            // Modify the existing loop to exclude the background
+            canvas.getObjects().forEach(obj => {
+                if (obj !== cropRect && obj !== marginRect && obj !== activeImage && obj !== canvasBackground) {
+                    obj.set({
+                        opacity: 0,
+                    });
+                }
+            });
+
             // Create new cropped image
             const cropped = new Image();
             cropped.src = canvas.toDataURL({
