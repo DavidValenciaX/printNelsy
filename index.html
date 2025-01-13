@@ -123,16 +123,15 @@
             transition: transform 0.3s ease;
         }
 
-        #confirmCrop{
+        #confirmCrop {
             display: none;
             background-color: #4CAF50;
         }
 
-        #cancelCrop{
+        #cancelCrop {
             display: none;
             background-color: #f44336;
         }
-
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
@@ -257,6 +256,12 @@
                 lockMovementX: true,
                 lockMovementY: true,
                 lockRotation: true,
+                // Add corner styling
+                transparentCorners: false,
+                cornerColor: 'DodgerBlue',
+                cornerStyle: 'circle',
+                cornerSize: 12,
+                cornerStrokeColor: 'Blue'
             });
 
             canvas.add(cropRect);
