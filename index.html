@@ -397,6 +397,12 @@
                     left: rect.left,
                     top: rect.top,
                 });
+
+                // Set rotation control visibility based on checkbox state
+                newImage.setControlsVisibility({
+                    mtr: rotateCheckbox.checked
+                });
+
                 newImage.setCoords();
                 canvas.add(newImage);
                 canvas.renderAll();
