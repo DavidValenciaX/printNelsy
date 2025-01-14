@@ -525,8 +525,10 @@
                             // Choose arrangement function based on number of images
                             if (files.length <= 2) {
                                 arrangeImagesCols(loadedImages);
+                                lastArrangement = 'cols';
                             } else {
                                 arrangeImagesRows(loadedImages);
+                                lastArrangement = 'rows';
                             }
                         }
                     });
@@ -759,11 +761,18 @@
         rotateButton_p90.addEventListener('click', () => rotateImage(90));
         rotateButton_n90.addEventListener('click', () => rotateImage(270));
 
+        let lastArrangement = 'rows'; // Track the last arrangement type
+
         arrangeBtn.addEventListener('click', function () {
-            // Get all fabric.Image objects from canvas
             const images = canvas.getObjects().filter(obj => obj.type === 'image');
-            // Call arrangeImagesRows with current images
-            arrangeImagesRows(images);
+
+            if (lastArrangement === 'rows') {
+                arrangeImagesCols(images);
+                lastArrangement = 'cols';
+            } else {
+                arrangeImagesRows(images);
+                lastArrangement = 'rows';
+            }
         });
 
         rotateCheckbox.addEventListener('change', function (e) {
