@@ -522,7 +522,12 @@
                         loadedImages.push(img);
 
                         if (loadedImages.length === files.length) {
-                            arrangeImagesRows(loadedImages);
+                            // Choose arrangement function based on number of images
+                            if (files.length <= 2) {
+                                arrangeImagesCols(loadedImages);
+                            } else {
+                                arrangeImagesRows(loadedImages);
+                            }
                         }
                     });
                 }
@@ -540,7 +545,7 @@
             });
 
             const count = images.length;
-            const margin = count === 1 ? 100 : 20;
+            const margin = count <= 2 ? 100 : 20;
 
             const cols = Math.ceil(Math.sqrt(count));
             const rows = Math.ceil(count / cols);
@@ -598,7 +603,7 @@
             });
 
             const count = images.length;
-            const margin = count === 1 ? 100 : 20;
+            const margin = count <= 2 ? 100 : 20;
 
             const rows = Math.ceil(Math.sqrt(count));
             const cols = Math.ceil(count / rows);
