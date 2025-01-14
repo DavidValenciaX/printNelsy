@@ -569,9 +569,12 @@
         // Add this at the top with other variables
         const originalImages = {};
 
-        // Modified handleImageUpload function
         function handleImageUpload(e) {
             const files = e.target.files;
+            const loadedImages = [];
+            const margin = 20; // margin from canvas edges
+
+            // First load all images
             for (const element of files) {
                 const file = element;
                 const reader = new FileReader();
@@ -592,14 +595,49 @@
                             top: img.top
                         };
 
-                        img.scaleToWidth(canvas.width / 2);
-                        canvas.add(img);
-                        canvas.centerObject(img);
-                        canvas.setActiveObject(img);
-                        canvas.renderAll();
+                        loadedImages.push(img);
+
+                        // Once all images are loaded, arrange them
+                        if (loadedImages.length === files.length) {
+                            arrangeImages(loadedImages);
+                        }
                     });
                 }
                 reader.readAsDataURL(file);
+            }
+
+            function arrangeImages(images) {
+                const count = images.length;
+                const cols = Math.ceil(Math.sqrt(count));
+                const rows = Math.ceil(count / cols);
+
+                const cellWidth = (canvas.width - margin * 2) / cols;
+                const cellHeight = (canvas.height - margin * 2) / rows;
+
+                images.forEach((img, index) => {
+                    const row = Math.floor(index / cols);
+                    const col = index % cols;
+
+                    // Scale image to fit cell with padding
+                    const scaleFactor = Math.min(
+                        (cellWidth - margin) / img.width,
+                        (cellHeight - margin) / img.height
+                    );
+
+                    img.scale(scaleFactor);
+
+                    // Position image in its cell
+                    img.set({
+                        left: margin + col * cellWidth + cellWidth / 2,
+                        top: margin + row * cellHeight + cellHeight / 2,
+                        originX: 'center',
+                        originY: 'center'
+                    });
+
+                    canvas.add(img);
+                });
+
+                canvas.renderAll();
             }
         }
 
