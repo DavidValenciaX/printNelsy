@@ -548,7 +548,11 @@
             const cellWidth = (canvas.width - margin * 2) / cols;
             const cellHeight = (canvas.height - margin * 2) / rows;
 
+            // Add index to make IDs unique
             images.forEach((img, index) => {
+                // Ensure unique ID by adding index
+                img.id = `image-${Date.now()}-${index}`;
+
                 const row = Math.floor(index / cols);
                 const col = index % cols;
 
@@ -593,15 +597,17 @@
             }
 
             const original = originalImages[activeObject.id];
-            fabric.Image.fromURL(original.url, function (img) {
-                img.id = activeObject.id;
-                img.scaleToWidth(canvas.width / 2);
-                canvas.remove(activeObject);
-                canvas.add(img);
-                canvas.centerObject(img);
-                canvas.setActiveObject(img);
-                canvas.renderAll();
+
+            // Apply original properties directly to active object
+            activeObject.set({
+                scaleX: original.scaleX,
+                scaleY: original.scaleY,
+                angle: original.angle,
+                left: original.left,
+                top: original.top
             });
+
+            canvas.renderAll();
         }
 
         function printCanvas() {
