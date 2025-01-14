@@ -522,7 +522,7 @@
                         loadedImages.push(img);
 
                         if (loadedImages.length === files.length) {
-                            arrangeImages(loadedImages);
+                            arrangeImagesRows(loadedImages);
                         }
                     });
                 }
@@ -530,7 +530,7 @@
             }
         }
 
-        function arrangeImages(images) {
+        function arrangeImagesRows(images) {
             // Remove all objects except the border
             const objects = canvas.getObjects();
             objects.forEach(obj => {
@@ -698,8 +698,8 @@
         arrangeBtn.addEventListener('click', function () {
             // Get all fabric.Image objects from canvas
             const images = canvas.getObjects().filter(obj => obj.type === 'image');
-            // Call arrangeImages with current images
-            arrangeImages(images);
+            // Call arrangeImagesRows with current images
+            arrangeImagesRows(images);
         });
 
         rotateCheckbox.addEventListener('change', function (e) {
