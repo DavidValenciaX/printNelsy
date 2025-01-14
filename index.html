@@ -322,9 +322,9 @@
             canvas.setActiveObject(cropRect);
 
             // Show crop control buttons
-            document.getElementById('confirmCrop').style.display = 'inline';
-            document.getElementById('cancelCrop').style.display = 'inline';
-            document.getElementById('cropButton').style.display = 'none';
+            confirmCropBtn.style.display = 'inline';
+            cancelCropBtn.style.display = 'inline';
+            cropButton.style.display = 'none';
         }
 
         // Add this global variable at the top of your script
@@ -423,9 +423,9 @@
             restoreOtherObjects();
 
             // Hide crop control buttons
-            document.getElementById('confirmCrop').style.display = 'none';
-            document.getElementById('cancelCrop').style.display = 'none';
-            document.getElementById('cropButton').style.display = 'inline';
+            confirmCropBtn.style.display = 'none';
+            cancelCropBtn.style.display = 'none';
+            cropButton.style.display = 'inline';
         }
 
         function deactivateObjects(event) {
