@@ -588,6 +588,65 @@
             canvas.renderAll();
         }
 
+        function arrangeImagesCols(images) {
+            // Remove all objects except the border
+            const objects = canvas.getObjects();
+            objects.forEach(obj => {
+                if (obj !== marginRect) {
+                    canvas.remove(obj);
+                }
+            });
+
+            const count = images.length;
+            const margin = count === 1 ? 100 : 20;
+
+            const rows = Math.ceil(Math.sqrt(count));
+            const cols = Math.ceil(count / rows);
+
+            const cellWidth = (canvas.width - margin * 2) / cols;
+            const cellHeight = (canvas.height - margin * 2) / rows;
+
+            // Add index to make IDs unique
+            images.forEach((img, index) => {
+                // Ensure unique ID by adding index
+                img.id = `image-${Date.now()}-${index}`;
+
+                // Switch row and column calculation for column-first layout
+                const col = Math.floor(index / rows);
+                const row = index % rows;
+
+                const scaleFactor = Math.min(
+                    (cellWidth - margin) / img.width,
+                    (cellHeight - margin) / img.height
+                );
+
+                img.scale(scaleFactor);
+
+                img.set({
+                    left: margin + col * cellWidth + cellWidth / 2,
+                    top: margin + row * cellHeight + cellHeight / 2,
+                    originX: 'center',
+                    originY: 'center'
+                });
+
+                // Store final state after arrangement
+                originalImages[img.id] = {
+                    url: img.originalUrl,
+                    width: img.width,
+                    height: img.height,
+                    scaleX: img.scaleX,
+                    scaleY: img.scaleY,
+                    angle: img.angle,
+                    left: img.left,
+                    top: img.top
+                };
+
+                canvas.add(img);
+            });
+
+            canvas.renderAll();
+        }
+
         // Reset active image to its original state
         function resetActiveImage() {
             const activeObject = canvas.getActiveObject();
