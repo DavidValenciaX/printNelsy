@@ -510,7 +510,6 @@
             const files = e.target.files;
             const loadedImages = [];
 
-            // First load all images
             for (const element of files) {
                 const file = element;
                 const reader = new FileReader();
@@ -518,22 +517,10 @@
                     fabric.Image.fromURL(event.target.result, function (img) {
                         const imageId = `image-${Date.now()}`;
                         img.id = imageId;
-
-                        // Store original state
-                        originalImages[imageId] = {
-                            url: event.target.result,
-                            width: img.width,
-                            height: img.height,
-                            scaleX: img.scaleX,
-                            scaleY: img.scaleY,
-                            angle: img.angle,
-                            left: img.left,
-                            top: img.top
-                        };
+                        img.originalUrl = event.target.result; // Store URL for later use
 
                         loadedImages.push(img);
 
-                        // Once all images are loaded, arrange them
                         if (loadedImages.length === files.length) {
                             arrangeImages(loadedImages);
                         }
@@ -544,7 +531,6 @@
         }
 
         function arrangeImages(images) {
-
             // Remove all objects except the border
             const objects = canvas.getObjects();
             objects.forEach(obj => {
@@ -554,7 +540,6 @@
             });
 
             const count = images.length;
-            // Set margin based on number of images
             const margin = count === 1 ? 100 : 20;
 
             const cols = Math.ceil(Math.sqrt(count));
@@ -567,7 +552,6 @@
                 const row = Math.floor(index / cols);
                 const col = index % cols;
 
-                // Scale image to fit cell with padding
                 const scaleFactor = Math.min(
                     (cellWidth - margin) / img.width,
                     (cellHeight - margin) / img.height
@@ -575,13 +559,24 @@
 
                 img.scale(scaleFactor);
 
-                // Position image in its cell
                 img.set({
                     left: margin + col * cellWidth + cellWidth / 2,
                     top: margin + row * cellHeight + cellHeight / 2,
                     originX: 'center',
                     originY: 'center'
                 });
+
+                // Store final state after arrangement
+                originalImages[img.id] = {
+                    url: img.originalUrl,
+                    width: img.width,
+                    height: img.height,
+                    scaleX: img.scaleX,
+                    scaleY: img.scaleY,
+                    angle: img.angle,
+                    left: img.left,
+                    top: img.top
+                };
 
                 canvas.add(img);
             });
