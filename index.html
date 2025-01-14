@@ -296,7 +296,6 @@
                 top: imgObject.top,
                 width: imgObject.width * imgObject.scaleX,
                 height: imgObject.height * imgObject.scaleY,
-                angle: imgObject.angle,
                 fill: 'transparent',
                 stroke: '#000',
                 strokeWidth: 1,
@@ -772,14 +771,12 @@
 
         // Add event listener
         rotateCheckbox.addEventListener('change', function (e) {
-            const controls = fabric.Object.prototype.controls;
-            controls.mtr.visible = this.checked;
             canvas.getObjects().forEach(obj => {
-
-                obj.setControlsVisibility({
-                    mtr: this.checked
-                });
-
+                if(obj.type === 'image') {
+                    obj.setControlsVisibility({
+                        mtr: this.checked
+                    });
+                }
             });
             canvas.requestRenderAll();
         });
