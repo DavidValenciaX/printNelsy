@@ -290,12 +290,15 @@
             activeImage = imgObject;
             isCropping = true;
 
-            // Create crop rectangle
+            // Get image bounding rectangle
+            const bounds = imgObject.getBoundingRect();
+
+            // Create crop rectangle using bounds
             cropRect = new fabric.Rect({
-                left: imgObject.left,
-                top: imgObject.top,
-                width: imgObject.width * imgObject.scaleX,
-                height: imgObject.height * imgObject.scaleY,
+                left: bounds.left,
+                top: bounds.top,
+                width: bounds.width,
+                height: bounds.height,
                 fill: 'transparent',
                 stroke: '#000',
                 strokeWidth: 1,
@@ -772,7 +775,7 @@
         // Add event listener
         rotateCheckbox.addEventListener('change', function (e) {
             canvas.getObjects().forEach(obj => {
-                if(obj.type === 'image') {
+                if (obj.type === 'image') {
                     obj.setControlsVisibility({
                         mtr: this.checked
                     });
