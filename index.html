@@ -664,16 +664,25 @@
 
             const original = originalImages[activeObject.id];
 
-            // Apply original properties directly to active object
-            activeObject.set({
-                scaleX: original.scaleX,
-                scaleY: original.scaleY,
-                angle: original.angle,
-                left: original.left,
-                top: original.top
-            });
+            fabric.Image.fromURL(original.url, function (img) {
+                // Apply original properties to new image
+                img.set({
+                    id: activeObject.id,
+                    scaleX: original.scaleX,
+                    scaleY: original.scaleY,
+                    angle: original.angle,
+                    left: original.left,
+                    top: original.top,
+                    originX: 'center',
+                    originY: 'center'
+                });
 
-            canvas.renderAll();
+                // Replace old image with new one
+                canvas.remove(activeObject);
+                canvas.add(img);
+                canvas.setActiveObject(img);
+                canvas.renderAll();
+            });
         }
 
         function printCanvas() {
