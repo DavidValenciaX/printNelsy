@@ -544,6 +544,15 @@
         }
 
         function arrangeImages(images) {
+
+            // Remove all objects except the border
+            const objects = canvas.getObjects();
+            objects.forEach(obj => {
+                if (obj !== marginRect) {
+                    canvas.remove(obj);
+                }
+            });
+
             const count = images.length;
             // Set margin based on number of images
             const margin = count === 1 ? 100 : 20;
