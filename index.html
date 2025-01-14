@@ -150,9 +150,10 @@
             <div class="button-container">
                 <label for="imageLoader" class="control-button">Cargar imágenes</label>
                 <input type="file" id="imageLoader" accept="image/*" multiple aria-label="Cargar imágenes">
-                <button type="button" id="deleteButton" class="control-button">Eliminar imagen</button>
                 <button type="button" id="printButton" class="control-button">Imprimir</button>
+                <button type="button" id="deleteButton" class="control-button">Eliminar imagen</button>
                 <button type="button" id="resetImageButton" class="control-button">Restablecer imagen</button>
+                <button type="button" id="arrangeBtn" class="control-button">Ordenar imágenes</button>
                 <hr>
                 <button type="button" id="cropButton" class="control-button">Recortar imagen</button>
                 <button type="button" id="confirmCrop" class="control-button">✓ Confirmar</button>
@@ -223,6 +224,11 @@
         const rotateButton_p90 = document.getElementById('rotateButton+90');
         const rotateButton_n90 = document.getElementById('rotateButton-90');
         const resetImageButton = document.getElementById('resetImageButton');
+        const arrangeBtn = document.getElementById('arrangeBtn');
+        const cropButton = document.getElementById('cropButton');
+        const confirmCropBtn = document.getElementById('confirmCrop');
+        const cancelCropBtn = document.getElementById('cancelCrop');
+        const rotateCheckbox = document.getElementById('rotateControl');
 
         const dpi = 300;
         const marginInches = 0.2;
@@ -278,13 +284,6 @@
             inactivatedObjects = [];
             canvas.requestRenderAll();
         }
-
-        document.getElementById('cropButton').addEventListener('click', function () {
-            const activeObject = canvas.getActiveObject();
-            if (!activeObject || activeObject.type !== 'image') return;
-
-            enterCropMode(activeObject);
-        });
 
         function enterCropMode(imgObject) {
             activeImage = imgObject;
@@ -353,7 +352,7 @@
             canvas.sendToBack(canvasBackground);
         }
 
-        document.getElementById('confirmCrop').addEventListener('click', function () {
+        function confirmCrop() {
             if (!isCropping || !cropRect || !activeImage) return;
 
             // Get the cropping rectangle and original image's ID
@@ -409,9 +408,7 @@
             };
 
             exitCropMode();
-        });
-
-        document.getElementById('cancelCrop').addEventListener('click', exitCropMode);
+        }
 
         function exitCropMode() {
             if (cropRect) {
@@ -431,7 +428,7 @@
             document.getElementById('cropButton').style.display = 'inline';
         }
 
-        document.body.addEventListener('click', function (event) {
+        function deactivateObjects(event) {
             const canvasElement = canvas.getElement();
             const isOnCanvasElement = event.target === canvasElement;
             const isOnFabricControls = event.target.classList.contains('canvas-container') ||
@@ -450,26 +447,7 @@
                 canvas.discardActiveObject();
                 canvas.requestRenderAll();
             }
-        });
-
-        deleteButton.addEventListener('click', function () {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject) {
-                canvas.remove(activeObject);
-                canvas.renderAll();
-            }
-        });
-
-        // Add keyboard delete support
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Delete') {
-                const activeObject = canvas.getActiveObject();
-                if (activeObject) {
-                    canvas.remove(activeObject);
-                    canvas.renderAll();
-                }
-            }
-        });
+        }
 
         function degToRad(degrees) {
             return degrees * (Math.PI / 180);
@@ -477,36 +455,6 @@
 
         function radToDeg(radians) {
             return radians * (180 / Math.PI);
-        }
-
-        function createCoordinateMarker(x, y, color = 'red') {
-            const marker = new fabric.Circle({
-                left: x,
-                top: y,
-                fill: color,
-                radius: 5,
-                selectable: false,
-                evented: false,
-                originX: 'center',
-                originY: 'center'
-            });
-
-            canvas.add(marker);
-            canvas.bringToFront(marker);
-            return marker;
-        }
-
-        function createCoordinateLine(x1, y1, x2, y2, color = 'red') {
-            const line = new fabric.Line([x1, y1, x2, y2], {
-                stroke: color,
-                strokeWidth: 1,
-                selectable: false,
-                evented: false
-            });
-
-            canvas.add(line);
-            canvas.bringToFront(line);
-            return line;
         }
 
         function resizeCanvas(size, orientation = isVertical) {
@@ -554,23 +502,6 @@
         function changeOrientation(vertical) {
             resizeCanvas(currentSize, vertical);
         }
-
-        cartaButton.addEventListener('click', () => resizeCanvas('carta'));
-        oficioButton.addEventListener('click', () => resizeCanvas('oficio'));
-        verticalButton.addEventListener('click', () => changeOrientation(true));
-        horizontalButton.addEventListener('click', () => changeOrientation(false));
-
-        imageLoader.addEventListener('change', handleImageUpload);
-        resetImageButton.addEventListener('click', resetActiveImage);
-        printButton.addEventListener('click', printCanvas);
-        rotateButton_p90.addEventListener('click', function () {
-            rotateImage(90);
-        });
-
-        rotateButton_n90.addEventListener('click', function () {
-            rotateImage(270);
-        });
-
 
         // Add this at the top with other variables
         const originalImages = {};
@@ -725,6 +656,75 @@
             }, 250);
         }
 
+        function rotateImage(deg) {
+            const activeObject = canvas.getActiveObject();
+            if (activeObject) {
+                activeObject.rotate((activeObject.angle + deg) % 360);
+                activeObject.setCoords();
+
+                canvas.renderAll();
+            }
+        }
+
+        function deleteActiveObject() {
+            const activeObject = canvas.getActiveObject();
+            if (activeObject) {
+                canvas.remove(activeObject);
+                canvas.renderAll();
+            }
+        }
+
+        cartaButton.addEventListener('click', () => resizeCanvas('carta'));
+        oficioButton.addEventListener('click', () => resizeCanvas('oficio'));
+        verticalButton.addEventListener('click', () => changeOrientation(true));
+        horizontalButton.addEventListener('click', () => changeOrientation(false));
+
+        imageLoader.addEventListener('change', handleImageUpload);
+        resetImageButton.addEventListener('click', resetActiveImage);
+        printButton.addEventListener('click', printCanvas);
+        rotateButton_p90.addEventListener('click', () => rotateImage(90));
+        rotateButton_n90.addEventListener('click', () => rotateImage(270));
+
+        arrangeBtn.addEventListener('click', function () {
+            // Get all fabric.Image objects from canvas
+            const images = canvas.getObjects().filter(obj => obj.type === 'image');
+            // Call arrangeImages with current images
+            arrangeImages(images);
+        });
+
+        rotateCheckbox.addEventListener('change', function (e) {
+            canvas.getObjects().forEach(obj => {
+                if (obj.type === 'image') {
+                    obj.setControlsVisibility({
+                        mtr: this.checked
+                    });
+                }
+            });
+            canvas.requestRenderAll();
+        });
+
+        deleteButton.addEventListener('click', deleteActiveObject);
+
+        // Add keyboard delete support
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Delete') {
+                deleteActiveObject();
+            }
+        });
+
+        cropButton.addEventListener('click', function () {
+            const activeObject = canvas.getActiveObject();
+            if (!activeObject || activeObject.type !== 'image') return;
+
+            enterCropMode(activeObject);
+        });
+
+        confirmCropBtn.addEventListener('click', confirmCrop);
+
+        cancelCropBtn.addEventListener('click', exitCropMode);
+
+        document.body.addEventListener('click', () => deactivateObjects(event));
+
         fabric.Object.prototype.transparentCorners = false;
         fabric.Object.prototype.cornerColor = 'limegreen';
         fabric.Object.prototype.cornerStrokeColor = 'black';
@@ -733,25 +733,6 @@
         const controls = fabric.Object.prototype.controls;
         const rotateControls = controls.mtr;
         rotateControls.visible = false;
-
-        // Add this logging function
-        function logObjectState(obj) {
-            const TL = obj.getPointByOrigin(0, 0);
-            const TR = obj.getPointByOrigin(1, 0);
-            const BL = obj.getPointByOrigin(0, 1);
-            const BR = obj.getPointByOrigin(1, 1);
-
-            console.log('=== Object State ===');
-            console.log(`Angle: ${obj.angle.toFixed(2)}°`);
-            console.log(`Scale: X=${obj.scaleX.toFixed(2)}, Y=${obj.scaleY.toFixed(2)}`);
-            console.log('Corners:');
-            console.log(`TL: (${TL.x.toFixed(0)}, ${TL.y.toFixed(0)})`);
-            console.log(`TR: (${TR.x.toFixed(0)}, ${TR.y.toFixed(0)})`);
-            console.log(`BL: (${BL.x.toFixed(0)}, ${BL.y.toFixed(0)})`);
-            console.log(`BR: (${BR.x.toFixed(0)}, ${BR.y.toFixed(0)})`);
-            console.log(`Active Restriction: ${activeRestriction}`);
-            console.log('==================\n');
-        }
 
         canvas.on('object:moving', function (e) {
             let obj = e.target;
@@ -790,44 +771,9 @@
             }
         });
 
-        function bringToFront(options) {
-            options.target.bringToFront();
-        }
-
         // Reset activeRestriction when scaling ends
         canvas.on('object:modified', function (e) {
             activeRestriction = null;
-        });
-
-        canvas.on('object:rotating', function (e) {
-            let obj = e.target;
-            obj.setCoords(); // Actualiza las coordenadas del objeto
-
-        });
-
-        function rotateImage(deg) {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject) {
-                activeObject.rotate((activeObject.angle + deg) % 360);
-                activeObject.setCoords();
-
-                canvas.renderAll();
-            }
-        }
-
-        // Get checkbox element
-        const rotateCheckbox = document.getElementById('rotateControl');
-
-        // Add event listener
-        rotateCheckbox.addEventListener('change', function (e) {
-            canvas.getObjects().forEach(obj => {
-                if (obj.type === 'image') {
-                    obj.setControlsVisibility({
-                        mtr: this.checked
-                    });
-                }
-            });
-            canvas.requestRenderAll();
         });
 
         // Add this variable outside the event handler
