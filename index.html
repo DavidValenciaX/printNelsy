@@ -538,13 +538,6 @@
         }
 
         function arrangeImagesRows(images) {
-            // Remove all objects except the border
-            const objects = canvas.getObjects();
-            objects.forEach(obj => {
-                if (obj !== marginRect) {
-                    canvas.remove(obj);
-                }
-            });
 
             const count = images.length;
             const margin = count <= 2 ? 100 : 20;
@@ -608,13 +601,6 @@
         }
 
         function arrangeImagesCols(images) {
-            // Remove all objects except the border
-            const objects = canvas.getObjects();
-            objects.forEach(obj => {
-                if (obj !== marginRect) {
-                    canvas.remove(obj);
-                }
-            });
 
             const count = images.length;
             const margin = count <= 2 ? 100 : 20;
@@ -793,7 +779,11 @@
         let lastArrangement = 'rows'; // Track the last arrangement type
 
         arrangeBtn.addEventListener('click', function () {
+            // 1. Obtener todas las imágenes actuales
             const images = canvas.getObjects().filter(obj => obj.type === 'image');
+
+            // 2. Remover todas las imágenes existentes del canvas
+            images.forEach(img => canvas.remove(img));
 
             if (lastArrangement === 'rows') {
                 arrangeImagesCols(images);
@@ -802,6 +792,8 @@
                 arrangeImagesRows(images);
                 lastArrangement = 'rows';
             }
+
+            canvas.renderAll();
         });
 
         rotateCheckbox.addEventListener('change', function (e) {
