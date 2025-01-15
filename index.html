@@ -923,6 +923,9 @@
             let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
             let MB = obj.oCoords.mb;
+            let MT = obj.oCoords.mt;
+            let ML = obj.oCoords.ml;
+            let MR = obj.oCoords.mr;
 
             // Para establecer la posición y el escalado de objeto hay que darle las propiedades left, top, scaleX y scaleY
 
@@ -1157,13 +1160,15 @@
 
                             let restrictedObjWidth = ca / Math.cos(degToRad(obj.angle));
 
+                            let co = restrictedObjWidth * Math.sin(degToRad(obj.angle));
+
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
                             obj.scaleX = restrictedScaleX;
 
-                            obj.left = TL.x;
+                            obj.left = ML.x + ca / 2;
 
-                            obj.top = TL.y;
+                            obj.top = ML.y + co / 2;
 
                         } else if (scaleYChanged) {
 
