@@ -557,9 +557,7 @@
 
             // Add index to make IDs unique
             images.forEach((img, index) => {
-                // Ensure unique ID by adding index
                 img.id = `image-${Date.now()}-${index}`;
-
                 const row = Math.floor(index / cols);
                 const col = index % cols;
 
@@ -570,12 +568,27 @@
 
                 img.scale(scaleFactor);
 
+                // First position with center origin
                 img.set({
-                    left: margin + col * cellWidth,
-                    top: margin + row * cellHeight
+                    left: margin + col * cellWidth + cellWidth / 2,
+                    top: margin + row * cellHeight + cellHeight / 2,
+                    originX: 'center',
+                    originY: 'center'
                 });
 
-                // Store final state after arrangement
+                // Calculate new position for top/left origin
+                const newLeft = img.left - (img.width * img.scaleX) / 2;
+                const newTop = img.top - (img.height * img.scaleY) / 2;
+
+                // Update to top/left origin
+                img.set({
+                    left: newLeft,
+                    top: newTop,
+                    originX: 'left',
+                    originY: 'top'
+                });
+
+                // Store final state with top/left origin
                 originalImages[img.id] = {
                     url: img.originalUrl,
                     width: img.width,
@@ -583,14 +596,15 @@
                     scaleX: img.scaleX,
                     scaleY: img.scaleY,
                     angle: img.angle,
-                    left: img.left,
-                    top: img.top
+                    left: newLeft,
+                    top: newTop
                 };
 
                 canvas.add(img);
             });
 
             canvas.renderAll();
+
         }
 
         function arrangeImagesCols(images) {
@@ -613,10 +627,7 @@
 
             // Add index to make IDs unique
             images.forEach((img, index) => {
-                // Ensure unique ID by adding index
                 img.id = `image-${Date.now()}-${index}`;
-
-                // Switch row and column calculation for column-first layout
                 const col = Math.floor(index / rows);
                 const row = index % rows;
 
@@ -627,12 +638,27 @@
 
                 img.scale(scaleFactor);
 
+                // First position with center origin
                 img.set({
-                    left: margin + col * cellWidth,
-                    top: margin + row * cellHeight
+                    left: margin + col * cellWidth + cellWidth / 2,
+                    top: margin + row * cellHeight + cellHeight / 2,
+                    originX: 'center',
+                    originY: 'center'
                 });
 
-                // Store final state after arrangement
+                // Calculate new position for top/left origin
+                const newLeft = img.left - (img.width * img.scaleX) / 2;
+                const newTop = img.top - (img.height * img.scaleY) / 2;
+
+                // Update to top/left origin
+                img.set({
+                    left: newLeft,
+                    top: newTop,
+                    originX: 'left',
+                    originY: 'top'
+                });
+
+                // Store final state with top/left origin
                 originalImages[img.id] = {
                     url: img.originalUrl,
                     width: img.width,
@@ -640,8 +666,8 @@
                     scaleX: img.scaleX,
                     scaleY: img.scaleY,
                     angle: img.angle,
-                    left: img.left,
-                    top: img.top
+                    left: newLeft,
+                    top: newTop
                 };
 
                 canvas.add(img);
