@@ -869,6 +869,28 @@
             }
         });
 
+        function findMidpointFromPoints(point1, point2) {
+            return {
+                x: (point1.x + point2.x) / 2,
+                y: (point1.y + point2.y) / 2
+            };
+        }
+
+        function drawRedCircle(x1, x2) {
+            // Add red circle at 
+            const circle = new fabric.Circle({
+                left: x1,
+                top: x2,
+                originX: 'center',
+                originY: 'center',
+                radius: 5,
+                fill: 'red',
+                selectable: false
+            });
+            canvas.add(circle);
+
+        }
+
         // Reset activeRestriction when scaling ends
         canvas.on('object:modified', function (e) {
             activeRestriction = null;
@@ -897,6 +919,10 @@
             let TR = obj.aCoords.tr;
             let BL = obj.aCoords.bl;
             let BR = obj.aCoords.br;
+
+            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
+
+            let MB = obj.oCoords.mb;
 
             // Para establecer la posición y el escalado de objeto hay que darle las propiedades left, top, scaleX y scaleY
 
@@ -998,8 +1024,6 @@
 
                             console.log("La esquina Top Left supera el margen derecho escalando horizontal y verticalmente");
 
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
-
                             let offsetAngle = diagAngle - degToRad(180 - obj.angle);
 
                             let xOffset = TL.x - marginRight;
@@ -1085,8 +1109,6 @@
 
                             // hallar angulo de la diagonal desde la base a la diagonal del rectangulo
 
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
-
                             let offsetAngle = diagAngle - degToRad(obj.angle);
 
                             let xOffset = TR.x - marginRight;
@@ -1159,9 +1181,9 @@
 
                             // Calculo del punto top y left
 
-                            obj.left = BL.x + co;
+                            obj.left = MB.x + co / 2;
 
-                            obj.top = BL.y - ca;
+                            obj.top = MB.y - ca / 2;
 
                         }
 
@@ -1173,8 +1195,6 @@
                         if (scaleXChanged && scaleYChanged) {
 
                             console.log("La esquina Bottom Right supera el margen derecho escalando horizontal y verticalmente");
-
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
                             let offsetAngle = diagAngle - degToRad(360 - obj.angle);
 
@@ -1232,8 +1252,6 @@
                         if (scaleXChanged && scaleYChanged) {
 
                             console.log("La esquina Bottom Left supera el margen derecho escalando horizontal y verticalmente");
-
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
                             let offsetAngle = diagAngle - degToRad(obj.angle - 180);
 
@@ -1310,8 +1328,6 @@
                         if (scaleXChanged && scaleYChanged) {
 
                             console.log("La esquina Top Left supera el margen inferior escalando horizontal y verticalmente");
-
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
                             let offsetAngle = diagAngle - degToRad(270 - obj.angle);
 
@@ -1397,8 +1413,6 @@
 
                             console.log("La esquina Top Right supera el margen inferior escalando horizontal y verticalmente");
 
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
-
                             let offsetAngle = diagAngle - degToRad(obj.angle - 90);
 
                             let yOffset = TR.y - marginBottom;
@@ -1480,8 +1494,6 @@
 
                             console.log("La esquina Bottom Right supera el margen inferior escalando horizontal y verticalmente");
 
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
-
                             let offsetAngle = diagAngle - degToRad(90 - obj.angle);
 
                             let yOffset = BR.y - marginBottom;
@@ -1548,8 +1560,6 @@
                         if (scaleXChanged && scaleYChanged) {
 
                             console.log("La esquina Bottom Right supera el margen inferior escalando horizontal y verticalmente");
-
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
                             let offsetAngle = diagAngle - degToRad(obj.angle - 270);
 
@@ -1630,8 +1640,6 @@
                         if (scaleXChanged && scaleYChanged) {
 
                             console.log("La esquina Top Left supera el margen izquierdo escalando horizontal y verticalmente");
-
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
                             let offsetAngle = diagAngle - degToRad(360 - obj.angle);
 
@@ -1715,8 +1723,6 @@
 
                             console.log("La esquina Top Left supera el margen izquierdo escalando horizontal y verticalmente");
 
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
-
                             let offsetAngle = diagAngle - degToRad(obj.angle - 180);
 
                             let xOffset = marginRect.left - TR.x;
@@ -1797,8 +1803,6 @@
 
                             console.log("La esquina Bottom Right supera el margen izquierdo escalando horizontal y verticalmente");
 
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
-
                             let offsetAngle = diagAngle - degToRad(180 - obj.angle);
 
                             let xOffset = marginRect.left - BR.x;
@@ -1864,8 +1868,6 @@
                         if (scaleXChanged && scaleYChanged) {
 
                             console.log("La esquina Bottom Left supera el margen izquierdo escalando horizontal y verticalmente");
-
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
                             let offsetAngle = diagAngle - degToRad(obj.angle);
 
@@ -1946,8 +1948,6 @@
                         if (scaleXChanged && scaleYChanged) {
 
                             console.log("La esquina Top Left supera el margen superior escalando horizontal y verticalmente");
-
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
                             let offsetAngle = diagAngle - degToRad(90 - obj.angle);
 
@@ -2031,8 +2031,6 @@
 
                             console.log("La esquina Top Right supera el margen superior escalando horizontal y verticalmente");
 
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
-
                             let offsetAngle = diagAngle - degToRad(obj.angle - 270);
 
                             let yOffset = marginRect.top - TR.y;
@@ -2113,8 +2111,6 @@
 
                             console.log("La esquina Bottom Right supera el margen superior escalando horizontal y verticalmente");
 
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
-
                             let offsetAngle = diagAngle - degToRad(270 - obj.angle);
 
                             let yOffset = marginRect.top - BR.y;
@@ -2179,8 +2175,6 @@
                         if (scaleXChanged && scaleYChanged) {
 
                             console.log("La esquina Bottom Left supera el margen superior escalando horizontal y verticalmente");
-
-                            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
                             let offsetAngle = diagAngle - degToRad(obj.angle - 90);
 
