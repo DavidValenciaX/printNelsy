@@ -571,18 +571,6 @@
                     originY: 'center'
                 });
 
-                // Calculate new position for top/left origin
-                const newLeft = img.left - (img.width * img.scaleX) / 2;
-                const newTop = img.top - (img.height * img.scaleY) / 2;
-
-                // Update to top/left origin
-                img.set({
-                    left: newLeft,
-                    top: newTop,
-                    originX: 'left',
-                    originY: 'top'
-                });
-
                 // Store final state with top/left origin
                 originalImages[img.id] = {
                     url: img.originalUrl,
@@ -591,8 +579,8 @@
                     scaleX: img.scaleX,
                     scaleY: img.scaleY,
                     angle: img.angle,
-                    left: newLeft,
-                    top: newTop
+                    left: img.left,
+                    top: img.top
                 };
 
                 canvas.add(img);
@@ -634,18 +622,6 @@
                     originY: 'center'
                 });
 
-                // Calculate new position for top/left origin
-                const newLeft = img.left - (img.width * img.scaleX) / 2;
-                const newTop = img.top - (img.height * img.scaleY) / 2;
-
-                // Update to top/left origin
-                img.set({
-                    left: newLeft,
-                    top: newTop,
-                    originX: 'left',
-                    originY: 'top'
-                });
-
                 // Store final state with top/left origin
                 originalImages[img.id] = {
                     url: img.originalUrl,
@@ -654,8 +630,8 @@
                     scaleX: img.scaleX,
                     scaleY: img.scaleY,
                     angle: img.angle,
-                    left: newLeft,
-                    top: newTop
+                    left: img.left,
+                    top: img.top
                 };
 
                 canvas.add(img);
