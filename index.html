@@ -154,6 +154,7 @@
                 <button type="button" id="deleteButton" class="control-button">Eliminar imagen</button>
                 <button type="button" id="resetImageButton" class="control-button">Restablecer imagen</button>
                 <button type="button" id="arrangeBtn" class="control-button">Ordenar imágenes</button>
+                <button type="button" id="grayScaleBtn" class="control-button">Convertir a blanco y negro</button>
                 <hr>
                 <button type="button" id="cropButton" class="control-button">Recortar imagen</button>
                 <button type="button" id="confirmCrop" class="control-button">✓ Confirmar</button>
@@ -229,6 +230,7 @@
         const confirmCropBtn = document.getElementById('confirmCrop');
         const cancelCropBtn = document.getElementById('cancelCrop');
         const rotateCheckbox = document.getElementById('rotateControl');
+        const grayScaleBtn = document.getElementById('grayScaleBtn');
 
         const dpi = 300;
         const marginInches = 0.2;
@@ -765,6 +767,21 @@
             }
         }
 
+        function convertToGrayscale() {
+            const activeObject = canvas.getActiveObject();
+            if (!activeObject) {
+                alert('Please select an image first');
+                return;
+            }
+
+            // Apply grayscale filter
+            activeObject.filters.push(new fabric.Image.filters.Grayscale());
+
+            // Apply the filters and re-render
+            activeObject.applyFilters();
+            canvas.renderAll();
+        }
+
         cartaButton.addEventListener('click', () => resizeCanvas('carta'));
         oficioButton.addEventListener('click', () => resizeCanvas('oficio'));
         verticalButton.addEventListener('click', () => changeOrientation(true));
@@ -773,6 +790,7 @@
         imageLoader.addEventListener('change', handleImageUpload);
         resetImageButton.addEventListener('click', resetActiveImage);
         printButton.addEventListener('click', printCanvas);
+        grayScaleBtn.addEventListener('click', convertToGrayscale);
         rotateButton_p90.addEventListener('click', () => rotateImage(90));
         rotateButton_n90.addEventListener('click', () => rotateImage(270));
 
