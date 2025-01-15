@@ -571,10 +571,8 @@
                 img.scale(scaleFactor);
 
                 img.set({
-                    left: margin + col * cellWidth + cellWidth / 2,
-                    top: margin + row * cellHeight + cellHeight / 2,
-                    originX: 'center',
-                    originY: 'center'
+                    left: margin + col * cellWidth,
+                    top: margin + row * cellHeight
                 });
 
                 // Store final state after arrangement
@@ -630,10 +628,8 @@
                 img.scale(scaleFactor);
 
                 img.set({
-                    left: margin + col * cellWidth + cellWidth / 2,
-                    top: margin + row * cellHeight + cellHeight / 2,
-                    originX: 'center',
-                    originY: 'center'
+                    left: margin + col * cellWidth,
+                    top: margin + row * cellHeight
                 });
 
                 // Store final state after arrangement
@@ -672,9 +668,7 @@
                     scaleY: original.scaleY,
                     angle: original.angle,
                     left: original.left,
-                    top: original.top,
-                    originX: 'center',
-                    originY: 'center'
+                    top: original.top
                 });
 
                 // Replace old image with new one
