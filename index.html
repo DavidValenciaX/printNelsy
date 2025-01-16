@@ -1021,7 +1021,6 @@
 
                 switch (activeRestriction) {
                     case 'TL_RIGHT':
-                        // Handle TL.x > marginRight case
 
                         if (scaleXChanged && scaleYChanged) {
 
@@ -1035,9 +1034,9 @@
 
                             let yCollision = TL.y - yOffset;
 
-                            let collisionToAnchorWidth = Math.abs(marginRight - BR.x);
+                            let collisionToAnchorWidth = marginRight - BR.x;
 
-                            let collisionToAnchorHeight = Math.abs(BR.y - yCollision);
+                            let collisionToAnchorHeight = yCollision - BR.y;
 
                             let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
 
@@ -1053,11 +1052,9 @@
 
                             obj.scaleY = restrictedScaleY;
 
-                            // Calculo del punto top y left
+                            obj.left = BR.x + collisionToAnchorWidth / 2;
 
-                            obj.left = marginRight;
-
-                            obj.top = yCollision;
+                            obj.top = BR.y + collisionToAnchorHeight / 2;
 
                         } else if (scaleXChanged) {
 
@@ -1073,11 +1070,9 @@
 
                             obj.scaleX = restrictedScaleX;
 
-                            // Calculo del punto top y left
+                            obj.left = MR.x + co / 2;
 
-                            obj.left = marginRight;
-
-                            obj.top = TR.y - ca;
+                            obj.top = MR.y - ca / 2;
 
                         } else if (scaleYChanged) {
 
@@ -1093,11 +1088,9 @@
 
                             obj.scaleY = restrictedScaleY;
 
-                            // Calculo del punto top y left
+                            obj.left = MB.x + ca / 2;
 
-                            obj.left = marginRight;
-
-                            obj.top = BL.y + co;
+                            obj.top = MB.y + co / 2;
 
                         }
 
