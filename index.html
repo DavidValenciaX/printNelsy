@@ -548,7 +548,15 @@
         function arrangeImagesRows(images) {
 
             const count = images.length;
-            const margin = count <= 2 ? 150 : 20;
+            let marginAdjustment;
+            if (count === 1) {
+                marginAdjustment = 100;
+            } else if (count === 2) {
+                marginAdjustment = 50;
+            } else {
+                marginAdjustment = 20;
+            }
+            const margin = marginWidth + marginAdjustment;
 
             const cols = Math.ceil(Math.sqrt(count));
             const rows = Math.ceil(count / cols);
@@ -581,13 +589,12 @@
                 const offsetHeightImageBound = roundToDecimals(roundedBoundsHeight - roundedImageHeight, 10);
 
                 const scaleFactor = Math.min(
-                    (cellWidth - (margin * 2) - offsetWidthImageBound) / img.width,
-                    (cellHeight - (margin * 2) - offsetHeightImageBound) / img.height
+                    (cellWidth - margin - offsetWidthImageBound) / img.width,
+                    (cellHeight - margin - offsetHeightImageBound) / img.height
                 );
 
                 img.scale(scaleFactor);
 
-                // First position with center origin
                 img.set({
                     left: margin + col * cellWidth + cellWidth / 2,
                     top: margin + row * cellHeight + cellHeight / 2,
@@ -617,7 +624,15 @@
         function arrangeImagesCols(images) {
 
             const count = images.length;
-            const margin = count <= 2 ? 150 : 20;
+            let marginAdjustment;
+            if (count === 1) {
+                marginAdjustment = 100;
+            } else if (count === 2) {
+                marginAdjustment = 50;
+            } else {
+                marginAdjustment = 20;
+            }
+            const margin = marginWidth + marginAdjustment;
 
             const rows = Math.ceil(Math.sqrt(count));
             const cols = Math.ceil(count / rows);
@@ -650,13 +665,12 @@
                 const offsetHeightImageBound = roundToDecimals(roundedBoundsHeight - roundedImageHeight, 10);
 
                 const scaleFactor = Math.min(
-                    (cellWidth - (margin * 2) - offsetWidthImageBound) / img.width,
-                    (cellHeight - (margin * 2) - offsetHeightImageBound) / img.height
+                    (cellWidth - margin - offsetWidthImageBound) / img.width,
+                    (cellHeight - margin - offsetHeightImageBound) / img.height
                 );
 
                 img.scale(scaleFactor);
 
-                // First position with center origin
                 img.set({
                     left: margin + col * cellWidth + cellWidth / 2,
                     top: margin + row * cellHeight + cellHeight / 2,
@@ -1267,7 +1281,6 @@
 
                     case 'BR_RIGHT':
 
-                        // Handle BR.x > marginRight case
                         if (scaleXChanged && scaleYChanged) {
 
                             console.log("La esquina Bottom Right supera el margen derecho escalando horizontal y verticalmente");
@@ -1525,7 +1538,6 @@
                         break;
 
                     case 'TR_BOTTOM':
-                        // Handle TR.y > marginBottom case
 
                         if (scaleXChanged && scaleYChanged) {
 
@@ -1614,7 +1626,6 @@
 
                     case 'BR_BOTTOM':
 
-                        // Handle BR.y > marginBottom case
                         if (scaleXChanged && scaleYChanged) {
 
                             console.log("La esquina Bottom Right supera el margen inferior escalando horizontal y verticalmente");
@@ -1701,7 +1712,6 @@
 
                     case 'BL_BOTTOM':
 
-                        // Handle BL.y > marginBottom case
                         if (scaleXChanged && scaleYChanged) {
 
                             console.log("La esquina Bottom Right supera el margen inferior escalando horizontal y verticalmente");
@@ -2491,6 +2501,11 @@
         });
 
         resizeCanvas('carta');
+
+        // Calcular el ancho del margen
+
+        let marginWidth = (canvas.width - marginRect.width) / 2;
+
     </script>
 </body>
 
