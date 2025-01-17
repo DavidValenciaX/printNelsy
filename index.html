@@ -1373,9 +1373,9 @@
 
                             let xCollision = TL.x + xOffset;
 
-                            let collisionToAnchorWidth = Math.abs(xCollision - BR.x);
+                            let collisionToAnchorWidth = xCollision - BR.x;
 
-                            let collisionToAnchorHeight = Math.abs(marginBottom - BR.y);
+                            let collisionToAnchorHeight = marginBottom - BR.y;
 
                             let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
 
@@ -1393,9 +1393,9 @@
 
                             // Calculo del punto top y left
 
-                            obj.left = xCollision;
+                            obj.left = BR.x + collisionToAnchorWidth / 2;
 
-                            obj.top = marginBottom;
+                            obj.top = BR.y + collisionToAnchorHeight / 2;
 
                         } else if (scaleXChanged) {
 
@@ -1413,9 +1413,9 @@
 
                             // Calculo del punto top y left
 
-                            obj.left = TR.x + ca;
+                            obj.left = MR.x + ca / 2;
 
-                            obj.top = marginBottom;
+                            obj.top = MR.y + co / 2;
 
                         } else if (scaleYChanged) {
 
@@ -1433,9 +1433,9 @@
 
                             // Calculo del punto top y left
 
-                            obj.left = BL.x - co;
+                            obj.left = MB.x - co / 2;
 
-                            obj.top = marginBottom;
+                            obj.top = MB.y + ca / 2;
 
                         }
 
@@ -1459,7 +1459,7 @@
 
                             let collisionToAnchorWidth = Math.abs(xCollision - BL.x);
 
-                            let collisionToAnchorHeight = Math.abs(marginBottom - BL.y);
+                            let collisionToAnchorHeight = marginBottom - BL.y;
 
                             let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
 
@@ -1540,7 +1540,7 @@
 
                             let collisionToAnchorWidth = Math.abs(xCollision - TL.x);
 
-                            let collisionToAnchorHeight = Math.abs(marginBottom - TL.y);
+                            let collisionToAnchorHeight = marginBottom - TL.y;
 
                             let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
 
@@ -1607,7 +1607,7 @@
 
                             let collisionToAnchorWidth = Math.abs(xCollision - TR.x);
 
-                            let collisionToAnchorHeight = Math.abs(marginBottom - TR.y);
+                            let collisionToAnchorHeight = marginBottom - TR.y;
 
                             let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
 
