@@ -540,6 +540,11 @@
             }
         }
 
+        // Función para redondear a un número específico de decimales
+        function roundToDecimals(value, decimals) {
+            return Number(value.toFixed(decimals));
+        }
+
         function arrangeImagesRows(images) {
 
             const count = images.length;
@@ -557,9 +562,27 @@
                 const row = Math.floor(index / cols);
                 const col = index % cols;
 
+                let realImagetWidth = img.width * img.scaleX;
+                let realImageHeight = img.height * img.scaleY;
+
+                let bounds = img.getBoundingRect();
+
+                // Redondear antes de calcular el offset
+                let roundedBoundsWidth = roundToDecimals(bounds.width, 10);
+
+                let roundedImageWidth = roundToDecimals(realImagetWidth, 10);
+
+                const offsetWidthImageBound = roundToDecimals(roundedBoundsWidth - roundedImageWidth, 10);
+
+                let roundedBoundsHeight = roundToDecimals(bounds.height, 10);
+
+                let roundedImageHeight = roundToDecimals(realImageHeight, 10);
+
+                const offsetHeightImageBound = roundToDecimals(roundedBoundsHeight - roundedImageHeight, 10);
+
                 const scaleFactor = Math.min(
-                    (cellWidth - margin) / img.width,
-                    (cellHeight - margin) / img.height
+                    (cellWidth - (margin * 2) - offsetWidthImageBound) / img.width,
+                    (cellHeight - (margin * 2) - offsetHeightImageBound) / img.height
                 );
 
                 img.scale(scaleFactor);
@@ -608,9 +631,27 @@
                 const col = Math.floor(index / rows);
                 const row = index % rows;
 
+                let realImagetWidth = img.width * img.scaleX;
+                let realImageHeight = img.height * img.scaleY;
+
+                let bounds = img.getBoundingRect();
+
+                // Redondear antes de calcular el offset
+                let roundedBoundsWidth = roundToDecimals(bounds.width, 10);
+
+                let roundedImageWidth = roundToDecimals(realImagetWidth, 10);
+
+                const offsetWidthImageBound = roundToDecimals(roundedBoundsWidth - roundedImageWidth, 10);
+
+                let roundedBoundsHeight = roundToDecimals(bounds.height, 10);
+
+                let roundedImageHeight = roundToDecimals(realImageHeight, 10);
+
+                const offsetHeightImageBound = roundToDecimals(roundedBoundsHeight - roundedImageHeight, 10);
+
                 const scaleFactor = Math.min(
-                    (cellWidth - margin) / img.width,
-                    (cellHeight - margin) / img.height
+                    (cellWidth - (margin * 2) - offsetWidthImageBound) / img.width,
+                    (cellHeight - (margin * 2) - offsetHeightImageBound) / img.height
                 );
 
                 img.scale(scaleFactor);
@@ -890,6 +931,31 @@
             });
             canvas.add(circle);
 
+        }
+
+        function drawRectangle(x, y, width, height, options = {}) {
+            // Default options merged with provided options
+            const defaultOptions = {
+                left: x,
+                top: y,
+                width: width,
+                height: height,
+                fill: 'transparent',
+                stroke: 'black',
+                strokeWidth: 2,
+                selectable: true
+            };
+
+            const finalOptions = { ...defaultOptions, ...options };
+
+            // Create new rectangle
+            const rectangle = new fabric.Rect(finalOptions);
+
+            // Add to canvas
+            canvas.add(rectangle);
+            canvas.renderAll();
+
+            return rectangle;
         }
 
         // Reset activeRestriction when scaling ends
