@@ -1540,7 +1540,7 @@
 
                             let xCollision = BR.x + xOffset;
 
-                            let collisionToAnchorWidth = Math.abs(xCollision - TL.x);
+                            let collisionToAnchorWidth = xCollision - TL.x;
 
                             let collisionToAnchorHeight = marginBottom - TL.y;
 
@@ -1558,7 +1558,11 @@
 
                             obj.scaleY = restrictedScaleY;
 
-                            // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla, es decir que no se mueve
+                            // Calculo del punto top y left
+
+                            obj.left = TL.x + collisionToAnchorWidth / 2;
+
+                            obj.top = TL.y + collisionToAnchorHeight / 2;
 
                         } else if (scaleXChanged) {
 
@@ -1568,11 +1572,17 @@
 
                             let restrictedObjWidth = co / Math.sin(degToRad(obj.angle));
 
+                            let ca = restrictedObjWidth * Math.cos(degToRad(obj.angle));
+
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
                             obj.scaleX = restrictedScaleX;
 
-                            // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla, es decir que no se mueve
+                            // Calculo del punto top y left
+
+                            obj.left = ML.x + ca / 2;
+
+                            obj.top = ML.y + co / 2;
 
                         } else if (scaleYChanged) {
 
@@ -1582,11 +1592,17 @@
 
                             let restrictedObjectHeight = ca / Math.cos(degToRad(obj.angle));
 
+                            let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle));
+
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
                             obj.scaleY = restrictedScaleY;
 
-                            // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla, es decir que no se mueve
+                            // Calculo del punto top y left
+
+                            obj.left = MT.x - co / 2;
+
+                            obj.top = MT.y + ca / 2;
 
                         }
 
