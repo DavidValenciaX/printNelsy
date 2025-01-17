@@ -2275,9 +2275,9 @@
 
                             let xCollision = BL.x + xOffset;
 
-                            let collisionToAnchorWidth = Math.abs(TR.x - xCollision);
+                            let collisionToAnchorHeight = TR.y - marginRect.top;
 
-                            let collisionToAnchorHeight = Math.abs(TR.y - marginRect.top);
+                            let collisionToAnchorWidth = xCollision - TR.x;
 
                             let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
 
@@ -2295,13 +2295,9 @@
 
                             // Calculo del punto top y left
 
-                            let ca = restrictedObjectWidth * Math.cos(degToRad(obj.angle - 90));
+                            obj.left = TR.x + collisionToAnchorWidth / 2;
 
-                            let co = restrictedObjectWidth * Math.sin(degToRad(obj.angle - 90));
-
-                            obj.left = TR.x + co;
-
-                            obj.top = TR.y - ca;
+                            obj.top = TR.y - collisionToAnchorHeight / 2;
 
                         } else if (scaleXChanged) {
 
@@ -2319,9 +2315,9 @@
 
                             // Calculo del punto top y left
 
-                            obj.left = TR.x + co;
+                            obj.left = MR.x + co / 2;
 
-                            obj.top = TR.y - ca;
+                            obj.top = MR.y - ca / 2;
 
                         } else if (scaleYChanged) {
 
@@ -2331,11 +2327,17 @@
 
                             let restrictedObjectHeight = co / Math.sin(degToRad(obj.angle - 90));
 
+                            let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle - 90));
+
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
                             obj.scaleY = restrictedScaleY;
 
-                            // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla, es decir que no se mueve
+                            // Calculo del punto top y left
+
+                            obj.left = MT.x - ca / 2;
+
+                            obj.top = MT.y - co / 2;
 
                         }
 
