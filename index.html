@@ -1784,9 +1784,9 @@
 
                             let yCollision = TR.y - yOffset;
 
-                            let collisionToAnchorWidth = Math.abs(BL.x - marginRect.left);
+                            let collisionToAnchorWidth = BL.x - marginRect.left;
 
-                            let collisionToAnchorHeight = Math.abs(yCollision - BL.y);
+                            let collisionToAnchorHeight = yCollision - BL.y;
 
                             let restrictedObjectDiagonal = Math.sqrt(Math.pow(collisionToAnchorWidth, 2) + Math.pow(collisionToAnchorHeight, 2));
 
@@ -1804,13 +1804,9 @@
 
                             // Calculo del punto top y left
 
-                            let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle - 180));
+                            obj.left = BL.x - collisionToAnchorWidth / 2;
 
-                            let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle - 180));
-
-                            obj.left = BL.x - co;
-
-                            obj.top = BL.y + ca;
+                            obj.top = BL.y + collisionToAnchorHeight / 2;
 
                         } else if (scaleXChanged) {
 
@@ -1820,11 +1816,17 @@
 
                             let restrictedObjWidth = ca / Math.cos(degToRad(obj.angle - 180));
 
+                            let co = restrictedObjWidth * Math.sin(degToRad(obj.angle - 180));
+
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
                             obj.scaleX = restrictedScaleX;
 
-                            // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla, es decir que no se mueve
+                            // Calculo del punto top y left
+
+                            obj.left = ML.x - ca / 2;
+
+                            obj.top = ML.y - co / 2;
 
                         } else if (scaleYChanged) {
 
@@ -1842,9 +1844,9 @@
 
                             // Calculo del punto top y left
 
-                            obj.left = BL.x - co;
+                            obj.left = MB.x - co / 2;
 
-                            obj.top = BL.y + ca;
+                            obj.top = MB.y + ca / 2;
 
                         }
 
