@@ -542,7 +542,7 @@
         function arrangeImagesRows(images) {
 
             const count = images.length;
-            const margin = count <= 2 ? 100 : 20;
+            const margin = count <= 2 ? 200 : 20;
 
             const cols = Math.ceil(Math.sqrt(count));
             const rows = Math.ceil(count / cols);
@@ -593,7 +593,7 @@
         function arrangeImagesCols(images) {
 
             const count = images.length;
-            const margin = count <= 2 ? 100 : 20;
+            const margin = count <= 2 ? 200 : 20;
 
             const rows = Math.ceil(Math.sqrt(count));
             const cols = Math.ceil(count / rows);
@@ -1307,10 +1307,6 @@
 
                             // Calculo del punto top y left
 
-                            let co = restrictedObjectWidth * Math.sin(degToRad(obj.angle - 180));
-
-                            let ca = restrictedObjectWidth * Math.cos(degToRad(obj.angle - 180));
-
                             obj.left = TR.x + collisionToAnchorWidth / 2;
 
                             obj.top = TR.y + collisionToAnchorHeight / 2;
@@ -1623,7 +1619,7 @@
 
                             let xCollision = BL.x - xOffset;
 
-                            let collisionToAnchorWidth = Math.abs(xCollision - TR.x);
+                            let collisionToAnchorWidth = xCollision - TR.x;
 
                             let collisionToAnchorHeight = marginBottom - TR.y;
 
@@ -1643,13 +1639,9 @@
 
                             // Calculo del punto top y left
 
-                            let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle - 270));
+                            obj.left = TR.x + collisionToAnchorWidth / 2;
 
-                            let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle - 270));
-
-                            obj.left = xCollision - ca;
-
-                            obj.top = marginBottom - co;
+                            obj.top = TR.y + collisionToAnchorHeight / 2;
 
                         } else if (scaleXChanged) {
 
@@ -1667,9 +1659,9 @@
 
                             // Calculo del punto top y left
 
-                            obj.left = TR.x - co;
+                            obj.left = MR.x - co / 2;
 
-                            obj.top = TR.y + ca;
+                            obj.top = MR.y + ca / 2;
 
                         } else if (scaleYChanged) {
 
@@ -1679,11 +1671,17 @@
 
                             let restrictedObjectHeight = co / Math.sin(degToRad(obj.angle - 270));
 
+                            let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle - 270));
+
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
                             obj.scaleY = restrictedScaleY;
 
-                            // No hay necesidad de calcular el punto deseado de Top Left porque el punto Top left es el ancla, es decir que no se mueve
+                            // Calculo del punto top y left
+
+                            obj.left = MT.x + ca / 2;
+
+                            obj.top = MT.y + co / 2;
 
                         }
 
