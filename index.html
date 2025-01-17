@@ -292,10 +292,10 @@
             activeImage = imgObject;
             isCropping = true;
 
-            // Get image bounding rectangle
+            // Get image bounding rect
             const bounds = imgObject.getBoundingRect();
 
-            // Create crop rectangle using bounds
+            // Create crop rect using bounds
             cropRect = new fabric.Rect({
                 left: bounds.left,
                 top: bounds.top,
@@ -358,12 +358,12 @@
         function confirmCrop() {
             if (!isCropping || !cropRect || !activeImage) return;
 
-            // Get the cropping rectangle and original image's ID
+            // Get the cropping rect and original image's ID
             const rect = cropRect;
             const img = activeImage;
             const originalId = img.id; // Save original ID
 
-            // Set the crop rectangle stroke to transparent so that it doesn't bleed into the final image
+            // Set the crop rect stroke to transparent so that it doesn't bleed into the final image
             rect.set('stroke', 'transparent');
 
             // Create a background to fill the canvas with white color
@@ -388,7 +388,7 @@
             });
 
             cropped.onload = function () {
-                // Remove old image and crop rectangle
+                // Remove old image and crop rect
                 canvas.remove(img);
                 canvas.remove(rect);
 
@@ -543,7 +543,7 @@
         function arrangeImagesRows(images) {
 
             const count = images.length;
-            const margin = count <= 2 ? 200 : 20;
+            const margin = count <= 2 ? 150 : 20;
 
             const cols = Math.ceil(Math.sqrt(count));
             const rows = Math.ceil(count / cols);
@@ -594,7 +594,7 @@
         function arrangeImagesCols(images) {
 
             const count = images.length;
-            const margin = count <= 2 ? 200 : 20;
+            const margin = count <= 2 ? 150 : 20;
 
             const rows = Math.ceil(Math.sqrt(count));
             const cols = Math.ceil(count / rows);
@@ -1063,11 +1063,13 @@
 
                             console.log("La esquina Top Left supera el margen derecho escalando horizontalmente");
 
-                            let co = (marginRight - TR.x);
+                            let rectAngle = obj.angle - 90;
 
-                            let restrictedObjWidth = co / Math.sin(degToRad(obj.angle - 90));
+                            let co = marginRight - TR.x;
 
-                            let ca = restrictedObjWidth * Math.cos(degToRad(obj.angle - 90));
+                            let restrictedObjWidth = co / Math.sin(degToRad(rectAngle));
+
+                            let ca = restrictedObjWidth * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -1083,11 +1085,13 @@
 
                             console.log("La esquina Top Left supera el margen derecho escalando verticalmente");
 
+                            let rectAngle = obj.angle - 90;
+
                             let ca = marginRight - BL.x;
 
-                            let restrictedObjectHeight = ca / Math.cos(degToRad(obj.angle - 90));
+                            let restrictedObjectHeight = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle - 90));
+                            let co = restrictedObjectHeight * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -1151,11 +1155,13 @@
 
                             console.log("La esquina Top Right supera el margen derecho escalando horizontalmente");
 
+                            let rectAngle = obj.angle;
+
                             let ca = marginRight - TL.x;
 
-                            let restrictedObjWidth = ca / Math.cos(degToRad(obj.angle));
+                            let restrictedObjWidth = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjWidth * Math.sin(degToRad(obj.angle));
+                            let co = restrictedObjWidth * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -1171,11 +1177,13 @@
 
                             console.log("La esquina Top Right supera el margen derecho escalando verticalmente");
 
+                            let rectAngle = obj.angle;
+
                             let co = marginRight - BR.x;
 
-                            let restrictedObjectHeight = co / Math.sin(degToRad(obj.angle));
+                            let restrictedObjectHeight = co / Math.sin(degToRad(rectAngle));
 
-                            let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle));
+                            let ca = restrictedObjectHeight * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -1234,11 +1242,13 @@
 
                             console.log("La esquina Bottom Right supera el margen derecho escalando horizontalmente");
 
+                            let rectAngle = 360 - obj.angle;
+
                             let co = marginRight - BL.x;
 
-                            let restrictedObjWidth = co / Math.cos(degToRad(360 - obj.angle));
+                            let restrictedObjWidth = co / Math.cos(degToRad(rectAngle));
 
-                            let ca = restrictedObjWidth * Math.sin(degToRad(360 - obj.angle));
+                            let ca = restrictedObjWidth * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -1254,11 +1264,13 @@
 
                             console.log("La esquina Bottom Right supera el margen derecho escalando verticalmente");
 
+                            let rectAngle = 360 - obj.angle;
+
                             let ca = marginRight - TR.x;
 
-                            let restrictedObjectHeight = ca / Math.sin(degToRad(360 - obj.angle));
+                            let restrictedObjectHeight = ca / Math.sin(degToRad(rectAngle));
 
-                            let co = restrictedObjectHeight * Math.cos(degToRad(360 - obj.angle));
+                            let co = restrictedObjectHeight * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -1316,11 +1328,13 @@
 
                             console.log("La esquina Bottom Left supera el margen derecho escalando horizontalmente");
 
+                            let rectAngle = obj.angle - 180;
+
                             let ca = marginRight - BR.x;
 
-                            let restrictedObjWidth = ca / Math.cos(degToRad(obj.angle - 180));
+                            let restrictedObjWidth = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjWidth * Math.sin(degToRad(obj.angle - 180));
+                            let co = restrictedObjWidth * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -1336,11 +1350,13 @@
 
                             console.log("La esquina Bottom Left supera el margen derecho escalando verticalmente");
 
+                            let rectAngle = obj.angle - 180;
+
                             let co = marginRight - TL.x;
 
-                            let restrictedObjectHeight = co / Math.sin(degToRad(obj.angle - 180));
+                            let restrictedObjectHeight = co / Math.sin(degToRad(rectAngle));
 
-                            let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle - 180));
+                            let ca = restrictedObjectHeight * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -1398,11 +1414,13 @@
 
                             console.log("La esquina Top Left supera el margen inferior escalando horizontalmente");
 
+                            let rectAngle = obj.angle - 180;
+
                             let co = marginBottom - TR.y;
 
-                            let restrictedObjWidth = co / Math.sin(degToRad(obj.angle - 180));
+                            let restrictedObjWidth = co / Math.sin(degToRad(rectAngle));
 
-                            let ca = restrictedObjWidth * Math.cos(degToRad(obj.angle - 180));
+                            let ca = restrictedObjWidth * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -1418,11 +1436,13 @@
 
                             console.log("La esquina Top Left supera el margen inferior escalando verticalmente");
 
+                            let rectAngle = obj.angle - 180;
+
                             let ca = marginBottom - BL.y;
 
-                            let restrictedObjectHeight = ca / Math.cos(degToRad(obj.angle - 180));
+                            let restrictedObjectHeight = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle - 180));
+                            let co = restrictedObjectHeight * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -1482,11 +1502,13 @@
 
                             console.log("La esquina Top Right supera el margen inferior escalando horizontalmente");
 
+                            let rectAngle = obj.angle - 90;
+
                             let ca = (marginBottom - TL.y);
 
-                            let restrictedObjWidth = ca / Math.cos(degToRad(obj.angle - 90));
+                            let restrictedObjWidth = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjWidth * Math.sin(degToRad(obj.angle - 90));
+                            let co = restrictedObjWidth * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -1502,11 +1524,13 @@
 
                             console.log("La esquina Top Right supera el margen inferior escalando verticalmente");
 
+                            let rectAngle = obj.angle - 90;
+
                             let co = (marginBottom - BR.y);
 
-                            let restrictedObjectHeight = co / Math.sin(degToRad(obj.angle - 90));
+                            let restrictedObjectHeight = co / Math.sin(degToRad(rectAngle));
 
-                            let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle - 90));
+                            let ca = restrictedObjectHeight * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -1565,11 +1589,13 @@
 
                             console.log("La esquina Bottom Right supera el margen inferior escalando horizontalmente");
 
+                            let rectAngle = obj.angle;
+
                             let co = (marginBottom - BL.y);
 
-                            let restrictedObjWidth = co / Math.sin(degToRad(obj.angle));
+                            let restrictedObjWidth = co / Math.sin(degToRad(rectAngle));
 
-                            let ca = restrictedObjWidth * Math.cos(degToRad(obj.angle));
+                            let ca = restrictedObjWidth * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -1585,11 +1611,13 @@
 
                             console.log("La esquina Bottom Right supera el margen inferior escalando verticalmente");
 
+                            let rectAngle = obj.angle;
+
                             let ca = marginBottom - TR.y;
 
-                            let restrictedObjectHeight = ca / Math.cos(degToRad(obj.angle));
+                            let restrictedObjectHeight = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle));
+                            let co = restrictedObjectHeight * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -1648,11 +1676,13 @@
 
                             console.log("La esquina Bottom Right supera el margen inferior escalando horizontalmente");
 
+                            let rectAngle = obj.angle - 270;
+
                             let ca = marginBottom - BR.y;
 
-                            let restrictedObjWidth = ca / Math.cos(degToRad(obj.angle - 270));
+                            let restrictedObjWidth = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjWidth * Math.sin(degToRad(obj.angle - 270));
+                            let co = restrictedObjWidth * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -1668,11 +1698,13 @@
 
                             console.log("La esquina Bottom Right supera el margen inferior escalando verticalmente");
 
+                            let rectAngle = obj.angle - 270;
+
                             let co = (marginBottom - TL.y);
 
-                            let restrictedObjectHeight = co / Math.sin(degToRad(obj.angle - 270));
+                            let restrictedObjectHeight = co / Math.sin(degToRad(rectAngle));
 
-                            let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle - 270));
+                            let ca = restrictedObjectHeight * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -1730,11 +1762,13 @@
 
                             console.log("La esquina Top Left supera el margen izquierdo escalando horizontalmente");
 
+                            let rectAngle = obj.angle - 270;
+
                             let co = TR.x - marginRect.left;
 
-                            let restrictedObjWidth = co / Math.sin(degToRad(obj.angle - 270));
+                            let restrictedObjWidth = co / Math.sin(degToRad(rectAngle));
 
-                            let ca = restrictedObjWidth * Math.cos(degToRad(obj.angle - 270));
+                            let ca = restrictedObjWidth * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -1750,11 +1784,13 @@
 
                             console.log("La esquina Top Left supera el margen izquierdo escalando verticalmente");
 
+                            let rectAngle = obj.angle - 270;
+
                             let ca = BL.x - marginRect.left;
 
-                            let restrictedObjectHeight = ca / Math.cos(degToRad(obj.angle - 270));
+                            let restrictedObjectHeight = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle - 270));
+                            let co = restrictedObjectHeight * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -1812,11 +1848,13 @@
 
                             console.log("La esquina Top Left supera el margen izquierdo escalando horizontalmente");
 
+                            let rectAngle = obj.angle - 180;
+
                             let ca = TL.x - marginRect.left;
 
-                            let restrictedObjWidth = ca / Math.cos(degToRad(obj.angle - 180));
+                            let restrictedObjWidth = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjWidth * Math.sin(degToRad(obj.angle - 180));
+                            let co = restrictedObjWidth * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -1832,11 +1870,13 @@
 
                             console.log("La esquina Top Left supera el margen izquierdo escalando verticalmente");
 
+                            let rectAngle = obj.angle - 180;
+
                             let co = BR.x - marginRect.left;
 
-                            let restrictedObjectHeight = co / Math.sin(degToRad(obj.angle - 180));
+                            let restrictedObjectHeight = co / Math.sin(degToRad(rectAngle));
 
-                            let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle - 180));
+                            let ca = restrictedObjectHeight * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -1894,11 +1934,13 @@
 
                             console.log("La esquina Bottom Right supera el margen izquierdo escalando horizontalmente");
 
+                            let rectAngle = obj.angle - 90;
+
                             let co = BL.x - marginRect.left;
 
-                            let restrictedObjWidth = co / Math.sin(degToRad(obj.angle - 90));
+                            let restrictedObjWidth = co / Math.sin(degToRad(rectAngle));
 
-                            let ca = restrictedObjWidth * Math.cos(degToRad(obj.angle - 90));
+                            let ca = restrictedObjWidth * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -1914,11 +1956,13 @@
 
                             console.log("La esquina Bottom Right supera el margen izquierdo escalando verticalmente");
 
+                            let rectAngle = obj.angle - 90;
+
                             let ca = TR.x - marginRect.left;
 
-                            let restrictedObjectHeight = ca / Math.cos(degToRad(obj.angle - 90));
+                            let restrictedObjectHeight = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle - 90));
+                            let co = restrictedObjectHeight * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -1976,11 +2020,13 @@
 
                             console.log("La esquina Bottom Left supera el margen izquierdo escalando horizontalmente");
 
+                            let rectAngle = obj.angle;
+
                             let ca = BR.x - marginRect.left;
 
-                            let restrictedObjWidth = ca / Math.cos(degToRad(obj.angle));
+                            let restrictedObjWidth = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjWidth * Math.sin(degToRad(obj.angle));
+                            let co = restrictedObjWidth * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -1996,11 +2042,13 @@
 
                             console.log("La esquina Bottom Left supera el margen izquierdo escalando verticalmente");
 
+                            let rectAngle = obj.angle;
+
                             let co = TL.x - marginRect.left;
 
-                            let restrictedObjectHeight = co / Math.sin(degToRad(obj.angle));
+                            let restrictedObjectHeight = co / Math.sin(degToRad(rectAngle));
 
-                            let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle));
+                            let ca = restrictedObjectHeight * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -2058,11 +2106,13 @@
 
                             console.log("La esquina Top Left supera el margen superior escalando horizontalmente");
 
+                            let rectAngle = obj.angle;
+
                             let co = TR.y - marginRect.top;
 
-                            let restrictedObjWidth = co / Math.sin(degToRad(obj.angle));
+                            let restrictedObjWidth = co / Math.sin(degToRad(rectAngle));
 
-                            let ca = restrictedObjWidth * Math.cos(degToRad(obj.angle));
+                            let ca = restrictedObjWidth * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -2078,11 +2128,13 @@
 
                             console.log("La esquina Top Left supera el margen superior escalando verticalmente");
 
+                            let rectAngle = obj.angle;
+
                             let ca = BL.y - marginRect.top;
 
-                            let restrictedObjectHeight = ca / Math.cos(degToRad(obj.angle));
+                            let restrictedObjectHeight = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle));
+                            let co = restrictedObjectHeight * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -2140,11 +2192,13 @@
 
                             console.log("La esquina Top Right supera el margen superior escalando horizontalmente");
 
+                            let rectAngle = obj.angle - 270;
+
                             let ca = TL.y - marginRect.top;
 
-                            let restrictedObjWidth = ca / Math.cos(degToRad(obj.angle - 270));
+                            let restrictedObjWidth = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjWidth * Math.sin(degToRad(obj.angle - 270));
+                            let co = restrictedObjWidth * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -2160,11 +2214,13 @@
 
                             console.log("La esquina Top Right supera el margen superior escalando verticalmente");
 
+                            let rectAngle = obj.angle - 270;
+
                             let co = BR.y - marginRect.top;
 
-                            let restrictedObjectHeight = co / Math.sin(degToRad(obj.angle - 270));
+                            let restrictedObjectHeight = co / Math.sin(degToRad(rectAngle));
 
-                            let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle - 270));
+                            let ca = restrictedObjectHeight * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -2222,11 +2278,13 @@
 
                             console.log("La esquina Bottom Right supera el margen superior escalando horizontalmente");
 
+                            let rectAngle = obj.angle - 180;
+
                             let co = BL.y - marginRect.top;
 
-                            let restrictedObjWidth = co / Math.sin(degToRad(obj.angle - 180));
+                            let restrictedObjWidth = co / Math.sin(degToRad(rectAngle));
 
-                            let ca = restrictedObjWidth * Math.cos(degToRad(obj.angle - 180));
+                            let ca = restrictedObjWidth * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -2242,11 +2300,13 @@
 
                             console.log("La esquina Bottom Right supera el margen superior escalando verticalmente");
 
+                            let rectAngle = obj.angle - 180;
+
                             let ca = TR.y - marginRect.top;
 
-                            let restrictedObjectHeight = ca / Math.cos(degToRad(obj.angle - 180));
+                            let restrictedObjectHeight = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjectHeight * Math.sin(degToRad(obj.angle - 180));
+                            let co = restrictedObjectHeight * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
@@ -2303,11 +2363,13 @@
 
                             console.log("La esquina Bottom Left supera el margen superior escalando horizontalmente");
 
+                            let rectAngle = obj.angle - 90;
+
                             let ca = BR.y - marginRect.top;
 
-                            let restrictedObjWidth = ca / Math.cos(degToRad(obj.angle - 90));
+                            let restrictedObjWidth = ca / Math.cos(degToRad(rectAngle));
 
-                            let co = restrictedObjWidth * Math.sin(degToRad(obj.angle - 90));
+                            let co = restrictedObjWidth * Math.sin(degToRad(rectAngle));
 
                             let restrictedScaleX = restrictedObjWidth / obj.width;
 
@@ -2323,11 +2385,13 @@
 
                             console.log("La esquina Bottom Left supera el margen superior escalando verticalmente");
 
+                            let rectAngle = obj.angle - 90;
+
                             let co = TL.y - marginRect.top;
 
-                            let restrictedObjectHeight = co / Math.sin(degToRad(obj.angle - 90));
+                            let restrictedObjectHeight = co / Math.sin(degToRad(rectAngle));
 
-                            let ca = restrictedObjectHeight * Math.cos(degToRad(obj.angle - 90));
+                            let ca = restrictedObjectHeight * Math.cos(degToRad(rectAngle));
 
                             let restrictedScaleY = restrictedObjectHeight / obj.height;
 
