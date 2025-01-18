@@ -191,6 +191,7 @@
     </div>
 
     <script>
+
         let currentZoom = 1;
         const zoomFactor = 0.1;
         const maxZoom = 2;
@@ -821,6 +822,76 @@
             canvas.renderAll();
         }
 
+        function calculateDistance(x1, y1, x2, y2) {
+            // Calculate the difference in x and y coordinates
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+
+            // Use Pythagorean theorem to calculate distance
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function drawCircle(x1, x2, color) {
+            // Add red circle at 
+            const circle = new fabric.Circle({
+                left: x1,
+                top: x2,
+                originX: 'center',
+                originY: 'center',
+                radius: 5,
+                fill: color || 'red',
+                selectable: false
+            });
+            canvas.add(circle);
+
+        }
+
+        function drawRectangle(x, y, width, height, options = {}) {
+            // Default options merged with provided options
+            const defaultOptions = {
+                left: x,
+                top: y,
+                width: width,
+                height: height,
+                fill: 'transparent',
+                stroke: 'black',
+                strokeWidth: 2,
+                selectable: true
+            };
+
+            const finalOptions = { ...defaultOptions, ...options };
+
+            // Create new rectangle
+            const rectangle = new fabric.Rect(finalOptions);
+
+            // Add to canvas
+            canvas.add(rectangle);
+            canvas.renderAll();
+
+            return rectangle;
+        }
+
+        function drawLine(coords, options = {}) {
+            // Default options merged with provided options
+            const defaultOptions = {
+                fill: 'black',
+                stroke: 'black',
+                strokeWidth: 2,
+                selectable: false
+            };
+
+            const finalOptions = { ...defaultOptions, ...options };
+
+            // Create new line
+            const line = new fabric.Line(coords, finalOptions);
+
+            // Add to canvas
+            canvas.add(line);
+            canvas.renderAll();
+
+            return line;
+        }
+
         cartaButton.addEventListener('click', () => resizeCanvas('carta'));
         oficioButton.addEventListener('click', () => resizeCanvas('oficio'));
         verticalButton.addEventListener('click', () => changeOrientation(true));
@@ -902,8 +973,8 @@
             // Obtener los puntos del objeto y del margen
             let objPoints = [obj.aCoords.tl, obj.aCoords.tr, obj.aCoords.br, obj.aCoords.bl];
 
-            let marginRight = (marginRect.left + marginRect.width);
-            let marginBottom = (marginRect.top + marginRect.height);
+            let marginRight = marginRect.left + marginRect.width;
+            let marginBottom = marginRect.top + marginRect.height;
 
             // Inicializar desplazamientos
             let offsetX = 0, offsetY = 0;
@@ -932,73 +1003,99 @@
             }
         });
 
-        function findMidpointFromPoints(point1, point2) {
-            return {
-                x: (point1.x + point2.x) / 2,
-                y: (point1.y + point2.y) / 2
-            };
-        }
+        // Add this variable outside event handlers
+        let previousAngle = 0;
 
-        function drawCircle(x1, x2, color) {
-            // Add red circle at 
-            const circle = new fabric.Circle({
-                left: x1,
-                top: x2,
-                originX: 'center',
-                originY: 'center',
-                radius: 5,
-                fill: color || 'red',
-                selectable: false
-            });
-            canvas.add(circle);
+        let clockwise = false;
 
-        }
+        canvas.on('object:rotating', function (event) {
+            const obj = event.target;
+            obj.setCoords();
 
-        function drawRectangle(x, y, width, height, options = {}) {
-            // Default options merged with provided options
-            const defaultOptions = {
-                left: x,
-                top: y,
-                width: width,
-                height: height,
-                fill: 'transparent',
-                stroke: 'black',
-                strokeWidth: 2,
-                selectable: true
-            };
+            // Get current angle and calculate direction
+            const currentAngle = obj.angle;
 
-            const finalOptions = { ...defaultOptions, ...options };
+            if (currentAngle > previousAngle) {
+                clockwise = true;
+            } else {
+                clockwise = false;
+            }
 
-            // Create new rectangle
-            const rectangle = new fabric.Rect(finalOptions);
+            // Store current angle for next comparison
+            previousAngle = currentAngle;
 
-            // Add to canvas
-            canvas.add(rectangle);
+            let TOP = obj.top;
+            let LEFT = obj.left;
+
+            let TL = obj.aCoords.tl;
+            let TR = obj.aCoords.tr;
+            let BL = obj.aCoords.bl;
+            let BR = obj.aCoords.br;
+
+            let realObjectWidth = obj.width * obj.scaleX;
+            let realObjectHeight = obj.height * obj.scaleY;
+
+            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
+
+            let complementDiagAngle = Math.PI / 2 - diagAngle;
+
+            // Calculate margins from canvas edges
+            const leftMargin = marginRect.left;
+            const rightMargin = marginRect.left + marginRect.width;
+            const topMargin = marginRect.top;
+            const bottomMargin = marginRect.top + marginRect.height;
+
+            if (TL.x < leftMargin) {
+
+                // Prevent rotation by setting angle back to previous value
+
+            }
+
+            if (TR.x > rightMargin) {
+
+                if (clockwise) {
+
+                    let co = rightMargin - obj.left;
+
+                    let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
+
+                    let marginAngle = Math.asin(co / hypotenuse);
+
+                    let restrictedAngle = marginAngle - complementDiagAngle;
+
+                    obj.angle = radToDeg(restrictedAngle);
+
+                } else {
+
+                    let co = rightMargin - obj.left;
+
+                    let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
+
+                    let marginAngle = Math.asin(co / hypotenuse);
+
+                    let restrictedAngle = marginAngle - diagAngle;
+
+                    let complementRestrictedAngle = Math.PI / 2 - restrictedAngle;
+
+                    obj.angle = radToDeg(complementRestrictedAngle);
+                }
+
+            }
+
+            if (TR.y < topMargin) {
+
+                // Prevent rotation by setting angle back to previous value
+
+            }
+
+            if (TR.y > bottomMargin) {
+
+                // Prevent rotation by setting angle back to previous value
+
+            }
+
             canvas.renderAll();
-
-            return rectangle;
-        }
-
-        function drawLine(coords, options = {}) {
-            // Default options merged with provided options
-            const defaultOptions = {
-                fill: 'black',
-                stroke: 'black',
-                strokeWidth: 2,
-                selectable: false
-            };
-
-            const finalOptions = { ...defaultOptions, ...options };
-
-            // Create new line
-            const line = new fabric.Line(coords, finalOptions);
-
-            // Add to canvas
-            canvas.add(line);
-            canvas.renderAll();
-
-            return line;
-        }
+        });
 
         // Reset activeRestriction when scaling ends
         canvas.on('object:modified', function (e) {
@@ -1021,8 +1118,8 @@
 
             // Verificamos si el objeto excede los márgenes
 
-            let marginRight = (marginRect.left + marginRect.width);
-            let marginBottom = (marginRect.top + marginRect.height);
+            let marginRight = marginRect.left + marginRect.width;
+            let marginBottom = marginRect.top + marginRect.height;
 
             let TL = obj.aCoords.tl;
             let TR = obj.aCoords.tr;
