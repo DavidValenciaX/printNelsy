@@ -576,17 +576,17 @@
                 let bounds = img.getBoundingRect();
 
                 // Redondear antes de calcular el offset
-                let roundedBoundsWidth = roundToDecimals(bounds.width, 10);
+                let roundedBoundsWidth = roundToDecimals(bounds.width, 2);
 
-                let roundedImageWidth = roundToDecimals(realImagetWidth, 10);
+                let roundedImageWidth = roundToDecimals(realImagetWidth, 2);
 
-                const offsetWidthImageBound = roundToDecimals(roundedBoundsWidth - roundedImageWidth, 10);
+                const offsetWidthImageBound = roundToDecimals(roundedBoundsWidth - roundedImageWidth, 2);
 
-                let roundedBoundsHeight = roundToDecimals(bounds.height, 10);
+                let roundedBoundsHeight = roundToDecimals(bounds.height, 2);
 
-                let roundedImageHeight = roundToDecimals(realImageHeight, 10);
+                let roundedImageHeight = roundToDecimals(realImageHeight, 2);
 
-                const offsetHeightImageBound = roundToDecimals(roundedBoundsHeight - roundedImageHeight, 10);
+                const offsetHeightImageBound = roundToDecimals(roundedBoundsHeight - roundedImageHeight, 2);
 
                 const scaleFactor = Math.min(
                     (cellWidth - margin - offsetWidthImageBound) / img.width,
@@ -652,17 +652,17 @@
                 let bounds = img.getBoundingRect();
 
                 // Redondear antes de calcular el offset
-                let roundedBoundsWidth = roundToDecimals(bounds.width, 10);
+                let roundedBoundsWidth = roundToDecimals(bounds.width, 2);
 
-                let roundedImageWidth = roundToDecimals(realImagetWidth, 10);
+                let roundedImageWidth = roundToDecimals(realImagetWidth, 2);
 
-                const offsetWidthImageBound = roundToDecimals(roundedBoundsWidth - roundedImageWidth, 10);
+                const offsetWidthImageBound = roundToDecimals(roundedBoundsWidth - roundedImageWidth, 2);
 
-                let roundedBoundsHeight = roundToDecimals(bounds.height, 10);
+                let roundedBoundsHeight = roundToDecimals(bounds.height, 2);
 
-                let roundedImageHeight = roundToDecimals(realImageHeight, 10);
+                let roundedImageHeight = roundToDecimals(realImageHeight, 2);
 
-                const offsetHeightImageBound = roundToDecimals(roundedBoundsHeight - roundedImageHeight, 10);
+                const offsetHeightImageBound = roundToDecimals(roundedBoundsHeight - roundedImageHeight, 2);
 
                 const scaleFactor = Math.min(
                     (cellWidth - margin - offsetWidthImageBound) / img.width,
@@ -714,7 +714,9 @@
                     scaleY: original.scaleY,
                     angle: original.angle,
                     left: original.left,
-                    top: original.top
+                    top: original.top,
+                    originX: 'center',
+                    originY: 'center'
                 });
 
                 // Replace old image with new one
@@ -932,7 +934,7 @@
             };
         }
 
-        function drawRedCircle(x1, x2) {
+        function drawCircle(x1, x2, color) {
             // Add red circle at 
             const circle = new fabric.Circle({
                 left: x1,
@@ -940,7 +942,7 @@
                 originX: 'center',
                 originY: 'center',
                 radius: 5,
-                fill: 'red',
+                fill: color || 'red',
                 selectable: false
             });
             canvas.add(circle);
@@ -970,6 +972,27 @@
             canvas.renderAll();
 
             return rectangle;
+        }
+
+        function drawLine(coords, options = {}) {
+            // Default options merged with provided options
+            const defaultOptions = {
+                fill: 'black',
+                stroke: 'black',
+                strokeWidth: 2,
+                selectable: false
+            };
+
+            const finalOptions = { ...defaultOptions, ...options };
+
+            // Create new line
+            const line = new fabric.Line(coords, finalOptions);
+
+            // Add to canvas
+            canvas.add(line);
+            canvas.renderAll();
+
+            return line;
         }
 
         // Reset activeRestriction when scaling ends
