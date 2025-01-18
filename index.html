@@ -522,6 +522,11 @@
                         img.id = imageId;
                         img.originalUrl = event.target.result; // Store URL for later use
 
+                        // Set rotation control visibility based on checkbox state
+                        img.setControlsVisibility({
+                            mtr: rotateCheckbox.checked
+                        });
+
                         loadedImages.push(img);
 
                         if (loadedImages.length === files.length) {
