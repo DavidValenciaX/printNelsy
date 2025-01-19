@@ -1052,21 +1052,21 @@
                 if (activeRestriction === 'TL_RIGHT_CCW' && TL.x <= rightMargin && clockwise) {
                     activeRestriction = null;
                 }
-                if (activeRestriction === 'TR_RIGHT_CW' && TR.x <= rightMargin && clockwise) {
+                if (activeRestriction === 'TR_RIGHT_CW' && TR.x <= rightMargin && !clockwise) {
                     activeRestriction = null;
                 }
-                if (activeRestriction === 'TR_RIGHT_CCW' && TR.x <= rightMargin && !clockwise) {
+                if (activeRestriction === 'TR_RIGHT_CCW' && TR.x <= rightMargin && clockwise) {
                     activeRestriction = null;
                 }
 
                 if (!activeRestriction) {
-                    if (TL.x > rightMargin && obj.angle > 90 && obj.angle <= 180 && clockwise) {
+                    if (TL.x > rightMargin && clockwise) {
                         activeRestriction = 'TL_RIGHT_CW';
-                    } else if (TL.x > rightMargin && obj.angle > 90 && obj.angle <= 180 && !clockwise) {
+                    } else if (TL.x > rightMargin && !clockwise) {
                         activeRestriction = 'TL_RIGHT_CCW';
-                    } else if (TR.x > rightMargin && obj.angle >= 0 && obj.angle <= 90 && clockwise) {
+                    } else if (TR.x > rightMargin && clockwise) {
                         activeRestriction = 'TR_RIGHT_CW';
-                    } else if (TR.x > rightMargin && obj.angle >= 0 && obj.angle <= 90 && !clockwise) {
+                    } else if (TR.x > rightMargin && !clockwise) {
                         activeRestriction = 'TR_RIGHT_CCW';
                     }
 
