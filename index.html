@@ -1046,135 +1046,71 @@
             const bottomMargin = marginRect.top + marginRect.height;
 
             function checkRotating(point) {
-                if (activeRestriction === 'TL_RIGHT' && TL.x <= rightMargin) {
+                if (activeRestriction === 'TL_RIGHT_CW' && TL.x <= rightMargin && !clockwise) {
                     activeRestriction = null;
                 }
-                if (activeRestriction === 'TR_RIGHT' && TR.x <= rightMargin) {
+                if (activeRestriction === 'TL_RIGHT_CCW' && TL.x <= rightMargin && clockwise) {
                     activeRestriction = null;
                 }
-                if (activeRestriction === 'BR_RIGHT' && BR.x <= rightMargin) {
+                if (activeRestriction === 'TR_RIGHT_CW' && TR.x <= rightMargin && clockwise) {
                     activeRestriction = null;
                 }
-                if (activeRestriction === 'BL_RIGHT' && BL.x <= rightMargin) {
-                    activeRestriction = null;
-                }
-                if (activeRestriction === 'TL_BOTTOM' && TL.y <= bottomMargin) {
-                    activeRestriction = null;
-                }
-                if (activeRestriction === 'TR_BOTTOM' && TR.y <= bottomMargin) {
-                    activeRestriction = null;
-                }
-                if (activeRestriction === 'BR_BOTTOM' && BR.y <= bottomMargin) {
-                    activeRestriction = null;
-                }
-                if (activeRestriction === 'BL_BOTTOM' && BL.y <= bottomMargin) {
-                    activeRestriction = null;
-                }
-                if (activeRestriction === 'TL_LEFT' && TL.x >= leftMargin) {
-                    activeRestriction = null;
-                }
-                if (activeRestriction === 'TR_LEFT' && TR.x >= leftMargin) {
-                    activeRestriction = null;
-                }
-                if (activeRestriction === 'BR_LEFT' && BR.x >= leftMargin) {
-                    activeRestriction = null;
-                }
-                if (activeRestriction === 'BL_LEFT' && BL.x >= leftMargin) {
-                    activeRestriction = null;
-                }
-                if (activeRestriction === 'TL_TOP' && TL.y >= topMargin) {
-                    activeRestriction = null;
-                }
-                if (activeRestriction === 'TR_TOP' && TR.y >= topMargin) {
-                    activeRestriction = null;
-                }
-                if (activeRestriction === 'BR_TOP' && BR.y >= topMargin) {
-                    activeRestriction = null;
-                }
-                if (activeRestriction === 'BL_TOP' && BL.y >= topMargin) {
+                if (activeRestriction === 'TR_RIGHT_CCW' && TR.x <= rightMargin && !clockwise) {
                     activeRestriction = null;
                 }
 
                 if (!activeRestriction) {
-                    if (TL.x > rightMargin && obj.angle > 90 && obj.angle <= 180) {
-                        activeRestriction = 'TL_RIGHT';
-                    } else if (TR.x > rightMargin && obj.angle >= 0 && obj.angle <= 90) {
-                        activeRestriction = 'TR_RIGHT';
-                    } else if (BR.x > rightMargin && obj.angle >= 270 && obj.angle < 360) {
-                        activeRestriction = 'BR_RIGHT';
-                    } else if (BL.x > rightMargin && obj.angle >= 180 && obj.angle < 270) {
-                        activeRestriction = 'BL_RIGHT';
-                    } else if (TL.y > bottomMargin && obj.angle > 180 && obj.angle <= 270) {
-                        activeRestriction = 'TL_BOTTOM';
-                    } else if (TR.y > bottomMargin && obj.angle >= 270 && obj.angle < 360) {
-                        activeRestriction = 'TR_BOTTOM';
-                    } else if (BR.y > bottomMargin && obj.angle >= 0 && obj.angle <= 90) {
-                        activeRestriction = 'BR_BOTTOM';
-                    } else if (BL.y > bottomMargin && obj.angle >= 90 && obj.angle <= 180) {
-                        activeRestriction = 'BL_BOTTOM';
-                    } else if (TL.x < leftMargin && obj.angle >= 90 && obj.angle <= 180) {
-                        activeRestriction = 'TL_LEFT';
-                    } else if (TR.x < leftMargin && obj.angle >= 180 && obj.angle <= 270) {
-                        activeRestriction = 'TR_LEFT';
-                    } else if (BR.x < leftMargin && obj.angle >= 270 && obj.angle < 360) {
-                        activeRestriction = 'BR_LEFT';
-                    } else if (BL.x < leftMargin && obj.angle >= 0 && obj.angle <= 90) {
-                        activeRestriction = 'BL_LEFT';
-                    } else if (TL.y < topMargin && obj.angle >= 0 && obj.angle <= 90) {
-                        activeRestriction = 'TL_TOP';
-                    } else if (TR.y < topMargin && obj.angle >= 90 && obj.angle <= 180) {
-                        activeRestriction = 'TR_TOP';
-                    } else if (BR.y < topMargin && obj.angle >= 180 && obj.angle <= 270) {
-                        activeRestriction = 'BR_TOP';
-                    } else if (BL.y < topMargin && obj.angle >= 270 && obj.angle < 360) {
-                        activeRestriction = 'BL_TOP';
+                    if (TL.x > rightMargin && obj.angle > 90 && obj.angle <= 180 && clockwise) {
+                        activeRestriction = 'TL_RIGHT_CW';
+                    } else if (TL.x > rightMargin && obj.angle > 90 && obj.angle <= 180 && !clockwise) {
+                        activeRestriction = 'TL_RIGHT_CCW';
+                    } else if (TR.x > rightMargin && obj.angle >= 0 && obj.angle <= 90 && clockwise) {
+                        activeRestriction = 'TR_RIGHT_CW';
+                    } else if (TR.x > rightMargin && obj.angle >= 0 && obj.angle <= 90 && !clockwise) {
+                        activeRestriction = 'TR_RIGHT_CCW';
                     }
-
-
 
                 }
 
                 switch (activeRestriction) {
 
-                    case 'TL_RIGHT':{
+                    case 'TL_RIGHT_CW': {
 
-                        if (clockwise) {
+                        console.log("Restrict TL to right margin when rotating clockwise");
 
-                            console.log("Restrict TL to right margin when rotating clockwise");
+                        let co = rightMargin - obj.left;
 
-                            let co = rightMargin - obj.left;
+                        let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
 
-                            let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
+                        let marginAngle = Math.asin(co / hypotenuse);
 
-                            let marginAngle = Math.asin(co / hypotenuse);
+                        let restrictedAngle = (marginAngle - diagAngle) + (Math.PI / 2);
 
-                            let restrictedAngle = (marginAngle - diagAngle) + (Math.PI / 2);
-
-                            obj.angle = radToDeg(restrictedAngle);
-
-                        } else {
-
-                            console.log("Restrict TL to right margin when rotating counterclockwise");
-
-                            let co = rightMargin - obj.left;
-
-                            let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
-
-                            let marginAngle = Math.asin(co / hypotenuse);
-
-                            let restrictedAngle = marginAngle - complementDiagAngle;
-
-                            let complementRestrictedAngle = (Math.PI / 2 - restrictedAngle) + (Math.PI / 2);
-
-                            obj.angle = radToDeg(complementRestrictedAngle);
-                        }
+                        obj.angle = radToDeg(restrictedAngle);
 
                         break;
                     }
 
-                    case 'TR_RIGHT': {
+                    case 'TL_RIGHT_CCW': {
 
-                        if (clockwise) {
+                        console.log("Restrict TL to right margin when rotating counterclockwise");
+
+                        let co = rightMargin - obj.left;
+
+                        let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
+
+                        let marginAngle = Math.asin(co / hypotenuse);
+
+                        let restrictedAngle = marginAngle - complementDiagAngle;
+
+                        let complementRestrictedAngle = (Math.PI / 2 - restrictedAngle) + (Math.PI / 2);
+
+                        obj.angle = radToDeg(complementRestrictedAngle);
+
+                        break;
+                    }
+
+                    case 'TR_RIGHT_CW': {
 
                             console.log("Restrict TR to right margin when rotating clockwise");
 
@@ -1188,22 +1124,24 @@
 
                             obj.angle = radToDeg(restrictedAngle);
 
-                        } else {
+                        break;
+                    }
 
-                            console.log("Restrict TR to right margin when rotating counterclockwise");
+                    case 'TR_RIGHT_CCW': {
 
-                            let co = rightMargin - obj.left;
+                        console.log("Restrict TR to right margin when rotating counterclockwise");
 
-                            let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
+                        let co = rightMargin - obj.left;
 
-                            let marginAngle = Math.asin(co / hypotenuse);
+                        let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
 
-                            let restrictedAngle = marginAngle - diagAngle;
+                        let marginAngle = Math.asin(co / hypotenuse);
 
-                            let complementRestrictedAngle = Math.PI / 2 - restrictedAngle;
+                        let restrictedAngle = marginAngle - diagAngle;
 
-                            obj.angle = radToDeg(complementRestrictedAngle);
-                        }
+                        let complementRestrictedAngle = Math.PI / 2 - restrictedAngle;
+
+                        obj.angle = radToDeg(complementRestrictedAngle);
 
                         break;
                     }
@@ -1211,9 +1149,6 @@
                     default:
                         // Handle default case
                         break;
-
-
-
 
                 }
 
