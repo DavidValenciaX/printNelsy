@@ -1064,6 +1064,12 @@
                 if (activeRestriction === 'BR_RIGHT_CCW' && BR.x <= rightMargin && clockwise) {
                     activeRestriction = null;
                 }
+                if (activeRestriction === 'BL_RIGHT_CW' && BL.x <= rightMargin && !clockwise) {
+                    activeRestriction = null;
+                }
+                if (activeRestriction === 'BL_RIGHT_CCW' && BL.x <= rightMargin && clockwise) {
+                    activeRestriction = null;
+                }
 
                 if (!activeRestriction) {
                     if (TL.x > rightMargin && clockwise) {
@@ -1221,6 +1227,44 @@
                         let restrictedAngle = marginAngle - complementDiagAngle;
 
                         let complementRestrictedAngle = (Math.PI / 2 - restrictedAngle) + (3 * Math.PI / 2);
+
+                        obj.angle = radToDeg(complementRestrictedAngle);
+
+                        break;
+
+                    }
+
+                    case 'BL_RIGHT_CW': {
+
+                        console.log("Restrict BL to right margin when rotating clockwise");
+
+                        let co = rightMargin - obj.left;
+
+                        let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
+
+                        let marginAngle = Math.asin(co / hypotenuse);
+
+                        let restrictedAngle = (marginAngle - complementDiagAngle) + Math.PI;
+
+                        obj.angle = radToDeg(restrictedAngle);
+
+                        break;
+
+                    }
+
+                    case 'BL_RIGHT_CCW': {
+
+                        console.log("Restrict BL to right margin when rotating counterclockwise");
+
+                        let co = rightMargin - obj.left;
+
+                        let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
+
+                        let marginAngle = Math.asin(co / hypotenuse);
+
+                        let restrictedAngle = marginAngle - diagAngle;
+
+                        let complementRestrictedAngle = (Math.PI / 2 - restrictedAngle) + Math.PI;
 
                         obj.angle = radToDeg(complementRestrictedAngle);
 
