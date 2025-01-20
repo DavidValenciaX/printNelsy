@@ -846,8 +846,18 @@
 
         }
 
+        let temporaryRectangle = null;
+        let cornerLabels = []; // Arreglo para almacenar los textos temporales
+
         function drawRectangle(x, y, width, height, options = {}) {
-            // Default options merged with provided options
+            // Eliminar el rectángulo temporal anterior y los textos si existen
+            if (temporaryRectangle) {
+                canvas.remove(temporaryRectangle);
+            }
+            cornerLabels.forEach(label => canvas.remove(label));
+            cornerLabels = [];
+
+            // Opciones predeterminadas combinadas con las proporcionadas
             const defaultOptions = {
                 left: x,
                 top: y,
@@ -856,19 +866,44 @@
                 fill: 'transparent',
                 stroke: 'black',
                 strokeWidth: 2,
-                selectable: true
+                selectable: false, // El rectángulo no será interactivo
+                evented: false // No responde a eventos del mouse
             };
-
             const finalOptions = { ...defaultOptions, ...options };
 
-            // Create new rectangle
-            const rectangle = new fabric.Rect(finalOptions);
+            // Crear nuevo rectángulo
+            temporaryRectangle = new fabric.Rect(finalOptions);
 
-            // Add to canvas
-            canvas.add(rectangle);
+            // Agregar rectángulo al canvas
+            canvas.add(temporaryRectangle);
+
+            // Forzar la actualización de coordenadas
+            temporaryRectangle.setCoords();
+
+            // Calcular las posiciones de las esquinas
+            const corners = {
+                TL: { x: temporaryRectangle.aCoords.tl.x, y: temporaryRectangle.aCoords.tl.y }, // Top-Left
+                TR: { x: temporaryRectangle.aCoords.tr.x, y: temporaryRectangle.aCoords.tr.y }, // Top-Right
+                BL: { x: temporaryRectangle.aCoords.bl.x, y: temporaryRectangle.aCoords.bl.y }, // Bottom-Left
+                BR: { x: temporaryRectangle.aCoords.br.x, y: temporaryRectangle.aCoords.br.y } // Bottom-Right
+            };
+
+            // Agregar etiquetas en las esquinas
+            for (const [corner, pos] of Object.entries(corners)) {
+                const text = new fabric.Text(corner, {
+                    left: pos.x - 10, // Ajuste para centrar el texto
+                    top: pos.y - 10,
+                    fontSize: 12,
+                    fill: 'red',
+                    selectable: false, // El texto no será interactivo
+                    evented: false // No responde a eventos del mouse
+                });
+                cornerLabels.push(text);
+                canvas.add(text);
+            }
+
+            // Renderizar
             canvas.renderAll();
-
-            return rectangle;
         }
 
         function drawLine(coords, options = {}) {
@@ -1037,6 +1072,8 @@
             let realObjectWidth = obj.width * obj.scaleX;
             let realObjectHeight = obj.height * obj.scaleY;
 
+            drawRectangle(obj.left, obj.top, realObjectWidth, realObjectHeight, { originX: 'center', originY: 'center', angle: obj.angle, fill: 'transparent', stroke: 'red', strokeWidth: 2, selectable: false, evented: false });
+
             let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
             let complementDiagAngle = Math.PI / 2 - diagAngle;
@@ -1054,8 +1091,8 @@
                 if (activeRestriction === 'TL_RIGHT_CCW' && TL.x <= rightMargin && clockwise && obj.angle >= 90 && obj.angle <= 180) {
                     activeRestriction = null;
                 }
-                if (activeRestriction === 'TR_RIGHT_CW' && TR.x <= rightMargin && !clockwise && obj.angle >= 0 && obj.angle <= 90) {
-                    //console.log("TR is less than right margin and rotating counterclockwise");
+                if (activeRestriction === 'TR_RIGHT_CW' && TR.x <= rightMargin && TL.x <= rightMargin && BR.x <= rightMargin && BL.x <= rightMargin && !clockwise && obj.angle >= 0 && obj.angle <= 90) {
+                    console.log("Se devuelve");
                     activeRestriction = null;
                 }
                 if (activeRestriction === 'TR_RIGHT_CCW' && TR.x <= rightMargin && clockwise && obj.angle >= 0 && obj.angle <= 90) {
@@ -1135,17 +1172,17 @@
 
                     case 'TR_RIGHT_CW': {
 
-                            //console.log("Restrict TR to right margin when rotating clockwise");
+                        console.log("Restrict TR to right margin when rotating clockwise");
 
-                            let co = rightMargin - obj.left;
+                        let co = rightMargin - obj.left;
 
-                            let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
+                        let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
 
-                            let marginAngle = Math.asin(co / hypotenuse);
+                        let marginAngle = Math.asin(co / hypotenuse);
 
-                            let restrictedAngle = marginAngle - complementDiagAngle;
+                        let restrictedAngle = marginAngle - complementDiagAngle;
 
-                            obj.angle = radToDeg(restrictedAngle);
+                        obj.angle = radToDeg(restrictedAngle);
 
                         break;
                     }
@@ -1183,7 +1220,7 @@
 
                         obj.angle = radToDeg(restrictedAngle);
 
-                       break;
+                        break;
 
                     }
 
