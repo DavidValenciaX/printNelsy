@@ -1058,6 +1058,12 @@
                 if (activeRestriction === 'TR_RIGHT_CCW' && TR.x <= rightMargin && clockwise) {
                     activeRestriction = null;
                 }
+                if (activeRestriction === 'BR_RIGHT_CW' && BR.x <= rightMargin && !clockwise) {
+                    activeRestriction = null;
+                }
+                if (activeRestriction === 'BR_RIGHT_CCW' && BR.x <= rightMargin && clockwise) {
+                    activeRestriction = null;
+                }
 
                 if (!activeRestriction) {
                     if (TL.x > rightMargin && clockwise) {
@@ -1068,6 +1074,44 @@
                         activeRestriction = 'TR_RIGHT_CW';
                     } else if (TR.x > rightMargin && !clockwise) {
                         activeRestriction = 'TR_RIGHT_CCW';
+                    } else if (BR.x > rightMargin && clockwise) {
+                        activeRestriction = 'BR_RIGHT_CW';
+                    } else if (BR.x > rightMargin && !clockwise) {
+                        activeRestriction = 'BR_RIGHT_CCW';
+                    } else if (BL.x > rightMargin && clockwise) {
+                        activeRestriction = 'BL_RIGHT_CW';
+                    } else if (BL.x > rightMargin && !clockwise) {
+                        activeRestriction = 'BL_RIGHT_CCW';
+                    } else if (TL.y > bottomMargin && clockwise) {
+                        activeRestriction = 'TL_BOTTOM_CW';
+                    } else if (TL.y > bottomMargin && !clockwise) {
+                        activeRestriction = 'TL_BOTTOM_CCW';
+                    } else if (TR.y > bottomMargin && clockwise) {
+                        activeRestriction = 'TR_BOTTOM_CW';
+                    } else if (TR.y > bottomMargin && !clockwise) {
+                        activeRestriction = 'TR_BOTTOM_CCW';
+                    } else if (BR.y > bottomMargin && clockwise) {
+                        activeRestriction = 'BR_BOTTOM_CW';
+                    } else if (BR.y > bottomMargin && !clockwise) {
+                        activeRestriction = 'BR_BOTTOM_CCW';
+                    } else if (BL.y > bottomMargin && clockwise) {
+                        activeRestriction = 'BL_BOTTOM_CW';
+                    } else if (BL.y > bottomMargin && !clockwise) {
+                        activeRestriction = 'BL_BOTTOM_CCW';
+                    } else if (TL.x < leftMargin && clockwise) {
+                        activeRestriction = 'TL_LEFT_CW';
+                    } else if (TL.x < leftMargin && !clockwise) {
+                        activeRestriction = 'TL_LEFT_CCW';
+                    } else if (TR.x < leftMargin && clockwise) {
+                        activeRestriction = 'TR_LEFT_CW';
+                    } else if (TR.x < leftMargin && !clockwise) {
+                        activeRestriction = 'TR_LEFT_CCW';
+                    } else if (BR.x < leftMargin && clockwise) {
+                        activeRestriction = 'BR_LEFT_CW';
+                    } else if (BR.x < leftMargin && !clockwise) {
+                        activeRestriction = 'BR_LEFT_CCW';
+                    } else if (BL.x < leftMargin && clockwise) {
+                        activeRestriction = 'BL_LEFT_CW';
                     }
 
                 }
@@ -1144,6 +1188,44 @@
                         obj.angle = radToDeg(complementRestrictedAngle);
 
                         break;
+                    }
+
+                    case 'BR_RIGHT_CW': {
+
+                        console.log("Restrict BR to right margin when rotating clockwise");
+
+                        let co = rightMargin - obj.left;
+
+                        let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
+
+                        let marginAngle = Math.asin(co / hypotenuse);
+
+                        let restrictedAngle = (marginAngle - diagAngle) + (3 * Math.PI / 2);
+
+                        obj.angle = radToDeg(restrictedAngle);
+
+                       break;
+
+                    }
+
+                    case 'BR_RIGHT_CCW': {
+
+                        console.log("Restrict BR to right margin when rotating counterclockwise");
+
+                        let co = rightMargin - obj.left;
+
+                        let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
+
+                        let marginAngle = Math.asin(co / hypotenuse);
+
+                        let restrictedAngle = marginAngle - complementDiagAngle;
+
+                        let complementRestrictedAngle = (Math.PI / 2 - restrictedAngle) + (3 * Math.PI / 2);
+
+                        obj.angle = radToDeg(complementRestrictedAngle);
+
+                        break;
+
                     }
 
                     default:
