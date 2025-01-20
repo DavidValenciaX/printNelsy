@@ -1012,6 +1012,8 @@
             const obj = event.target;
             obj.setCoords();
 
+            console.log("object angle: " + obj.angle);
+
             // Get current angle and calculate direction
             const currentAngle = obj.angle;
 
@@ -1046,28 +1048,29 @@
             const bottomMargin = marginRect.top + marginRect.height;
 
             function checkRotating(point) {
-                if (activeRestriction === 'TL_RIGHT_CW' && TL.x <= rightMargin && !clockwise) {
+                if (activeRestriction === 'TL_RIGHT_CW' && TL.x <= rightMargin && !clockwise && obj.angle >= 90 && obj.angle <= 180) {
                     activeRestriction = null;
                 }
-                if (activeRestriction === 'TL_RIGHT_CCW' && TL.x <= rightMargin && clockwise) {
+                if (activeRestriction === 'TL_RIGHT_CCW' && TL.x <= rightMargin && clockwise && obj.angle >= 90 && obj.angle <= 180) {
                     activeRestriction = null;
                 }
-                if (activeRestriction === 'TR_RIGHT_CW' && TR.x <= rightMargin && !clockwise) {
+                if (activeRestriction === 'TR_RIGHT_CW' && TR.x <= rightMargin && !clockwise && obj.angle >= 0 && obj.angle <= 90) {
+                    //console.log("TR is less than right margin and rotating counterclockwise");
                     activeRestriction = null;
                 }
-                if (activeRestriction === 'TR_RIGHT_CCW' && TR.x <= rightMargin && clockwise) {
+                if (activeRestriction === 'TR_RIGHT_CCW' && TR.x <= rightMargin && clockwise && obj.angle >= 0 && obj.angle <= 90) {
                     activeRestriction = null;
                 }
-                if (activeRestriction === 'BR_RIGHT_CW' && BR.x <= rightMargin && !clockwise) {
+                if (activeRestriction === 'BR_RIGHT_CW' && BR.x <= rightMargin && !clockwise && obj.angle >= 270 && obj.angle < 360) {
                     activeRestriction = null;
                 }
-                if (activeRestriction === 'BR_RIGHT_CCW' && BR.x <= rightMargin && clockwise) {
+                if (activeRestriction === 'BR_RIGHT_CCW' && BR.x <= rightMargin && clockwise && obj.angle >= 270 && obj.angle < 360) {
                     activeRestriction = null;
                 }
-                if (activeRestriction === 'BL_RIGHT_CW' && BL.x <= rightMargin && !clockwise) {
+                if (activeRestriction === 'BL_RIGHT_CW' && BL.x <= rightMargin && !clockwise && obj.angle >= 180 && obj.angle <= 270) {
                     activeRestriction = null;
                 }
-                if (activeRestriction === 'BL_RIGHT_CCW' && BL.x <= rightMargin && clockwise) {
+                if (activeRestriction === 'BL_RIGHT_CCW' && BL.x <= rightMargin && clockwise && obj.angle >= 180 && obj.angle <= 270) {
                     activeRestriction = null;
                 }
 
@@ -1132,7 +1135,7 @@
 
                     case 'TR_RIGHT_CW': {
 
-                            console.log("Restrict TR to right margin when rotating clockwise");
+                            //console.log("Restrict TR to right margin when rotating clockwise");
 
                             let co = rightMargin - obj.left;
 
