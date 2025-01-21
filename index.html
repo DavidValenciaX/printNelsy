@@ -533,10 +533,10 @@
                         if (loadedImages.length === files.length) {
                             // Choose arrangement function based on number of images
                             if (files.length <= 2) {
-                                arrangeImagesCols(loadedImages);
+                                arrangeImages(loadedImages, 'cols');
                                 lastArrangement = 'cols';
                             } else {
-                                arrangeImagesRows(loadedImages);
+                                arrangeImages(loadedImages, 'rows');
                                 lastArrangement = 'rows';
                             }
                         }
@@ -551,8 +551,7 @@
             return Number(value.toFixed(decimals));
         }
 
-        function arrangeImagesRows(images) {
-
+        function arrangeImages(images, orientation) {
             const count = images.length;
             let marginAdjustment;
             if (count === 1) {
@@ -564,84 +563,14 @@
             }
             const margin = marginWidth + marginAdjustment;
 
-            const cols = Math.ceil(Math.sqrt(count));
-            const rows = Math.ceil(count / cols);
-
-            const cellWidth = (canvas.width - margin * 2) / cols;
-            const cellHeight = (canvas.height - margin * 2) / rows;
-
-            // Add index to make IDs unique
-            images.forEach((img, index) => {
-                img.id = `image-${Date.now()}-${index}`;
-                const row = Math.floor(index / cols);
-                const col = index % cols;
-
-                let realImagetWidth = img.width * img.scaleX;
-                let realImageHeight = img.height * img.scaleY;
-
-                let bounds = img.getBoundingRect();
-
-                // Redondear antes de calcular el offset
-                let roundedBoundsWidth = roundToDecimals(bounds.width, 2);
-
-                let roundedImageWidth = roundToDecimals(realImagetWidth, 2);
-
-                const offsetWidthImageBound = roundToDecimals(roundedBoundsWidth - roundedImageWidth, 2);
-
-                let roundedBoundsHeight = roundToDecimals(bounds.height, 2);
-
-                let roundedImageHeight = roundToDecimals(realImageHeight, 2);
-
-                const offsetHeightImageBound = roundToDecimals(roundedBoundsHeight - roundedImageHeight, 2);
-
-                const scaleFactor = Math.min(
-                    (cellWidth - margin - offsetWidthImageBound) / img.width,
-                    (cellHeight - margin - offsetHeightImageBound) / img.height
-                );
-
-                img.scale(scaleFactor);
-
-                img.set({
-                    left: margin + col * cellWidth + cellWidth / 2,
-                    top: margin + row * cellHeight + cellHeight / 2,
-                    originX: 'center',
-                    originY: 'center'
-                });
-
-                // Store final state with top/left origin
-                originalImages[img.id] = {
-                    url: img.originalUrl,
-                    width: img.width,
-                    height: img.height,
-                    scaleX: img.scaleX,
-                    scaleY: img.scaleY,
-                    angle: img.angle,
-                    left: img.left,
-                    top: img.top
-                };
-
-                canvas.add(img);
-            });
-
-            canvas.renderAll();
-
-        }
-
-        function arrangeImagesCols(images) {
-
-            const count = images.length;
-            let marginAdjustment;
-            if (count === 1) {
-                marginAdjustment = 100;
-            } else if (count === 2) {
-                marginAdjustment = 50;
-            } else {
-                marginAdjustment = 20;
+            let cols, rows;
+            if (orientation === 'rows') {
+                cols = Math.ceil(Math.sqrt(count));
+                rows = Math.ceil(count / cols);
+            } else if (orientation === 'cols') {
+                rows = Math.ceil(Math.sqrt(count));
+                cols = Math.ceil(count / rows);
             }
-            const margin = marginWidth + marginAdjustment;
-
-            const rows = Math.ceil(Math.sqrt(count));
-            const cols = Math.ceil(count / rows);
 
             const cellWidth = (canvas.width - margin * 2) / cols;
             const cellHeight = (canvas.height - margin * 2) / rows;
@@ -649,25 +578,27 @@
             // Add index to make IDs unique
             images.forEach((img, index) => {
                 img.id = `image-${Date.now()}-${index}`;
-                const col = Math.floor(index / rows);
-                const row = index % rows;
+
+                let row, col;
+                if (orientation === 'rows') {
+                    row = Math.floor(index / cols);
+                    col = index % cols;
+                } else if (orientation === 'cols') {
+                    col = Math.floor(index / rows);
+                    row = index % rows;
+                }
 
                 let realImagetWidth = img.width * img.scaleX;
                 let realImageHeight = img.height * img.scaleY;
-
                 let bounds = img.getBoundingRect();
 
                 // Redondear antes de calcular el offset
                 let roundedBoundsWidth = roundToDecimals(bounds.width, 2);
-
                 let roundedImageWidth = roundToDecimals(realImagetWidth, 2);
-
                 const offsetWidthImageBound = roundToDecimals(roundedBoundsWidth - roundedImageWidth, 2);
 
                 let roundedBoundsHeight = roundToDecimals(bounds.height, 2);
-
                 let roundedImageHeight = roundToDecimals(realImageHeight, 2);
-
                 const offsetHeightImageBound = roundToDecimals(roundedBoundsHeight - roundedImageHeight, 2);
 
                 const scaleFactor = Math.min(
@@ -676,7 +607,6 @@
                 );
 
                 img.scale(scaleFactor);
-
                 img.set({
                     left: margin + col * cellWidth + cellWidth / 2,
                     top: margin + row * cellHeight + cellHeight / 2,
@@ -949,10 +879,10 @@
             images.forEach(img => canvas.remove(img));
 
             if (lastArrangement === 'rows') {
-                arrangeImagesCols(images);
+                arrangeImages(images, 'cols');
                 lastArrangement = 'cols';
             } else {
-                arrangeImagesRows(images);
+                arrangeImages(images, 'rows');
                 lastArrangement = 'rows';
             }
 
