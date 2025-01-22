@@ -981,8 +981,9 @@
 
         // From here, the code for rotating restrictions is added
 
-        // Add this variable outside event handlers
         let previousAngle = 0;
+        let accumulatedAngle = 0;
+        let fullRotations = 0;
 
         let clockwise = false;
 
@@ -1006,8 +1007,39 @@
 
             //console.log("object angle: " + obj.angle);
 
+            // Initialize accumulated angle if not exists
+            if (typeof obj.accumulatedAngle === 'undefined') {
+                obj.accumulatedAngle = 0;
+                obj.fullRotations = 0;
+            }
+
             // Get current angle and calculate direction
             const currentAngle = obj.angle;
+
+            // Detect direction and full rotations
+            let angleDiff = currentAngle - previousAngle;
+
+            // Handle angle wrap-around
+            if (Math.abs(angleDiff) > 270) {
+                if (angleDiff > 0) {
+                    // Counter-clockwise wrap from 0 to 359
+                    angleDiff -= 360;
+                } else {
+                    // Clockwise wrap from 359 to 0
+                    angleDiff += 360;
+                }
+            }
+
+            obj.accumulatedAngle += angleDiff;
+
+            // Update full rotations counter
+            if (obj.accumulatedAngle >= 360) {
+                obj.fullRotations++;
+                obj.accumulatedAngle -= 360;
+            } else if (obj.accumulatedAngle <= -360) {
+                obj.fullRotations--;
+                obj.accumulatedAngle += 360;
+            }
 
             if (currentAngle > previousAngle) {
                 clockwise = true;
@@ -1017,6 +1049,11 @@
 
             // Store current angle for next comparison
             previousAngle = currentAngle;
+
+            // Log total rotation information
+            console.log(`Total rotation: ${obj.fullRotations * 360 + obj.accumulatedAngle}°`);
+            console.log(`Complete rotations: ${obj.fullRotations}`);
+            console.log(`Current accumulated angle: ${obj.accumulatedAngle}°`);
 
             let TOP = obj.top;
             let LEFT = obj.left;
