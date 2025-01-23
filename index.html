@@ -1169,7 +1169,12 @@
             obj.fullRotations = Math.floor(obj.angle / 360);
 
             // Update total rotation to match current angle
-            totalRotation = obj.angle;
+            if (obj.angle >= 0 && obj.angle <= 90) {
+                totalRotation = obj.angle;
+            } else {
+                totalRotation = obj.angle - 360;
+                obj.angle = totalRotation;
+            }
 
             console.log(`Total rotation: ${totalRotation}`);
 
