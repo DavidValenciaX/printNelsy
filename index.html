@@ -191,6 +191,7 @@
     </div>
 
     <script>
+
         let currentZoom = 1;
         const zoomFactor = 0.1;
         const maxZoom = 2;
@@ -751,6 +752,111 @@
             canvas.renderAll();
         }
 
+        function calculateDistance(x1, y1, x2, y2) {
+            // Calculate the difference in x and y coordinates
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+
+            // Use Pythagorean theorem to calculate distance
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function drawCircle(x1, x2, color) {
+            // Add red circle at 
+            const circle = new fabric.Circle({
+                left: x1,
+                top: x2,
+                originX: 'center',
+                originY: 'center',
+                radius: 5,
+                fill: color || 'red',
+                selectable: false
+            });
+            canvas.add(circle);
+
+        }
+
+        let temporaryRectangle = null;
+        let cornerLabels = []; // Arreglo para almacenar los textos temporales
+
+        function drawRectangle(x, y, width, height, options = {}) {
+            // Eliminar el rectángulo temporal anterior y los textos si existen
+            if (temporaryRectangle) {
+                canvas.remove(temporaryRectangle);
+            }
+            cornerLabels.forEach(label => canvas.remove(label));
+            cornerLabels = [];
+
+            // Opciones predeterminadas combinadas con las proporcionadas
+            const defaultOptions = {
+                left: x,
+                top: y,
+                width: width,
+                height: height,
+                fill: 'transparent',
+                stroke: 'black',
+                strokeWidth: 2,
+                selectable: false, // El rectángulo no será interactivo
+                evented: false // No responde a eventos del mouse
+            };
+            const finalOptions = { ...defaultOptions, ...options };
+
+            // Crear nuevo rectángulo
+            temporaryRectangle = new fabric.Rect(finalOptions);
+
+            // Agregar rectángulo al canvas
+            canvas.add(temporaryRectangle);
+
+            // Forzar la actualización de coordenadas
+            temporaryRectangle.setCoords();
+
+            // Calcular las posiciones de las esquinas
+            const corners = {
+                TL: { x: temporaryRectangle.aCoords.tl.x, y: temporaryRectangle.aCoords.tl.y }, // Top-Left
+                TR: { x: temporaryRectangle.aCoords.tr.x, y: temporaryRectangle.aCoords.tr.y }, // Top-Right
+                BL: { x: temporaryRectangle.aCoords.bl.x, y: temporaryRectangle.aCoords.bl.y }, // Bottom-Left
+                BR: { x: temporaryRectangle.aCoords.br.x, y: temporaryRectangle.aCoords.br.y } // Bottom-Right
+            };
+
+            // Agregar etiquetas en las esquinas
+            for (const [corner, pos] of Object.entries(corners)) {
+                const text = new fabric.Text(corner, {
+                    left: pos.x - 10, // Ajuste para centrar el texto
+                    top: pos.y - 10,
+                    fontSize: 12,
+                    fill: 'red',
+                    selectable: false, // El texto no será interactivo
+                    evented: false // No responde a eventos del mouse
+                });
+                cornerLabels.push(text);
+                canvas.add(text);
+            }
+
+            // Renderizar
+            canvas.renderAll();
+        }
+
+        function drawLine(coords, options = {}) {
+            // Default options merged with provided options
+            const defaultOptions = {
+                fill: 'black',
+                stroke: 'black',
+                strokeWidth: 2,
+                selectable: false
+            };
+
+            const finalOptions = { ...defaultOptions, ...options };
+
+            // Create new line
+            const line = new fabric.Line(coords, finalOptions);
+
+            // Add to canvas
+            canvas.add(line);
+            canvas.renderAll();
+
+            return line;
+        }
+
         cartaButton.addEventListener('click', () => resizeCanvas('carta'));
         oficioButton.addEventListener('click', () => resizeCanvas('oficio'));
         verticalButton.addEventListener('click', () => changeOrientation(true));
@@ -832,8 +938,8 @@
             // Obtener los puntos del objeto y del margen
             let objPoints = [obj.aCoords.tl, obj.aCoords.tr, obj.aCoords.br, obj.aCoords.bl];
 
-            let marginRight = (marginRect.left + marginRect.width);
-            let marginBottom = (marginRect.top + marginRect.height);
+            let marginRight = marginRect.left + marginRect.width;
+            let marginBottom = marginRect.top + marginRect.height;
 
             // Inicializar desplazamientos
             let offsetX = 0, offsetY = 0;
@@ -862,77 +968,227 @@
             }
         });
 
-        function findMidpointFromPoints(point1, point2) {
-            return {
-                x: (point1.x + point2.x) / 2,
-                y: (point1.y + point2.y) / 2
-            };
-        }
 
-        function drawCircle(x1, x2, color) {
-            // Add red circle at 
-            const circle = new fabric.Circle({
-                left: x1,
-                top: x2,
-                originX: 'center',
-                originY: 'center',
-                radius: 5,
-                fill: color || 'red',
-                selectable: false
-            });
-            canvas.add(circle);
+        // From here, the code for rotating restrictions is added
 
-        }
+        let previousAngle = 0;
+        let accumulatedAngle = 0;
+        let fullRotations = 0;
+        let totalRotation = 0;
+        let restrictedAngle = 0;
 
-        function drawRectangle(x, y, width, height, options = {}) {
-            // Default options merged with provided options
-            const defaultOptions = {
-                left: x,
-                top: y,
-                width: width,
-                height: height,
-                fill: 'transparent',
-                stroke: 'black',
-                strokeWidth: 2,
-                selectable: true
-            };
+        const intersectionAngle = 0;
 
-            const finalOptions = { ...defaultOptions, ...options };
+        let clockwise = false;
 
-            // Create new rectangle
-            const rectangle = new fabric.Rect(finalOptions);
+        let isMouseDown = false;
 
-            // Add to canvas
-            canvas.add(rectangle);
+        canvas.on('mouse:down', function () {
+            isMouseDown = true;
+        });
+
+        canvas.on('mouse:up', function () {
+            isMouseDown = false;
+        });
+
+        canvas.on('object:rotating', function (event) {
+            const obj = event.target;
+            obj.setCoords();
+
+            // Initialize accumulated angle if not exists
+            if (typeof obj.accumulatedAngle === 'undefined') {
+                obj.accumulatedAngle = 0;
+                obj.fullRotations = 0;
+            }
+
+            // Get current angle and calculate direction
+            const currentAngle = obj.angle;
+
+            // Detect direction and full rotations
+            let angleDiff = currentAngle - previousAngle;
+
+            // Handle angle wrap-around
+            if (Math.abs(angleDiff) > 270) {
+                if (angleDiff > 0) {
+                    // Counter-clockwise wrap from 0 to 359
+                    angleDiff -= 360;
+                } else {
+                    // Clockwise wrap from 359 to 0
+                    angleDiff += 360;
+                }
+            }
+
+            // Update rotation tracking
+            obj.accumulatedAngle += angleDiff;
+            clockwise = angleDiff > 0;
+
+            // Update full rotations
+            while (obj.accumulatedAngle >= 360) {
+                obj.fullRotations++;
+                obj.accumulatedAngle -= 360;
+            }
+            while (obj.accumulatedAngle <= -360) {
+                obj.fullRotations--;
+                obj.accumulatedAngle += 360;
+            }
+
+            // Calculate total rotation
+            totalRotation = obj.fullRotations * 360 + obj.accumulatedAngle;
+
+            // Store current angle for next comparison
+            previousAngle = currentAngle;
+
+            let TOP = obj.top;
+            let LEFT = obj.left;
+
+            let TL = obj.aCoords.tl;
+            let TR = obj.aCoords.tr;
+            let BL = obj.aCoords.bl;
+            let BR = obj.aCoords.br;
+
+            let realObjectWidth = obj.width * obj.scaleX;
+            let realObjectHeight = obj.height * obj.scaleY;
+
+            drawRectangle(obj.left, obj.top, realObjectWidth, realObjectHeight, { originX: 'center', originY: 'center', angle: obj.angle, fill: 'transparent', stroke: 'red', strokeWidth: 2, selectable: false, evented: false });
+
+            let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
+
+            let complementDiagAngle = Math.PI / 2 - diagAngle;
+
+            let MB = obj.oCoords.mb;
+            let MT = obj.oCoords.mt;
+            let ML = obj.oCoords.ml;
+            let MR = obj.oCoords.mr;
+
+            // Calculate margins from canvas edges
+            const leftMargin = marginRect.left;
+            const rightMargin = marginRect.left + marginRect.width;
+            const topMargin = marginRect.top;
+            const bottomMargin = marginRect.top + marginRect.height;
+
+            console.log(`Total rotation: ${totalRotation}`);
+
+            console.log(`restrictedAngle ${radToDeg(restrictedAngle)}`);
+
+
+            function checkRotating(point) {
+                if (activeRestriction === 'TR_RIGHT_CW' && !isMouseDown) {
+                    activeRestriction = null;
+                }
+
+                if (activeRestriction === 'BR_RIGHT_CCW' && !isMouseDown) {
+                    activeRestriction = null;
+                }
+
+                if (!activeRestriction) {
+                    if (isMouseDown && TR.x > rightMargin && clockwise) {
+                        activeRestriction = 'TR_RIGHT_CW';
+                    } else if (isMouseDown && BR.x > rightMargin && !clockwise) {
+                        activeRestriction = 'BR_RIGHT_CCW';
+                    }
+                }
+
+                switch (activeRestriction) {
+
+                    case 'TR_RIGHT_CW': {
+
+                        if (totalRotation > radToDeg(restrictedAngle)) {
+
+                            console.log("Restrict TR to right margin when rotating clockwise");
+
+                            let co = rightMargin - obj.left;
+
+                            let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
+
+                            let marginAngle = Math.asin(co / hypotenuse);
+
+                            restrictedAngle = marginAngle - complementDiagAngle;
+
+                            obj.angle = radToDeg(restrictedAngle);
+
+                        } else if (BR.x > rightMargin && !clockwise) {
+                            restrictedAngle = 0;
+                            activeRestriction = 'BR_RIGHT_CCW';
+                        }
+
+                        break;
+                    }
+
+                    case 'BR_RIGHT_CCW': {
+
+                        if (totalRotation < - radToDeg(restrictedAngle)) {
+                            console.log("Restrict BR to right margin when rotating counterclockwise");
+
+                            let co = rightMargin - obj.left;
+
+                            let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
+
+                            let marginAngle = Math.asin(co / hypotenuse);
+
+                            restrictedAngle = marginAngle - complementDiagAngle;
+
+                            let complementRestrictedAngle = (Math.PI / 2 - restrictedAngle) + (3 * Math.PI / 2);
+
+                            obj.angle = radToDeg(complementRestrictedAngle);
+
+                        } else if (TR.x > rightMargin && clockwise) {
+                            restrictedAngle = 0;
+                            activeRestriction = 'TR_RIGHT_CW';
+                        }
+
+                        break;
+
+                    }
+
+                    default:
+                        // Handle default case
+                        break;
+
+                }
+
+            }
+
+            checkRotating();
+
+            obj.setCoords();
             canvas.renderAll();
+        });
 
-            return rectangle;
-        }
-
-        function drawLine(coords, options = {}) {
-            // Default options merged with provided options
-            const defaultOptions = {
-                fill: 'black',
-                stroke: 'black',
-                strokeWidth: 2,
-                selectable: false
-            };
-
-            const finalOptions = { ...defaultOptions, ...options };
-
-            // Create new line
-            const line = new fabric.Line(coords, finalOptions);
-
-            // Add to canvas
-            canvas.add(line);
-            canvas.renderAll();
-
-            return line;
-        }
-
-        // Reset activeRestriction when scaling ends
         canvas.on('object:modified', function (e) {
+            const obj = e.target;
+
+            console.log("Object modified");
+
+            // Update the accumulated angle to match current angle
+            obj.accumulatedAngle = obj.angle % 360;
+            if (obj.accumulatedAngle < 0) {
+                obj.accumulatedAngle += 360;
+            }
+
+            // Reset full rotations
+            obj.fullRotations = Math.floor(obj.angle / 360);
+
+            // Update total rotation to match current angle
+            if (obj.angle >= 0 && obj.angle <= 90) {
+                totalRotation = obj.angle;
+            } else {
+                totalRotation = obj.angle - 360;
+                obj.angle = totalRotation;
+            }
+
+            console.log(`Total rotation: ${totalRotation}`);
+
+            // Reset restrictions
             activeRestriction = null;
+            restrictedAngle = 0;
+
+            // Reset previous angle to current
+            previousAngle = obj.angle;
+        });
+
+        // Detectar inicio de la manipulación de un objeto
+        canvas.on('before:transform', function () {
+            //console.log('Transformación iniciada');
         });
 
         // Add this variable outside the event handler
@@ -951,8 +1207,8 @@
 
             // Verificamos si el objeto excede los márgenes
 
-            let marginRight = (marginRect.left + marginRect.width);
-            let marginBottom = (marginRect.top + marginRect.height);
+            let marginRight = marginRect.left + marginRect.width;
+            let marginBottom = marginRect.top + marginRect.height;
 
             let TL = obj.aCoords.tl;
             let TR = obj.aCoords.tr;
@@ -968,7 +1224,7 @@
 
             // Para establecer la posición y el escalado de objeto hay que darle las propiedades left, top, scaleX y scaleY
 
-            function checkPosition(point) {
+            function checkScaling(point) {
 
                 // Check if object is still violating margins
                 if (activeRestriction === 'TL_RIGHT' && TL.x <= marginRight) {
@@ -2447,7 +2703,7 @@
                 }
             }
 
-            checkPosition();
+            checkScaling();
 
             // Guardamos la escala y posición válidas
             obj._lastScaleX = obj.scaleX;
