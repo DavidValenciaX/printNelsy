@@ -1018,27 +1018,25 @@
                 }
             }
 
+            // Update rotation tracking
             obj.accumulatedAngle += angleDiff;
+            clockwise = angleDiff > 0;
 
-            // Update full rotations counter
-            if (obj.accumulatedAngle >= 360) {
+            // Update full rotations
+            while (obj.accumulatedAngle >= 360) {
                 obj.fullRotations++;
                 obj.accumulatedAngle -= 360;
-            } else if (obj.accumulatedAngle <= -360) {
+            }
+            while (obj.accumulatedAngle <= -360) {
                 obj.fullRotations--;
                 obj.accumulatedAngle += 360;
             }
 
-            if (currentAngle > previousAngle) {
-                clockwise = true;
-            } else {
-                clockwise = false;
-            }
+            // Calculate total rotation
+            totalRotation = obj.fullRotations * 360 + obj.accumulatedAngle;
 
             // Store current angle for next comparison
             previousAngle = currentAngle;
-
-            totalRotation = obj.fullRotations * 360 + obj.accumulatedAngle;
 
             let TOP = obj.top;
             let LEFT = obj.left;
@@ -1075,11 +1073,11 @@
 
             function checkRotating(point) {
                 if (activeRestriction === 'TR_RIGHT_CW' && !isMouseDown) {
-                        activeRestriction = null;
+                    activeRestriction = null;
                 }
 
                 if (activeRestriction === 'BR_RIGHT_CCW' && !isMouseDown) {
-                        activeRestriction = null;
+                    activeRestriction = null;
                 }
 
                 if (!activeRestriction) {
@@ -1156,16 +1154,31 @@
             canvas.renderAll();
         });
 
-        // Detectar fin de la manipulación de un objeto
         canvas.on('object:modified', function (e) {
             const obj = e.target;
 
+            console.log("Object modified");
+
+            // Update the accumulated angle to match current angle
+            obj.accumulatedAngle = obj.angle % 360;
+            if (obj.accumulatedAngle < 0) {
+                obj.accumulatedAngle += 360;
+            }
+
+            // Reset full rotations
+            obj.fullRotations = Math.floor(obj.angle / 360);
+
+            // Update total rotation to match current angle
             totalRotation = obj.angle;
 
-            // Reset activeRestriction when scaling and rotating ends
-            activeRestriction = null;
+            console.log(`Total rotation: ${totalRotation}`);
 
+            // Reset restrictions
+            activeRestriction = null;
             restrictedAngle = 0;
+
+            // Reset previous angle to current
+            previousAngle = obj.angle;
         });
 
         // Detectar inicio de la manipulación de un objeto
