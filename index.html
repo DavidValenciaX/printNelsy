@@ -968,30 +968,20 @@
             }
         });
 
-        // Detectar fin de la manipulación de un objeto
-        canvas.on('object:modified', function (e) {
-            //console.log('Transformación terminada', e.target);
-        });
-
-        // Detectar inicio de la manipulación de un objeto
-        canvas.on('before:transform', function () {
-            //console.log('Transformación iniciada');
-        });
-
 
         // From here, the code for rotating restrictions is added
 
         let previousAngle = 0;
         let accumulatedAngle = 0;
         let fullRotations = 0;
+        let totalRotation = 0;
+        let restrictedAngle = 0;
+
+        const intersectionAngle = 0;
 
         let clockwise = false;
 
         let isMouseDown = false;
-
-        let isTRBeyondRightMargin = false;
-
-        let isBRBeyondRightMargin = false;
 
         canvas.on('mouse:down', function () {
             isMouseDown = true;
@@ -1050,10 +1040,12 @@
             // Store current angle for next comparison
             previousAngle = currentAngle;
 
+            totalRotation = obj.fullRotations * 360 + obj.accumulatedAngle;
+
             // Log total rotation information
-            console.log(`Total rotation: ${obj.fullRotations * 360 + obj.accumulatedAngle}°`);
-            console.log(`Complete rotations: ${obj.fullRotations}`);
-            console.log(`Current accumulated angle: ${obj.accumulatedAngle}°`);
+            //console.log(`Total rotation: ${totalRotation}°`);
+            //console.log(`Complete rotations: ${obj.fullRotations}`);
+            //console.log(`Current accumulated angle: ${obj.accumulatedAngle}°`);
 
             let TOP = obj.top;
             let LEFT = obj.left;
@@ -1072,11 +1064,21 @@
 
             let complementDiagAngle = Math.PI / 2 - diagAngle;
 
+            let MB = obj.oCoords.mb;
+            let MT = obj.oCoords.mt;
+            let ML = obj.oCoords.ml;
+            let MR = obj.oCoords.mr;
+
             // Calculate margins from canvas edges
             const leftMargin = marginRect.left;
             const rightMargin = marginRect.left + marginRect.width;
             const topMargin = marginRect.top;
             const bottomMargin = marginRect.top + marginRect.height;
+
+            console.log(`Total rotation: ${totalRotation}`);
+
+            console.log(`restrictedAngle ${radToDeg(restrictedAngle)}`);
+
 
             function checkRotating(point) {
                 if (activeRestriction === 'TL_RIGHT_CW' && TL.x <= rightMargin && !clockwise && obj.angle >= 90 && obj.angle <= 180) {
@@ -1086,14 +1088,6 @@
                     activeRestriction = null;
                 }
                 if (activeRestriction === 'TR_RIGHT_CW') {
-
-                    if (TR.x > rightMargin) {
-                        console.log("TR.x > rightMargin");
-                        isTRBeyondRightMargin = true;
-                    } else {
-                        console.log("TR.x <= rightMargin");
-                        isTRBeyondRightMargin = false;
-                    }
 
                     if (!isMouseDown) {
                         activeRestriction = null;
@@ -1107,14 +1101,6 @@
                     activeRestriction = null;
                 }
                 if (activeRestriction === 'BR_RIGHT_CCW') {
-
-                    if (BR.x > rightMargin) {
-                        console.log("BR.x > rightMargin");
-                        isBRBeyondRightMargin = true;
-                    } else {
-                        console.log("BR.x <= rightMargin");
-                        isBRBeyondRightMargin = false;
-                    }
 
                     if (!isMouseDown) {
                         activeRestriction = null;
@@ -1188,7 +1174,7 @@
 
                     case 'TR_RIGHT_CW': {
 
-                        if (isTRBeyondRightMargin) {
+                        if (totalRotation > radToDeg(restrictedAngle)) {
 
                             console.log("Restrict TR to right margin when rotating clockwise");
 
@@ -1196,30 +1182,19 @@
 
                             let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
 
+                            //let ca = Math.sqrt(Math.pow(hypotenuse, 2) - Math.pow(co, 2));
+
                             let marginAngle = Math.asin(co / hypotenuse);
 
-                            let restrictedAngle = marginAngle - complementDiagAngle;
+                            restrictedAngle = marginAngle - complementDiagAngle;
 
                             obj.angle = radToDeg(restrictedAngle);
 
                         } else {
-                            console.log("TR is within right margin");
 
                             if (BR.x > rightMargin && !clockwise) {
+                                restrictedAngle = 0;
                                 activeRestriction = 'BR_RIGHT_CCW';
-                            } else {
-
-                                console.log("Restrict TR to right margin when rotating clockwise");
-
-                                let co = rightMargin - obj.left;
-
-                                let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
-
-                                let marginAngle = Math.asin(co / hypotenuse);
-
-                                let restrictedAngle = marginAngle - complementDiagAngle;
-
-                                obj.angle = radToDeg(restrictedAngle);
                             }
 
                         }
@@ -1266,7 +1241,7 @@
 
                     case 'BR_RIGHT_CCW': {
 
-                        if (isBRBeyondRightMargin) {
+                        if (totalRotation < - radToDeg(restrictedAngle)) {
                             console.log("Restrict BR to right margin when rotating counterclockwise");
 
                             let co = rightMargin - obj.left;
@@ -1275,30 +1250,17 @@
 
                             let marginAngle = Math.asin(co / hypotenuse);
 
-                            let restrictedAngle = marginAngle - complementDiagAngle;
+                            restrictedAngle = marginAngle - complementDiagAngle;
 
                             let complementRestrictedAngle = (Math.PI / 2 - restrictedAngle) + (3 * Math.PI / 2);
 
                             obj.angle = radToDeg(complementRestrictedAngle);
+
                         } else {
-                            console.log("BR is within right margin");
 
                             if (TR.x > rightMargin && clockwise) {
+                                restrictedAngle = 0;
                                 activeRestriction = 'TR_RIGHT_CW';
-                            } else {
-                                console.log("Restrict BR to right margin when rotating counterclockwise");
-
-                                let co = rightMargin - obj.left;
-
-                                let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
-
-                                let marginAngle = Math.asin(co / hypotenuse);
-
-                                let restrictedAngle = marginAngle - complementDiagAngle;
-
-                                let complementRestrictedAngle = (Math.PI / 2 - restrictedAngle) + (3 * Math.PI / 2);
-
-                                obj.angle = radToDeg(complementRestrictedAngle);
                             }
                         }
 
@@ -1358,9 +1320,21 @@
             canvas.renderAll();
         });
 
-        // Reset activeRestriction when scaling ends
+        // Detectar fin de la manipulación de un objeto
         canvas.on('object:modified', function (e) {
+            //console.log('Transformación terminada', e.target);
+
+            // Reset activeRestriction when scaling and rotating ends
             activeRestriction = null;
+
+            totalRotation = 0;
+
+            restrictedAngle = 0;
+        });
+
+        // Detectar inicio de la manipulación de un objeto
+        canvas.on('before:transform', function () {
+            //console.log('Transformación iniciada');
         });
 
         // Add this variable outside the event handler
