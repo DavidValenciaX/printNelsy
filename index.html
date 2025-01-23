@@ -554,10 +554,8 @@
         function arrangeImages(images, orientation) {
             const count = images.length;
             let marginAdjustment;
-            if (count === 1) {
+            if (count <= 2) {
                 marginAdjustment = 100;
-            } else if (count === 2) {
-                marginAdjustment = 50;
             } else {
                 marginAdjustment = 20;
             }
@@ -1049,7 +1047,7 @@
             let realObjectWidth = obj.width * obj.scaleX;
             let realObjectHeight = obj.height * obj.scaleY;
 
-            drawRectangle(obj.left, obj.top, realObjectWidth, realObjectHeight, { originX: 'center', originY: 'center', angle: obj.angle, fill: 'transparent', stroke: 'red', strokeWidth: 2, selectable: false, evented: false });
+            //drawRectangle(obj.left, obj.top, realObjectWidth, realObjectHeight, { originX: 'center', originY: 'center', angle: obj.angle, fill: 'transparent', stroke: 'red', strokeWidth: 2, selectable: false, evented: false });
 
             let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
 
