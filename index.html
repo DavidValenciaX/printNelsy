@@ -1196,6 +1196,10 @@
             let obj = e.target;
             obj.setCoords();
 
+            if(obj.angle < 0) {
+                obj.angle += 360;
+            }
+
             let realObjectWidth = obj.width * obj.scaleX;
             let realObjectHeight = obj.height * obj.scaleY;
 
