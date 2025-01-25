@@ -1171,11 +1171,9 @@
 
                         let restrictedAngle = marginAngle - complementDiagAngle;
 
-                        let complementRestrictedAngle = (Math.PI / 2 - restrictedAngle) + (3 * Math.PI / 2);
-
                         if (totalRotation < - radToDeg(restrictedAngle)) {
 
-                            obj.angle = radToDeg(complementRestrictedAngle);
+                            obj.angle = - radToDeg(restrictedAngle);
 
                         } else if (TR.x > rightMargin && clockwise) {
 
