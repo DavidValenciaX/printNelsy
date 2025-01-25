@@ -1081,6 +1081,10 @@
                         activeRestriction = 'TR_RIGHT_CW';
                     } else if (isMouseDown && BR.x > rightMargin && !clockwise) {
                         activeRestriction = 'BR_RIGHT_CCW';
+                    } else if (isMouseDown && BR.x > rightMargin && clockwise) {
+                        activeRestriction = 'BR_RIGHT_CW';
+                    } else if (isMouseDown && BL.x > rightMargin && !clockwise) {
+                        activeRestriction = 'BL_RIGHT_CCW';
                     }
                 }
 
@@ -1182,6 +1186,42 @@
 
                         break;
 
+                    }
+
+                    case 'BR_RIGHT_CW': {
+                        console.log("BR right margin rotating clockwise");
+
+                        let co = rightMargin - obj.left;
+                        let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
+                        let marginAngle = Math.asin(co / hypotenuse);
+
+                        let restrictedAngle = (marginAngle - diagAngle) - (Math.PI / 2);
+
+                        if (totalRotation > radToDeg(restrictedAngle)) {
+                            obj.angle = radToDeg(restrictedAngle);
+                        } else if (BL.x > rightMargin && !clockwise) {
+                            activeRestriction = 'BL_RIGHT_CCW';
+                        }
+                        break;
+                    }
+
+                    case 'BL_RIGHT_CCW': {
+                        console.log("BL right margin rotating counterclockwise");
+
+                        let co = rightMargin - obj.left;
+                        let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
+                        let marginAngle = Math.asin(co / hypotenuse);
+
+                        let restrictedAngle = marginAngle - diagAngle;
+
+                        let complementRestrictedAngle = - (Math.PI / 2) - restrictedAngle;
+
+                        if (totalRotation < radToDeg(complementRestrictedAngle)) {
+                            obj.angle = radToDeg(complementRestrictedAngle);
+                        } else if (BR.x > rightMargin && clockwise) {
+                            activeRestriction = 'BR_RIGHT_CW';
+                        }
+                        break;
                     }
 
                     default:
