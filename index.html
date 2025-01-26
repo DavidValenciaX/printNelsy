@@ -1140,7 +1140,9 @@
 
                         let marginAngle = Math.asin(co / hypotenuse);
 
-                        let restrictedAngle = (marginAngle - diagAngle) + (Math.PI / 2);
+                        let innerAngle = marginAngle - diagAngle;
+
+                        let restrictedAngle = innerAngle + (Math.PI / 2);
 
                         if (totalRotation > radToDeg(restrictedAngle)) {
 
@@ -1163,9 +1165,9 @@
 
                         let marginAngle = Math.asin(co / hypotenuse);
 
-                        let complementRestrictedAngle = marginAngle - diagAngle;
+                        let innerAngle = marginAngle - diagAngle;
 
-                        let restrictedAngle = Math.PI / 2 - complementRestrictedAngle;
+                        let restrictedAngle = Math.PI / 2 - innerAngle;
 
                         if (totalRotation < radToDeg(restrictedAngle)) {
 
@@ -1189,7 +1191,9 @@
 
                         let marginAngle = Math.asin(co / hypotenuse);
 
-                        let restrictedAngle = marginAngle - complementDiagAngle;
+                        let innerAngle = marginAngle - complementDiagAngle;
+
+                        let restrictedAngle = innerAngle;
 
                         if (totalRotation > radToDeg(restrictedAngle)) {
 
@@ -1213,9 +1217,9 @@
 
                         let marginAngle = Math.asin(co / hypotenuse);
 
-                        let complementRestrictedAngle = marginAngle - complementDiagAngle;
+                        let innerAngle = marginAngle - complementDiagAngle;
 
-                        let restrictedAngle = 2 * Math.PI - complementRestrictedAngle;
+                        let restrictedAngle = (2 * Math.PI) - innerAngle;
 
                         if (totalRotation <= radToDeg(restrictedAngle) - 360) {
 
@@ -1237,7 +1241,9 @@
                         let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
                         let marginAngle = Math.asin(co / hypotenuse);
 
-                        let restrictedAngle = (3 * Math.PI / 2) + (marginAngle - diagAngle);
+                        let innerAngle = marginAngle - diagAngle;
+
+                        let restrictedAngle = (3 * Math.PI / 2) + innerAngle;
 
                         if (totalRotation > radToDeg(restrictedAngle)) {
                             obj.angle = radToDeg(restrictedAngle);
@@ -1254,9 +1260,9 @@
                         let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
                         let marginAngle = Math.asin(co / hypotenuse);
 
-                        let complementRestrictedAngle = marginAngle - diagAngle;
+                        let innerAngle = marginAngle - diagAngle;
 
-                        let restrictedAngle = (3 * Math.PI / 2) - complementRestrictedAngle;
+                        let restrictedAngle = (3 * Math.PI / 2) - innerAngle;
 
                         if (totalRotation <= radToDeg(restrictedAngle)) {
                             obj.angle = radToDeg(restrictedAngle);
@@ -1275,7 +1281,9 @@
 
                         let marginAngle = Math.asin(co / hypotenuse);
 
-                        let restrictedAngle = (marginAngle - complementDiagAngle) + Math.PI;
+                        let innerAngle = marginAngle - complementDiagAngle;
+
+                        let restrictedAngle = innerAngle + Math.PI;
 
                         if (totalRotation > radToDeg(restrictedAngle)) {
                             obj.angle = radToDeg(restrictedAngle);
@@ -1294,9 +1302,9 @@
 
                         let marginAngle = Math.asin(co / hypotenuse);
 
-                        let complementRestrictedAngle = marginAngle - complementDiagAngle;
+                        let innerAngle = marginAngle - complementDiagAngle;
 
-                        let restrictedAngle = Math.PI - complementRestrictedAngle;
+                        let restrictedAngle = Math.PI - innerAngle;
 
                         if (totalRotation <= radToDeg(restrictedAngle)) {
                             obj.angle = radToDeg(restrictedAngle);
@@ -1311,7 +1319,8 @@
                         let co = bottomMargin - obj.top;
                         let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
                         let marginAngle = Math.asin(co / hypotenuse);
-                        let restrictedAngle = marginAngle - diagAngle;
+                        let innerAngle = marginAngle - diagAngle;
+                        let restrictedAngle = innerAngle;
 
                         if (totalRotation > radToDeg(restrictedAngle)) {
                             obj.angle = radToDeg(restrictedAngle);
@@ -1326,7 +1335,8 @@
                         let co = bottomMargin - obj.top;
                         let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
                         let marginAngle = Math.asin(co / hypotenuse);
-                        let restrictedAngle = marginAngle - diagAngle;
+                        let innerAngle = marginAngle - diagAngle;
+                        let restrictedAngle = innerAngle;
 
                         console.log(`Restricted angle: ${radToDeg(restrictedAngle)}`);
 
