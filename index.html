@@ -534,10 +534,12 @@
                             // Choose arrangement function based on number of images
                             if (files.length <= 2) {
                                 arrangeImages(loadedImages, 'cols', 'forward');
-                                lastArrangement = 'cols';
+                                lastLayout = 'cols';
+                                lastDirection = 'forward';
                             } else {
                                 arrangeImages(loadedImages, 'rows', 'forward');
-                                lastArrangement = 'rows';
+                                lastLayout = 'rows';
+                                lastDirection = 'forward';
                             }
                         }
                     });
@@ -871,21 +873,33 @@
         rotateButton_p90.addEventListener('click', () => rotateImage(90));
         rotateButton_n90.addEventListener('click', () => rotateImage(270));
 
-        let lastArrangement = 'rows'; // Track the last arrangement type
+        let lastLayout = 'rows';    // Track layout type (rows/cols)
+        let lastDirection = 'forward'; // Track direction (forward/reverse)
 
         arrangeBtn.addEventListener('click', function () {
-            // 1. Obtener todas las imágenes actuales
+            // 1. Get all current images
             const images = canvas.getObjects().filter(obj => obj.type === 'image');
 
-            // 2. Remover todas las imágenes existentes del canvas
+            // 2. Remove existing images from canvas
             images.forEach(img => canvas.remove(img));
 
-            if (lastArrangement === 'rows') {
+            // 3. Determine next arrangement state
+            if (lastLayout === 'rows' && lastDirection === 'forward') {
+                arrangeImages(images, 'rows', 'reverse');
+                lastLayout = 'rows';
+                lastDirection = 'reverse';
+            } else if (lastLayout === 'rows' && lastDirection === 'reverse') {
                 arrangeImages(images, 'cols', 'forward');
-                lastArrangement = 'cols';
+                lastLayout = 'cols';
+                lastDirection = 'forward';
+            } else if (lastLayout === 'cols' && lastDirection === 'forward') {
+                arrangeImages(images, 'cols', 'reverse');
+                lastLayout = 'cols';
+                lastDirection = 'reverse';
             } else {
                 arrangeImages(images, 'rows', 'forward');
-                lastArrangement = 'rows';
+                lastLayout = 'rows';
+                lastDirection = 'forward';
             }
 
             canvas.renderAll();
