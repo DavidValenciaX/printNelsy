@@ -533,10 +533,10 @@
                         if (loadedImages.length === files.length) {
                             // Choose arrangement function based on number of images
                             if (files.length <= 2) {
-                                arrangeImages(loadedImages, 'cols');
+                                arrangeImages(loadedImages, 'cols', 'forward');
                                 lastArrangement = 'cols';
                             } else {
-                                arrangeImages(loadedImages, 'rows');
+                                arrangeImages(loadedImages, 'rows', 'forward');
                                 lastArrangement = 'rows';
                             }
                         }
@@ -551,15 +551,16 @@
             return Number(value.toFixed(decimals));
         }
 
-        function arrangeImages(images, orientation) {
+        function arrangeImages(images, orientation, order = 'forward') {
             const count = images.length;
-            let marginAdjustment;
-            if (count <= 2) {
-                marginAdjustment = 100;
-            } else {
-                marginAdjustment = 20;
-            }
+            let marginAdjustment = count <= 2 ? 100 : 20;
             const margin = marginWidth + marginAdjustment;
+
+            // Sort images array based on order parameter
+            const sortedImages = [...images];
+            if (order === 'reverse') {
+                sortedImages.reverse();
+            }
 
             let cols, rows;
             if (orientation === 'rows') {
@@ -573,8 +574,8 @@
             const cellWidth = (canvas.width - margin * 2) / cols;
             const cellHeight = (canvas.height - margin * 2) / rows;
 
-            // Add index to make IDs unique
-            images.forEach((img, index) => {
+            // Process images
+            sortedImages.forEach((img, index) => {
                 img.id = `image-${Date.now()}-${index}`;
 
                 let row, col;
@@ -612,7 +613,7 @@
                     originY: 'center'
                 });
 
-                // Store final state with top/left origin
+                // Store original state
                 originalImages[img.id] = {
                     url: img.originalUrl,
                     width: img.width,
@@ -880,10 +881,10 @@
             images.forEach(img => canvas.remove(img));
 
             if (lastArrangement === 'rows') {
-                arrangeImages(images, 'cols');
+                arrangeImages(images, 'cols', 'forward');
                 lastArrangement = 'cols';
             } else {
-                arrangeImages(images, 'rows');
+                arrangeImages(images, 'rows', 'forward');
                 lastArrangement = 'rows';
             }
 
