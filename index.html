@@ -721,7 +721,10 @@
             const activeObject = canvas.getActiveObject();
             if (activeObject) {
                 activeObject.rotate((activeObject.angle + deg) % 360);
+
                 activeObject.setCoords();
+
+                resetRotationValues(activeObject);
 
                 canvas.renderAll();
             }
@@ -973,8 +976,6 @@
         let accumulatedAngle = 0;
         let fullRotations = 0;
         let totalRotation = 0;
-
-        const intersectionAngle = 0;
 
         let clockwise = false;
 
@@ -1258,7 +1259,7 @@
 
                         let marginAngle = Math.asin(co / hypotenuse);
 
-                        let complementRestrictedAngle  = marginAngle - complementDiagAngle;
+                        let complementRestrictedAngle = marginAngle - complementDiagAngle;
 
                         let restrictedAngle = Math.PI - complementRestrictedAngle;
 
@@ -1284,9 +1285,7 @@
             canvas.renderAll();
         });
 
-        canvas.on('object:modified', function (e) {
-            const obj = e.target;
-
+        function resetRotationValues(obj) {
             // Update the accumulated angle to match current angle
             obj.accumulatedAngle = obj.angle % 360;
             if (obj.accumulatedAngle < 0) {
@@ -1296,9 +1295,17 @@
             // Reset full rotations
             obj.fullRotations = Math.floor(obj.angle / 360);
 
-            totalRotation = obj.angle;
+            // Update total rotation to include both full rotations and accumulated angle
+            totalRotation = obj.fullRotations * 360 + obj.accumulatedAngle;
 
-            console.log(`Total rotation after modification: ${totalRotation}`);
+            // Reset previous angle to current angle
+            previousAngle = obj.angle;
+        }
+
+        canvas.on('object:modified', function (e) {
+            const obj = e.target;
+
+            resetRotationValues(obj);
 
             // Reset restrictions
             activeRestriction = null;
