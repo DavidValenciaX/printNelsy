@@ -171,6 +171,7 @@
             <div class="button-container">
                 <button type="button" class="size-button" id="cartaButton">CARTA</button>
                 <button type="button" class="size-button" id="oficioButton">OFICIO</button>
+                <button type="button" class="size-button" id="a4Button">A4</button>
                 <button type="button" class="orientation-button" id="verticalButton">▯ Vertical</button>
                 <button type="button" class="orientation-button" id="horizontalButton">▭ Horizontal</button>
                 <button type="button" id="rotateButton+90" class="control-button">Girar 90 grados a la derecha
@@ -222,6 +223,7 @@
         const printButton = document.getElementById('printButton');
         const cartaButton = document.getElementById('cartaButton');
         const oficioButton = document.getElementById('oficioButton');
+        const a4Button = document.getElementById('a4Button');
         const verticalButton = document.getElementById('verticalButton');
         const horizontalButton = document.getElementById('horizontalButton');
         const rotateButton_p90 = document.getElementById('rotateButton+90');
@@ -239,7 +241,8 @@
         const marginPixels = marginInches * dpi;
         const paperSizes = {
             carta: { width: 8.5 * dpi, height: 11 * dpi },
-            oficio: { width: 8.5 * dpi, height: 13 * dpi }
+            oficio: { width: 8.5 * dpi, height: 13 * dpi },
+            a4: { width: 8.27 * dpi, height: 11.69 * dpi }
         };
 
         let currentSize = 'carta';
@@ -878,6 +881,7 @@
 
         cartaButton.addEventListener('click', () => resizeCanvas('carta'));
         oficioButton.addEventListener('click', () => resizeCanvas('oficio'));
+        a4Button.addEventListener('click', () => resizeCanvas('a4'));
         verticalButton.addEventListener('click', () => changeOrientation(true));
         horizontalButton.addEventListener('click', () => changeOrientation(false));
 
