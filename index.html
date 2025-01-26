@@ -747,6 +747,8 @@
 
                 resetRotationValues(activeObject);
 
+                constrainObjectToMargin(activeObject, marginRect);
+
                 canvas.renderAll();
             }
         }
@@ -966,20 +968,15 @@
         const rotateControls = controls.mtr;
         rotateControls.visible = false;
 
-        canvas.on('object:moving', function (e) {
-            let obj = e.target;
-            obj.setCoords(); // Actualiza las coordenadas del objeto
+        function constrainObjectToMargin(obj, marginRect) {
+            obj.setCoords();
 
-            // Obtener los puntos del objeto y del margen
             let objPoints = [obj.aCoords.tl, obj.aCoords.tr, obj.aCoords.br, obj.aCoords.bl];
-
             let marginRight = marginRect.left + marginRect.width;
             let marginBottom = marginRect.top + marginRect.height;
 
-            // Inicializar desplazamientos
             let offsetX = 0, offsetY = 0;
 
-            // Comprobar cada punto del objeto
             objPoints.forEach(function (point) {
                 if (point.x < marginRect.left) {
                     offsetX = Math.max(offsetX, marginRect.left - point.x);
@@ -995,12 +992,17 @@
                 }
             });
 
-            // Aplicar desplazamientos si es necesario
             if (offsetX !== 0 || offsetY !== 0) {
                 obj.left += offsetX;
                 obj.top += offsetY;
-                obj.setCoords(); // Actualiza las coordenadas después de ajustar la posición
+                obj.setCoords();
             }
+
+            return obj;
+        }
+
+        canvas.on('object:moving', function (e) {
+            constrainObjectToMargin(e.target, marginRect);
         });
 
 
