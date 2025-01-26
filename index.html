@@ -154,7 +154,7 @@
                 <button type="button" id="printButton" class="control-button">Imprimir</button>
                 <button type="button" id="deleteButton" class="control-button">Eliminar imagen</button>
                 <button type="button" id="resetImageButton" class="control-button">Restablecer imagen</button>
-                <button type="button" id="arrangeBtn" class="control-button">Ordenar imágenes</button>
+                <button type="button" id="arrangeBtn" class="control-button">Re-Ordenar imágenes</button>
                 <button type="button" id="grayScaleBtn" class="control-button">Convertir a blanco y negro</button>
                 <hr>
                 <button type="button" id="cropButton" class="control-button">Recortar imagen</button>
@@ -521,9 +521,8 @@
                     fabric.Image.fromURL(event.target.result, function (img) {
                         const imageId = `image-${Date.now()}`;
                         img.id = imageId;
-                        img.originalUrl = event.target.result; // Store URL for later use
+                        img.originalUrl = event.target.result;
 
-                        // Set rotation control visibility based on checkbox state
                         img.setControlsVisibility({
                             mtr: rotateCheckbox.checked
                         });
@@ -540,6 +539,13 @@
                                 arrangeImages(loadedImages, 'rows', 'forward');
                                 lastLayout = 'rows';
                                 lastDirection = 'forward';
+                            }
+
+                            // Auto-select if only one image
+                            if (files.length === 1) {
+                                canvas.discardActiveObject();
+                                canvas.setActiveObject(loadedImages[0]);
+                                canvas.renderAll();
                             }
                         }
                     });
