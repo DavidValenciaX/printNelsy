@@ -468,7 +468,7 @@
             // Store current canvas state
             const images = canvas.getObjects().filter(obj => obj.type === 'image');
             const currentLayout = lastLayout || (images.length <= 2 ? 'cols' : 'rows');
-            const currentDirection = lastDirection || 'forward';
+            const currentDirection = 'forward';
 
             // Remove all images from canvas
             images.forEach(img => canvas.remove(img));
