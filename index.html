@@ -1089,11 +1089,6 @@
 
             let complementDiagAngle = Math.PI / 2 - diagAngle;
 
-            let MB = obj.oCoords.mb;
-            let MT = obj.oCoords.mt;
-            let ML = obj.oCoords.ml;
-            let MR = obj.oCoords.mr;
-
             // Calculate margins from canvas edges
             const leftMargin = marginRect.left;
             const rightMargin = marginRect.left + marginRect.width;
@@ -1126,6 +1121,10 @@
                         activeRestriction = 'BL_RIGHT_CW';
                     } else if (isMouseDown && TL.x > rightMargin && !clockwise) {
                         activeRestriction = 'TL_RIGHT_CCW';
+                    } else if (isMouseDown && BR.y > bottomMargin && clockwise) {
+                        activeRestriction = 'BR_BOTTOM_CW';
+                    } else if (isMouseDown && BL.y > bottomMargin && !clockwise) {
+                        activeRestriction = 'BL_BOTTOM_CCW';
                     }
                 }
 
@@ -1303,6 +1302,38 @@
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BL.x > rightMargin && clockwise) {
                             activeRestriction = 'BL_RIGHT_CW';
+                        }
+                        break;
+                    }
+
+                    case 'BR_BOTTOM_CW': {
+                        console.log("BR bottom margin rotating clockwise");
+                        let co = bottomMargin - obj.top;
+                        let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
+                        let marginAngle = Math.asin(co / hypotenuse);
+                        let restrictedAngle = marginAngle - diagAngle;
+
+                        if (totalRotation > radToDeg(restrictedAngle)) {
+                            obj.angle = radToDeg(restrictedAngle);
+                        } else if (BL.y > bottomMargin && !clockwise) {
+                            activeRestriction = 'BL_BOTTOM_CCW';
+                        }
+                        break;
+                    }
+
+                    case 'BL_BOTTOM_CCW': {
+                        console.log("BL bottom margin rotating counterclockwise");
+                        let co = bottomMargin - obj.top;
+                        let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
+                        let marginAngle = Math.asin(co / hypotenuse);
+                        let restrictedAngle = marginAngle - diagAngle;
+
+                        console.log(`Restricted angle: ${radToDeg(restrictedAngle)}`);
+
+                        if (totalRotation <= - radToDeg(restrictedAngle)) {
+                            obj.angle = 360 - radToDeg(restrictedAngle);
+                        } else if (BR.y > bottomMargin && clockwise) {
+                            activeRestriction = 'BR_BOTTOM_CW';
                         }
                         break;
                     }
