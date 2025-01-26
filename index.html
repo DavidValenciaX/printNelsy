@@ -462,6 +462,15 @@
         }
 
         function resizeCanvas(size, orientation = isVertical) {
+            // Store current canvas state
+            const images = canvas.getObjects().filter(obj => obj.type === 'image');
+            const currentLayout = lastLayout || (images.length <= 2 ? 'cols' : 'rows');
+            const currentDirection = lastDirection || 'forward';
+
+            // Remove all images from canvas
+            images.forEach(img => canvas.remove(img));
+
+            // Update canvas dimensions
             currentSize = size;
             isVertical = orientation;
             const scale = 0.3;
@@ -475,6 +484,7 @@
             canvas.setWidth(width * scale);
             canvas.setHeight(height * scale);
 
+            // Update margin rectangle
             if (marginRect) {
                 canvas.remove(marginRect);
             }
@@ -493,14 +503,13 @@
             });
 
             canvas.add(marginRect);
-            canvas.renderAll();
 
-            // Actualizar los límites para todas las imágenes existentes
-            canvas.forEachObject(function (obj) {
-                if (obj !== marginRect) {
-                    obj.setCoords();
-                }
-            });
+            // Re-arrange images with same layout and direction
+            if (images.length > 0) {
+                arrangeImages(images, currentLayout, currentDirection);
+            }
+
+            canvas.renderAll();
         }
 
         function changeOrientation(vertical) {
