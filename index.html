@@ -1137,6 +1137,22 @@
                         activeRestriction = 'BL_BOTTOM_CW';
                     } else if (isMouseDown && TL.y > bottomMargin && !clockwise) {
                         activeRestriction = 'TL_BOTTOM_CCW';
+                    } else if (isMouseDown && TL.x < leftMargin && !clockwise) {
+                        activeRestriction = 'TL_LEFT_CCW';
+                    } else if (isMouseDown && BL.x < leftMargin && clockwise) {
+                        activeRestriction = 'BL_LEFT_CW';
+                    } else if (isMouseDown && BL.x < leftMargin && !clockwise) {
+                        activeRestriction = 'BL_LEFT_CCW';
+                    } else if (isMouseDown && BR.x < leftMargin && clockwise) {
+                        activeRestriction = 'BR_LEFT_CW';
+                    } else if (isMouseDown && BR.x < leftMargin && !clockwise) {
+                        activeRestriction = 'BR_LEFT_CCW';
+                    } else if (isMouseDown && TR.x < leftMargin && clockwise) {
+                        activeRestriction = 'TR_LEFT_CW';
+                    } else if (isMouseDown && TR.x < leftMargin && !clockwise) {
+                        activeRestriction = 'TR_LEFT_CCW';
+                    } else if (isMouseDown && TL.x < leftMargin && clockwise) {
+                        activeRestriction = 'TL_LEFT_CW';
                     }
                 }
 
@@ -1452,6 +1468,134 @@
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BL.y > bottomMargin && clockwise) {
                             activeRestriction = 'BL_BOTTOM_CW';
+                        }
+                        break;
+                    }
+
+                    case 'TL_LEFT_CCW': {
+                        console.log("TL left margin rotating counterclockwise");
+                        let co = obj.left - leftMargin;
+                        let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
+                        let marginAngle = Math.asin(co / hypotenuse);
+                        let innerAngle = marginAngle - complementDiagAngle;
+                        let restrictedAngle = -innerAngle;
+
+                        if (totalRotation < radToDeg(restrictedAngle)) {
+                            obj.angle = radToDeg(restrictedAngle);
+                        } else if (BL.x < leftMargin && clockwise) {
+                            activeRestriction = 'BL_LEFT_CW';
+                        }
+                        break;
+                    }
+
+                    case 'BL_LEFT_CW': {
+                        console.log("BL left margin rotating clockwise");
+                        let co = obj.left - leftMargin;
+                        let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
+                        let marginAngle = Math.asin(co / hypotenuse);
+                        let innerAngle = marginAngle - complementDiagAngle;
+                        let restrictedAngle = innerAngle;
+
+                        if (totalRotation > radToDeg(restrictedAngle)) {
+                            obj.angle = radToDeg(restrictedAngle);
+                        } else if (TL.x < leftMargin && !clockwise) {
+                            activeRestriction = 'TL_LEFT_CCW';
+                        }
+                        break;
+                    }
+
+                    case 'BL_LEFT_CCW': {
+                        console.log("BL left margin rotating counterclockwise");
+                        let co = obj.left - leftMargin;
+                        let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
+                        let marginAngle = Math.asin(co / hypotenuse);
+                        let innerAngle = marginAngle - diagAngle;
+                        let restrictedAngle = (Math.PI / 2) - innerAngle;
+
+                        if (totalRotation < radToDeg(restrictedAngle)) {
+                            obj.angle = radToDeg(restrictedAngle);
+                        } else if (BR.x < leftMargin && clockwise) {
+                            activeRestriction = 'BR_LEFT_CW';
+                        }
+                        break;
+                    }
+
+                    case 'BR_LEFT_CW': {
+                        console.log("BR left margin rotating clockwise");
+                        let co = obj.left - leftMargin;
+                        let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
+                        let marginAngle = Math.asin(co / hypotenuse);
+                        let innerAngle = marginAngle - diagAngle;
+                        let restrictedAngle = (Math.PI / 2) + innerAngle;
+
+                        if (totalRotation > radToDeg(restrictedAngle)) {
+                            obj.angle = radToDeg(restrictedAngle);
+                        } else if (BL.x < leftMargin && !clockwise) {
+                            activeRestriction = 'BL_LEFT_CCW';
+                        }
+                        break;
+                    }
+
+                    case 'BR_LEFT_CCW': {
+                        console.log("BR left margin rotating counterclockwise");
+                        let co = obj.left - leftMargin;
+                        let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
+                        let marginAngle = Math.asin(co / hypotenuse);
+                        let innerAngle = marginAngle - complementDiagAngle;
+                        let restrictedAngle = Math.PI - innerAngle;
+
+                        if (totalRotation < radToDeg(restrictedAngle)) {
+                            obj.angle = radToDeg(restrictedAngle);
+                        } else if (TR.x < leftMargin && clockwise) {
+                            activeRestriction = 'TR_LEFT_CW';
+                        }
+                        break;
+                    }
+
+                    case 'TR_LEFT_CW': {
+                        console.log("TR left margin rotating clockwise");
+                        let co = obj.left - leftMargin;
+                        let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
+                        let marginAngle = Math.asin(co / hypotenuse);
+                        let innerAngle = marginAngle - complementDiagAngle;
+                        let restrictedAngle = Math.PI + innerAngle;
+
+                        if (totalRotation > radToDeg(restrictedAngle)) {
+                            obj.angle = radToDeg(restrictedAngle);
+                        } else if (BR.x < leftMargin && !clockwise) {
+                            activeRestriction = 'BR_LEFT_CCW';
+                        }
+                        break;
+                    }
+
+                    case 'TR_LEFT_CCW': {
+                        console.log("TR left margin rotating counterclockwise");
+                        let co = obj.left - leftMargin;
+                        let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
+                        let marginAngle = Math.asin(co / hypotenuse);
+                        let innerAngle = marginAngle - diagAngle;
+                        let restrictedAngle = (3 * Math.PI / 2) - innerAngle;
+
+                        if (totalRotation < radToDeg(restrictedAngle)) {
+                            obj.angle = radToDeg(restrictedAngle);
+                        } else if (TL.x < leftMargin && clockwise) {
+                            activeRestriction = 'TL_LEFT_CW';
+                        }
+                        break;
+                    }
+
+                    case 'TL_LEFT_CW': {
+                        console.log("TL left margin rotating clockwise");
+                        let co = obj.left - leftMargin;
+                        let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
+                        let marginAngle = Math.asin(co / hypotenuse);
+                        let innerAngle = marginAngle - diagAngle;
+                        let restrictedAngle = (3 * Math.PI / 2) + innerAngle;
+
+                        if (totalRotation > radToDeg(restrictedAngle)) {
+                            obj.angle = radToDeg(restrictedAngle);
+                        } else if (TR.x < leftMargin && !clockwise) {
+                            activeRestriction = 'TR_LEFT_CCW';
                         }
                         break;
                     }
