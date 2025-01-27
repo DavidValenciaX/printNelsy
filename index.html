@@ -178,6 +178,8 @@
                     ↻</button>
                 <button type="button" id="rotateButton-90" class="control-button">Girar 90 grados a la izquierda
                     ↺</button>
+                <button type="button" id="scaleUp" class="control-button">Ampliar</button>
+                <button type="button" id="scaleDown" class="control-button">Reducir</button>
             </div>
         </div>
     </div>
@@ -235,6 +237,8 @@
         const cancelCropBtn = document.getElementById('cancelCrop');
         const rotateCheckbox = document.getElementById('rotateControl');
         const grayScaleBtn = document.getElementById('grayScaleBtn');
+        const scaleUpBtn = document.getElementById('scaleUp');
+        const scaleDownBtn = document.getElementById('scaleDown');
 
         const dpi = 300;
         const marginInches = 0.2;
@@ -253,6 +257,8 @@
         let activeImage = null;
         let isCropping = false;
         let inactivatedObjects = [];
+
+        const SCALE_FACTOR = 0.05;
 
         function disableOtherObjects() {
             canvas.getObjects().forEach(obj => {
@@ -893,6 +899,25 @@
         grayScaleBtn.addEventListener('click', convertToGrayscale);
         rotateButton_p90.addEventListener('click', () => rotateImage(90));
         rotateButton_n90.addEventListener('click', () => rotateImage(270));
+        scaleUpBtn.addEventListener('click', function () {
+            const activeObject = canvas.getActiveObject();
+            if (!activeObject) return;
+
+            const currentScale = activeObject.scaleX;
+            activeObject.scale(currentScale + SCALE_FACTOR);
+            canvas.renderAll();
+        });
+        scaleDownBtn.addEventListener('click', function () {
+            const activeObject = canvas.getActiveObject();
+            if (!activeObject) return;
+
+            const currentScale = activeObject.scaleX;
+            // Prevent scaling below 0.1 to avoid object disappearing
+            if (currentScale > 0.1) {
+                activeObject.scale(currentScale - SCALE_FACTOR);
+                canvas.renderAll();
+            }
+        });
 
         let lastLayout = 'rows';    // Track layout type (rows/cols)
         let lastDirection = 'forward'; // Track direction (forward/reverse)
