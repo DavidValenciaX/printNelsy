@@ -1034,8 +1034,6 @@
         // From here, the code for rotating restrictions is added
 
         let previousAngle = 0;
-        let accumulatedAngle = 0;
-        let fullRotations = 0;
         let totalRotation = 0;
 
         let clockwise = false;
@@ -1057,11 +1055,15 @@
             // Initialize accumulated angle if not exists
             if (typeof obj.accumulatedAngle === 'undefined') {
                 obj.accumulatedAngle = 0;
-                obj.fullRotations = 0;
+                obj.turns = 0;
             }
 
             // Get current angle and calculate direction
             const currentAngle = obj.angle;
+
+            console.log("currentAngle: ", currentAngle);
+
+            console.log("previousAngle: ", previousAngle);
 
             // Detect direction and full rotations
             let angleDiff = currentAngle - previousAngle;
@@ -1077,25 +1079,37 @@
                 }
             }
 
+            console.log("angleDiff: ", angleDiff);
+
             // Update rotation tracking
             obj.accumulatedAngle += angleDiff;
             clockwise = angleDiff > 0;
 
+            console.log("clockwise: ", clockwise);
+
             // Update full rotations
             while (obj.accumulatedAngle >= 360) {
-                obj.fullRotations++;
+                obj.turns++;
                 obj.accumulatedAngle -= 360;
             }
             while (obj.accumulatedAngle <= -360) {
-                obj.fullRotations--;
+                obj.turns--;
                 obj.accumulatedAngle += 360;
             }
 
+            console.log("obj.accumulatedAngle: ", obj.accumulatedAngle);
+
+            console.log("obj.turns: ", obj.turns);
+
             // Calculate total rotation
-            totalRotation = obj.fullRotations * 360 + obj.accumulatedAngle;
+            totalRotation = obj.turns * 360 + obj.accumulatedAngle;
+
+            console.log("totalRotation: ", totalRotation);
 
             // Store current angle for next comparison
             previousAngle = currentAngle;
+
+            console.log("====================================");
 
             let TOP = obj.top;
             let LEFT = obj.left;
@@ -1119,10 +1133,6 @@
             const rightMargin = marginRect.left + marginRect.width;
             const topMargin = marginRect.top;
             const bottomMargin = marginRect.top + marginRect.height;
-
-            console.log(`Object angle: ${obj.angle}`);
-
-            console.log(`Total rotation: ${totalRotation}`);
 
             function checkRotating(point) {
                 if (!isMouseDown) {
@@ -1239,7 +1249,7 @@
 
                         let restrictedAngle = (2 * Math.PI) - innerAngle;
 
-                        if (totalRotation <= radToDeg(restrictedAngle) - 360) {
+                        if (totalRotation < radToDeg(restrictedAngle) - 360) {
 
                             obj.angle = radToDeg(restrictedAngle);
 
@@ -1337,7 +1347,7 @@
 
                         let restrictedAngle = Math.PI - innerAngle;
 
-                        if (totalRotation <= radToDeg(restrictedAngle)) {
+                        if (totalRotation < radToDeg(restrictedAngle)) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BL.x > rightMargin && clockwise) {
                             activeRestriction = 'BL_RIGHT_CW';
@@ -1375,7 +1385,7 @@
 
                         let restrictedAngle = (3 * Math.PI / 2) - innerAngle;
 
-                        if (totalRotation <= radToDeg(restrictedAngle)) {
+                        if (totalRotation < radToDeg(restrictedAngle)) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BR.x > rightMargin && clockwise) {
                             activeRestriction = 'BR_RIGHT_CW';
@@ -1407,7 +1417,7 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = (2 * Math.PI) - innerAngle;
 
-                        if (totalRotation <= radToDeg(restrictedAngle) - 360) {
+                        if (totalRotation < radToDeg(restrictedAngle) - 360) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BR.y > bottomMargin && clockwise) {
                             activeRestriction = 'BR_BOTTOM_CW';
@@ -1503,7 +1513,7 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = (3 * Math.PI / 2) - innerAngle;
 
-                        if (totalRotation <= radToDeg(restrictedAngle)) {
+                        if (totalRotation < radToDeg(restrictedAngle)) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BL.y > bottomMargin && clockwise) {
                             activeRestriction = 'BL_BOTTOM_CW';
@@ -1517,9 +1527,19 @@
                         let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
                         let marginAngle = Math.asin(co / hypotenuse);
                         let innerAngle = marginAngle - complementDiagAngle;
-                        let restrictedAngle = -innerAngle;
+                        let restrictedAngle = (2 * Math.PI) - innerAngle;
 
-                        if (totalRotation < radToDeg(restrictedAngle)) {
+                        console.log(`Object angle: ${obj.angle}`);
+
+                        console.log(`Total rotation: ${totalRotation}`);
+
+                        console.log(`restrictedAngle: ${radToDeg(restrictedAngle)}`);
+
+                        console.log(`restrictedAngle - 360: ${radToDeg(restrictedAngle) - 360}`);
+
+                        console.log("totalRotation < radToDeg(restrictedAngle) - 360: ", totalRotation < radToDeg(restrictedAngle) - 360);
+
+                        if (totalRotation < radToDeg(restrictedAngle) - 360) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BL.x < leftMargin && clockwise) {
                             activeRestriction = 'BL_LEFT_CW';
@@ -1663,7 +1683,7 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = (2 * Math.PI) - innerAngle;
 
-                        if (totalRotation <= radToDeg(restrictedAngle) - 360) {
+                        if (totalRotation < radToDeg(restrictedAngle) - 360) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (TL.y < topMargin && clockwise) {
                             activeRestriction = 'TL_TOP_CW';
@@ -1695,7 +1715,7 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = (Math.PI / 2) - innerAngle;
 
-                        if (totalRotation <= radToDeg(restrictedAngle)) {
+                        if (totalRotation < radToDeg(restrictedAngle)) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BL.y < topMargin && clockwise) {
                             activeRestriction = 'BL_TOP_CW';
@@ -1789,13 +1809,19 @@
             }
 
             // Reset full rotations
-            obj.fullRotations = Math.floor(obj.angle / 360);
+            obj.turns = Math.floor(obj.angle / 360);
 
             // Update total rotation to include both full rotations and accumulated angle
-            totalRotation = obj.fullRotations * 360 + obj.accumulatedAngle;
+            totalRotation = obj.turns * 360 + obj.accumulatedAngle;
 
             // Reset previous angle to current angle
             previousAngle = obj.angle;
+
+            console.log('Angulo acumulado del objeto después de ser modificado:', obj.accumulatedAngle);
+            console.log('Rotaciones completas del objeto después de ser modificado:', obj.turns);
+            console.log('Rotación total del objeto después de ser modificado:', totalRotation);
+            console.log('Ángulo previo del objeto después de ser modificado:', previousAngle);
+            console.log('Ángulo actual del objeto después de ser modificado:', obj.angle);
         }
 
         canvas.on('object:modified', function (e) {
@@ -1810,7 +1836,7 @@
         // Detectar inicio de la manipulación de un objeto
         canvas.on('before:transform', function () {
             let obj = canvas.getActiveObject();
-            console.log('Antes de transformar el objeto:', obj);
+            //console.log('Antes de transformar el objeto:', obj);
         });
 
 
