@@ -1033,7 +1033,6 @@
 
         // From here, the code for rotating restrictions is added
 
-        let previousAngle = 0;
         let totalRotation = 0;
 
         let clockwise = false;
@@ -1056,6 +1055,7 @@
             if (typeof obj.accumulatedAngle === 'undefined') {
                 obj.accumulatedAngle = 0;
                 obj.turns = 0;
+                obj.previousAngle = 0;
             }
 
             // Get current angle and calculate direction
@@ -1063,10 +1063,10 @@
 
             console.log("currentAngle: ", currentAngle);
 
-            console.log("previousAngle: ", previousAngle);
+            console.log("obj.previousAngle: ", obj.previousAngle);
 
             // Detect direction and full rotations
-            let angleDiff = currentAngle - previousAngle;
+            let angleDiff = currentAngle - obj.previousAngle;
 
             // Handle angle wrap-around
             if (Math.abs(angleDiff) > 270) {
@@ -1107,7 +1107,7 @@
             console.log("totalRotation: ", totalRotation);
 
             // Store current angle for next comparison
-            previousAngle = currentAngle;
+            obj.previousAngle = currentAngle;
 
             console.log("====================================");
 
@@ -1815,12 +1815,12 @@
             totalRotation = obj.turns * 360 + obj.accumulatedAngle;
 
             // Reset previous angle to current angle
-            previousAngle = obj.angle;
+            obj.previousAngle = obj.angle;
 
             console.log('Angulo acumulado del objeto después de ser modificado:', obj.accumulatedAngle);
             console.log('Rotaciones completas del objeto después de ser modificado:', obj.turns);
             console.log('Rotación total del objeto después de ser modificado:', totalRotation);
-            console.log('Ángulo previo del objeto después de ser modificado:', previousAngle);
+            console.log('Ángulo previo del objeto después de ser modificado:', obj.previousAngle);
             console.log('Ángulo actual del objeto después de ser modificado:', obj.angle);
         }
 
