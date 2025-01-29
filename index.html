@@ -901,18 +901,24 @@
             const activeObject = canvas.getActiveObject();
             if (!activeObject) return;
 
-            const currentScale = activeObject.scaleX;
-            activeObject.scale(currentScale + SCALE_FACTOR);
+            const currentScaleX = activeObject.scaleX;
+            const currentScaleY = activeObject.scaleY;
+            activeObject.scaleX = currentScaleX + SCALE_FACTOR;
+            activeObject.scaleY = currentScaleY + SCALE_FACTOR;
+            constrainObjectToMargin(activeObject, marginRect);
             canvas.renderAll();
         });
         scaleDownBtn.addEventListener('click', function () {
             const activeObject = canvas.getActiveObject();
             if (!activeObject) return;
 
-            const currentScale = activeObject.scaleX;
+            const currentScaleX = activeObject.scaleX;
+            const currentScaleY = activeObject.scaleY;
             // Prevent scaling below 0.1 to avoid object disappearing
-            if (currentScale > 0.1) {
-                activeObject.scale(currentScale - SCALE_FACTOR);
+            if (currentScaleX > 0.1 && currentScaleY > 0.1) {
+                activeObject.scaleX = currentScaleX - SCALE_FACTOR;
+                activeObject.scaleY = currentScaleY - SCALE_FACTOR;
+                constrainObjectToMargin(activeObject, marginRect);
                 canvas.renderAll();
             }
         });
