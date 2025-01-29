@@ -181,6 +181,7 @@
                 <button type="button" id="scaleUp" class="control-button">Ampliar imagen</button>
                 <button type="button" id="scaleDown" class="control-button">Reducir imagen</button>
                 <button type="button" id="centerVerticallyBtn" class="control-button">Centrar verticalmente</button>
+                <button type="button" id="centerHorizontallyBtn" class="control-button">Centrar horizontalmente</button>
             </div>
         </div>
     </div>
@@ -241,6 +242,7 @@
         const scaleUpBtn = document.getElementById('scaleUp');
         const scaleDownBtn = document.getElementById('scaleDown');
         const centerVerticallyBtn = document.getElementById('centerVerticallyBtn');
+        const centerHorizontallyBtn = document.getElementById('centerHorizontallyBtn');
 
         const dpi = 300;
         const marginInches = 0.2;
@@ -272,6 +274,23 @@
             // Set new position
             activeObject.set({
                 top: centerY
+            });
+
+            canvas.renderAll();
+        }
+
+        function centerHorizontally() {
+            const activeObject = canvas.getActiveObject();
+            if (!activeObject) return;
+
+            const canvasWidth = canvas.getWidth();
+
+            // Calculate horizontal center position
+            const centerX = canvasWidth / 2;
+
+            // Set new position
+            activeObject.set({
+                left: centerX
             });
 
             canvas.renderAll();
@@ -917,6 +936,7 @@
         rotateButton_p90.addEventListener('click', () => rotateImage(90));
         rotateButton_n90.addEventListener('click', () => rotateImage(270));
         centerVerticallyBtn.addEventListener('click', centerVertically);
+        centerHorizontallyBtn.addEventListener('click', centerHorizontally);
         scaleUpBtn.addEventListener('click', function () {
             const activeObject = canvas.getActiveObject();
             if (!activeObject) return;
