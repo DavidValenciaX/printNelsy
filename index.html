@@ -1174,6 +1174,7 @@
             const topMargin = marginRect.top;
             const bottomMargin = marginRect.top + marginRect.height;
 
+            // This function restricts the rotation of the object if it is exceeding the margins while it is rotating
             function checkRotating(point) {
                 if (!isMouseDown) {
                     activeRestriction = null;
@@ -1250,17 +1251,11 @@
                 switch (activeRestriction) {
 
                     case 'TR_RIGHT_CW': {
-
                         console.log("TR right margin rotating clockwise");
-
                         let co = rightMargin - obj.left;
-
                         let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
-
                         let marginAngle = Math.asin(co / hypotenuse);
-
                         let innerAngle = marginAngle - complementDiagAngle;
-
                         let restrictedAngle = innerAngle;
 
                         if (obj.totalRotation > radToDeg(restrictedAngle)) {
@@ -1276,17 +1271,11 @@
                     }
 
                     case 'BR_RIGHT_CCW': {
-
                         console.log("BR right margin rotating counterclockwise");
-
                         let co = rightMargin - obj.left;
-
                         let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
-
                         let marginAngle = Math.asin(co / hypotenuse);
-
                         let innerAngle = marginAngle - complementDiagAngle;
-
                         let restrictedAngle = (2 * Math.PI) - innerAngle;
 
                         if (obj.totalRotation < radToDeg(restrictedAngle) - 360) {
@@ -1303,17 +1292,11 @@
                     }
 
                     case 'TL_RIGHT_CW': {
-
                         console.log("TL right margin rotating clockwise");
-
                         let co = rightMargin - obj.left;
-
                         let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
-
                         let marginAngle = Math.asin(co / hypotenuse);
-
                         let innerAngle = marginAngle - diagAngle;
-
                         let restrictedAngle = (Math.PI / 2) + innerAngle;
 
                         if (obj.totalRotation > radToDeg(restrictedAngle)) {
@@ -1328,17 +1311,11 @@
                     }
 
                     case 'TR_RIGHT_CCW': {
-
                         console.log("TR right margin rotating counterclockwise");
-
                         let co = rightMargin - obj.left;
-
                         let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
-
                         let marginAngle = Math.asin(co / hypotenuse);
-
                         let innerAngle = marginAngle - diagAngle;
-
                         let restrictedAngle = (Math.PI / 2) - innerAngle;
 
                         if (obj.totalRotation < radToDeg(restrictedAngle)) {
@@ -1355,15 +1332,10 @@
 
                     case 'BL_RIGHT_CW': {
                         console.log("BL right margin rotating clockwise");
-
                         let co = rightMargin - obj.left;
-
                         let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
-
                         let marginAngle = Math.asin(co / hypotenuse);
-
                         let innerAngle = marginAngle - complementDiagAngle;
-
                         let restrictedAngle = Math.PI + innerAngle;
 
                         if (obj.totalRotation > radToDeg(restrictedAngle)) {
@@ -1376,15 +1348,10 @@
 
                     case 'TL_RIGHT_CCW': {
                         console.log("TL right margin rotating counterclockwise");
-
                         let co = rightMargin - obj.left;
-
                         let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
-
                         let marginAngle = Math.asin(co / hypotenuse);
-
                         let innerAngle = marginAngle - complementDiagAngle;
-
                         let restrictedAngle = Math.PI - innerAngle;
 
                         if (obj.totalRotation < radToDeg(restrictedAngle)) {
@@ -1397,13 +1364,10 @@
 
                     case 'BR_RIGHT_CW': {
                         console.log("BR right margin rotating clockwise");
-
                         let co = rightMargin - obj.left;
                         let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
                         let marginAngle = Math.asin(co / hypotenuse);
-
                         let innerAngle = marginAngle - diagAngle;
-
                         let restrictedAngle = (3 * Math.PI / 2) + innerAngle;
 
                         if (obj.totalRotation > radToDeg(restrictedAngle)) {
@@ -1416,13 +1380,10 @@
 
                     case 'BL_RIGHT_CCW': {
                         console.log("BL right margin rotating counterclockwise");
-
                         let co = rightMargin - obj.left;
                         let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
                         let marginAngle = Math.asin(co / hypotenuse);
-
                         let innerAngle = marginAngle - diagAngle;
-
                         let restrictedAngle = (3 * Math.PI / 2) - innerAngle;
 
                         if (obj.totalRotation < radToDeg(restrictedAngle)) {
@@ -1568,16 +1529,6 @@
                         let marginAngle = Math.asin(co / hypotenuse);
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = (2 * Math.PI) - innerAngle;
-
-                        console.log(`Object angle: ${obj.angle}`);
-
-                        console.log(`Total rotation: ${obj.totalRotation}`);
-
-                        console.log(`restrictedAngle: ${radToDeg(restrictedAngle)}`);
-
-                        console.log(`restrictedAngle - 360: ${radToDeg(restrictedAngle) - 360}`);
-
-                        console.log("obj.totalRotation < radToDeg(restrictedAngle) - 360: ", obj.totalRotation < radToDeg(restrictedAngle) - 360);
 
                         if (obj.totalRotation < radToDeg(restrictedAngle) - 360) {
                             obj.angle = radToDeg(restrictedAngle);
