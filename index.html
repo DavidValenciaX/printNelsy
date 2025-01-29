@@ -751,8 +751,6 @@
 
                 activeObject.setCoords();
 
-                resetRotationValues(activeObject);
-
                 constrainObjectToMargin(activeObject, marginRect);
 
                 canvas.renderAll();
@@ -1797,33 +1795,7 @@
             canvas.renderAll();
         });
 
-        function resetRotationValues(obj) {
-            // Update the accumulated angle to match current angle
-            obj.accumulatedAngle = obj.angle % 360;
-            if (obj.accumulatedAngle < 0) {
-                obj.accumulatedAngle += 360;
-            }
-
-            // Reset full rotations
-            obj.turns = Math.floor(obj.angle / 360);
-
-            // Update total rotation to include both full rotations and accumulated angle
-            obj.totalRotation = obj.turns * 360 + obj.accumulatedAngle;
-
-            // Reset previous angle to current angle
-            obj.previousAngle = obj.angle;
-
-            console.log('Angulo acumulado del objeto después de ser modificado:', obj.accumulatedAngle);
-            console.log('Rotaciones completas del objeto después de ser modificado:', obj.turns);
-            console.log('Rotación total del objeto después de ser modificado:', obj.totalRotation);
-            console.log('Ángulo previo del objeto después de ser modificado:', obj.previousAngle);
-            console.log('Ángulo actual del objeto después de ser modificado:', obj.angle);
-        }
-
         canvas.on('object:modified', function (e) {
-            const obj = e.target;
-
-            resetRotationValues(obj);
 
             // Reset restrictions
             activeRestriction = null;
@@ -1832,7 +1804,7 @@
         // Detectar inicio de la manipulación de un objeto
         canvas.on('before:transform', function () {
             let obj = canvas.getActiveObject();
-            //console.log('Antes de transformar el objeto:', obj);
+            console.log('Antes de transformar el objeto:', obj);
         });
 
 
