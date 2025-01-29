@@ -178,8 +178,9 @@
                     ↻</button>
                 <button type="button" id="rotateButton-90" class="control-button">Girar 90 grados a la izquierda
                     ↺</button>
-                <button type="button" id="scaleUp" class="control-button">Ampliar</button>
-                <button type="button" id="scaleDown" class="control-button">Reducir</button>
+                <button type="button" id="scaleUp" class="control-button">Ampliar imagen</button>
+                <button type="button" id="scaleDown" class="control-button">Reducir imagen</button>
+                <button type="button" id="centerVerticallyBtn" class="control-button">Centrar verticalmente</button>
             </div>
         </div>
     </div>
@@ -239,6 +240,7 @@
         const grayScaleBtn = document.getElementById('grayScaleBtn');
         const scaleUpBtn = document.getElementById('scaleUp');
         const scaleDownBtn = document.getElementById('scaleDown');
+        const centerVerticallyBtn = document.getElementById('centerVerticallyBtn');
 
         const dpi = 300;
         const marginInches = 0.2;
@@ -257,6 +259,23 @@
         let activeImage = null;
         let isCropping = false;
         let inactivatedObjects = [];
+
+        function centerVertically() {
+            const activeObject = canvas.getActiveObject();
+            if (!activeObject) return;
+
+            const canvasHeight = canvas.getHeight();
+
+            // Calculate vertical center position
+            const centerY = canvasHeight / 2;
+
+            // Set new position
+            activeObject.set({
+                top: centerY
+            });
+
+            canvas.renderAll();
+        }
 
         const SCALE_FACTOR = 0.05;
 
@@ -897,6 +916,7 @@
         grayScaleBtn.addEventListener('click', convertToGrayscale);
         rotateButton_p90.addEventListener('click', () => rotateImage(90));
         rotateButton_n90.addEventListener('click', () => rotateImage(270));
+        centerVerticallyBtn.addEventListener('click', centerVertically);
         scaleUpBtn.addEventListener('click', function () {
             const activeObject = canvas.getActiveObject();
             if (!activeObject) return;
