@@ -923,21 +923,7 @@
             return line;
         }
 
-        cartaButton.addEventListener('click', () => resizeCanvas('carta'));
-        oficioButton.addEventListener('click', () => resizeCanvas('oficio'));
-        a4Button.addEventListener('click', () => resizeCanvas('a4'));
-        verticalButton.addEventListener('click', () => changeOrientation(true));
-        horizontalButton.addEventListener('click', () => changeOrientation(false));
-
-        imageLoader.addEventListener('change', handleImageUpload);
-        resetImageButton.addEventListener('click', resetActiveImage);
-        printButton.addEventListener('click', printCanvas);
-        grayScaleBtn.addEventListener('click', convertToGrayscale);
-        rotateButton_p90.addEventListener('click', () => rotateImage(90));
-        rotateButton_n90.addEventListener('click', () => rotateImage(270));
-        centerVerticallyBtn.addEventListener('click', centerVertically);
-        centerHorizontallyBtn.addEventListener('click', centerHorizontally);
-        scaleUpBtn.addEventListener('click', function () {
+        function scaleUp() {
             const activeObject = canvas.getActiveObject();
             if (!activeObject) return;
 
@@ -947,8 +933,9 @@
             activeObject.scaleY = currentScaleY + SCALE_FACTOR;
             constrainObjectToMargin(activeObject, marginRect);
             canvas.renderAll();
-        });
-        scaleDownBtn.addEventListener('click', function () {
+        }
+
+        function scaleDown() {
             const activeObject = canvas.getActiveObject();
             if (!activeObject) return;
 
@@ -961,12 +948,12 @@
                 constrainObjectToMargin(activeObject, marginRect);
                 canvas.renderAll();
             }
-        });
+        }
 
         let lastLayout = 'rows';    // Track layout type (rows/cols)
         let lastDirection = 'forward'; // Track direction (forward/reverse)
 
-        arrangeBtn.addEventListener('click', function () {
+        function selectArrangeImageLayout() {
             // 1. Get all current images
             const images = canvas.getObjects().filter(obj => obj.type === 'image');
 
@@ -993,7 +980,28 @@
             }
 
             canvas.renderAll();
-        });
+        }
+
+        cartaButton.addEventListener('click', () => resizeCanvas('carta'));
+        oficioButton.addEventListener('click', () => resizeCanvas('oficio'));
+        a4Button.addEventListener('click', () => resizeCanvas('a4'));
+        verticalButton.addEventListener('click', () => changeOrientation(true));
+        horizontalButton.addEventListener('click', () => changeOrientation(false));
+
+        imageLoader.addEventListener('change', handleImageUpload);
+        resetImageButton.addEventListener('click', resetActiveImage);
+        printButton.addEventListener('click', printCanvas);
+        grayScaleBtn.addEventListener('click', convertToGrayscale);
+        rotateButton_p90.addEventListener('click', () => rotateImage(90));
+        rotateButton_n90.addEventListener('click', () => rotateImage(270));
+        centerVerticallyBtn.addEventListener('click', centerVertically);
+        centerHorizontallyBtn.addEventListener('click', centerHorizontally);
+        deleteButton.addEventListener('click', deleteActiveObject);
+        confirmCropBtn.addEventListener('click', confirmCrop);
+        cancelCropBtn.addEventListener('click', exitCropMode);
+        scaleUpBtn.addEventListener('click', scaleUp);
+        scaleDownBtn.addEventListener('click', scaleDown);
+        arrangeBtn.addEventListener('click', selectArrangeImageLayout);
 
         rotateCheckbox.addEventListener('change', function (e) {
             canvas.getObjects().forEach(obj => {
@@ -1005,16 +1013,7 @@
             });
             canvas.requestRenderAll();
         });
-
-        deleteButton.addEventListener('click', deleteActiveObject);
-
-        // Add keyboard delete support
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Delete') {
-                deleteActiveObject();
-            }
-        });
-
+        
         cropButton.addEventListener('click', function () {
             const activeObject = canvas.getActiveObject();
             if (!activeObject || activeObject.type !== 'image') return;
@@ -1022,9 +1021,12 @@
             enterCropMode(activeObject);
         });
 
-        confirmCropBtn.addEventListener('click', confirmCrop);
-
-        cancelCropBtn.addEventListener('click', exitCropMode);
+        // Add keyboard delete support
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Delete') {
+                deleteActiveObject();
+            }
+        });
 
         document.body.addEventListener('click', () => deactivateObjects(event));
 
