@@ -1013,7 +1013,7 @@
             });
             canvas.requestRenderAll();
         });
-        
+
         cropButton.addEventListener('click', function () {
             const activeObject = canvas.getActiveObject();
             if (!activeObject || activeObject.type !== 'image') return;
@@ -1140,10 +1140,7 @@
             return false;
         }
 
-        canvas.on('object:rotating', function (event) {
-            const obj = event.target;
-            obj.setCoords();
-
+        function calculateTotalRotation(obj) {
             // Initialize accumulated angle if not exists
             if (typeof obj.accumulatedAngle === 'undefined') {
                 obj.accumulatedAngle = 0;
@@ -1202,6 +1199,13 @@
 
             // Store current angle for next comparison
             obj.previousAngle = currentAngle;
+        }
+
+        canvas.on('object:rotating', function (event) {
+            const obj = event.target;
+            obj.setCoords();
+
+            calculateTotalRotation(obj);
 
             console.log("====================================");
 
