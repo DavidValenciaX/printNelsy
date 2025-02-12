@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asistente de impresión de Imágenes</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -64,7 +68,6 @@
         .control-button[for="imageLoader"] {
             display: inline-block;
             text-align: center;
-            width: 8.75rem;
         }
 
         .control-group input[type="checkbox"] {
@@ -140,6 +143,16 @@
             margin: 1.25rem 0;
             width: 12.5rem;
         }
+
+        #sizeInput {
+            padding: 0.938rem 1.875rem;
+            font-size: 1.125rem;
+            cursor: pointer;
+            border: 0.125rem solid #000;
+            border-radius: 0.313rem;
+            color: #333;
+            width: 12.5rem;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
@@ -182,6 +195,9 @@
                 <button type="button" id="scaleDown" class="control-button">Reducir imagen</button>
                 <button type="button" id="centerVerticallyBtn" class="control-button">Centrar verticalmente</button>
                 <button type="button" id="centerHorizontallyBtn" class="control-button">Centrar horizontalmente</button>
+                <input type="number" id="sizeInput" placeholder="Ancho en cm" step="0.1">
+                <button type="button" id="setSizeButton" class="control-button">Establecer ancho de imagen en
+                    cm</button>
             </div>
         </div>
     </div>
@@ -243,6 +259,7 @@
         const scaleDownBtn = document.getElementById('scaleDown');
         const centerVerticallyBtn = document.getElementById('centerVerticallyBtn');
         const centerHorizontallyBtn = document.getElementById('centerHorizontallyBtn');
+        const setSizeBtn = document.getElementById('setSizeButton');
 
         const dpi = 300;
         const marginInches = 0.2;
@@ -261,6 +278,31 @@
         let activeImage = null;
         let isCropping = false;
         let inactivatedObjects = [];
+
+        function setImageWidthInCm() {
+            const activeObject = canvas.getActiveObject();
+            if (!activeObject || activeObject.type !== 'image') {
+                alert('Please select an image first.');
+                return;
+            }
+            const inputValue = document.getElementById('sizeInput').value;
+            const cm = parseFloat(inputValue);
+            if (isNaN(cm) || cm <= 0) {
+                alert('Please enter a valid size in centimeters.');
+                return;
+            }
+            // Convert centimeters to pixels (1 inch = 2.54 cm)
+            const targetWidthPixels = (cm / 2.54) * dpi;
+            // Compensa la escala del canvas: se compara el ancho actual del canvas con el ancho completo del papel
+            const canvasScale = canvas.getWidth() / paperSizes[currentSize].width;
+            // Calcula el nuevo factor de escala aplicando la compensación
+            const newScale = (targetWidthPixels * canvasScale) / activeObject.width;
+
+            activeObject.scaleX = newScale;
+
+            activeObject.setCoords();
+            canvas.renderAll();
+        }
 
         function centerVertically() {
             const activeObject = canvas.getActiveObject();
@@ -491,10 +533,13 @@
             const isOnCheckbox = event.target.tagName === 'INPUT' &&
                 event.target.type === 'checkbox';
 
+            const isOnInputNumber = event.target.tagName === 'INPUT' &&
+                event.target.type === 'number';
+
             const isOnCheckBoxLabel = event.target.tagName === 'LABEL' &&
                 event.target.htmlFor === 'rotateControl';
 
-            if (!isOnCanvasElement && !isOnFabricControls && !isOnButton && !isOnCheckbox && !isOnCheckBoxLabel) {
+            if (!isOnCanvasElement && !isOnFabricControls && !isOnButton && !isOnCheckbox && !isOnCheckBoxLabel && !isOnInputNumber) {
                 canvas.discardActiveObject();
                 canvas.requestRenderAll();
             }
@@ -1002,6 +1047,7 @@
         scaleUpBtn.addEventListener('click', scaleUp);
         scaleDownBtn.addEventListener('click', scaleDown);
         arrangeBtn.addEventListener('click', selectArrangeImageLayout);
+        setSizeBtn.addEventListener('click', setImageWidthInCm);
 
         rotateCheckbox.addEventListener('change', function (e) {
             canvas.getObjects().forEach(obj => {
@@ -1857,7 +1903,7 @@
         // Detectar inicio de la manipulación de un objeto
         canvas.on('before:transform', function () {
             let obj = canvas.getActiveObject();
-            console.log('Antes de transformar el objeto:', obj);
+            //console.log('Antes de transformar el objeto:', obj);
         });
 
 
