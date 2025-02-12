@@ -144,7 +144,7 @@
             width: 12.5rem;
         }
 
-        #sizeInput {
+        #widthInput, #heightInput {
             padding: 0.938rem 1.875rem;
             font-size: 1.125rem;
             cursor: pointer;
@@ -195,9 +195,9 @@
                 <button type="button" id="scaleDown" class="control-button">Reducir imagen</button>
                 <button type="button" id="centerVerticallyBtn" class="control-button">Centrar verticalmente</button>
                 <button type="button" id="centerHorizontallyBtn" class="control-button">Centrar horizontalmente</button>
-                <input type="number" id="sizeInput" placeholder="Ancho en cm" step="0.1">
-                <button type="button" id="setSizeButton" class="control-button">Establecer ancho de imagen en
-                    cm</button>
+                <input type="number" id="widthInput" placeholder="Ancho en cm" step="0.1">
+                <input type="number" id="heightInput" placeholder="Alto en cm" step="0.1">
+                <button type="button" id="setSizeButton" class="control-button">Establecer tamaño en cm</button>
             </div>
         </div>
     </div>
@@ -279,26 +279,53 @@
         let isCropping = false;
         let inactivatedObjects = [];
 
-        function setImageWidthInCm() {
+        function setImageSizeInCm() {
             const activeObject = canvas.getActiveObject();
             if (!activeObject || activeObject.type !== 'image') {
-                alert('Please select an image first.');
+                alert('Seleccione primero una imagen.');
                 return;
             }
-            const inputValue = document.getElementById('sizeInput').value;
-            const cm = parseFloat(inputValue);
-            if (isNaN(cm) || cm <= 0) {
-                alert('Please enter a valid size in centimeters.');
-                return;
-            }
-            // Convert centimeters to pixels (1 inch = 2.54 cm)
-            const targetWidthPixels = (cm / 2.54) * dpi;
-            // Compensa la escala del canvas: se compara el ancho actual del canvas con el ancho completo del papel
-            const canvasScale = canvas.getWidth() / paperSizes[currentSize].width;
-            // Calcula el nuevo factor de escala aplicando la compensación
-            const newScale = (targetWidthPixels * canvasScale) / activeObject.width;
 
-            activeObject.scaleX = newScale;
+            // Obtener los valores de ancho y alto ingresados
+            const widthInputValue = document.getElementById('widthInput').value;
+            const heightInputValue = document.getElementById('heightInput').value;
+
+            // Se utilizan escalas separadas para ancho y alto
+            const canvasScaleX = canvas.getWidth() / paperSizes[currentSize].width;
+            const canvasScaleY = canvas.getHeight() / paperSizes[currentSize].height;
+
+            let updated = false;
+
+            // Actualizar ancho si se ingresa valor válido
+            if (widthInputValue) {
+                const cmWidth = parseFloat(widthInputValue);
+                if (isNaN(cmWidth) || cmWidth <= 0) {
+                    alert('Introduzca una anchura válida en centímetros.');
+                    return;
+                }
+                const targetWidthPixels = (cmWidth / 2.54) * dpi;
+                const newScaleX = (targetWidthPixels * canvasScaleX) / activeObject.width;
+                activeObject.scaleX = newScaleX;
+                updated = true;
+            }
+
+            // Actualizar alto si se ingresa valor válido
+            if (heightInputValue) {
+                const cmHeight = parseFloat(heightInputValue);
+                if (isNaN(cmHeight) || cmHeight <= 0) {
+                    alert('Introduzca una altura válida en centímetros.');
+                    return;
+                }
+                const targetHeightPixels = (cmHeight / 2.54) * dpi;
+                const newScaleY = (targetHeightPixels * canvasScaleY) / activeObject.height;
+                activeObject.scaleY = newScaleY;
+                updated = true;
+            }
+
+            if (!updated) {
+                alert('Introduzca al menos una dimensión válida.');
+                return;
+            }
 
             activeObject.setCoords();
             canvas.renderAll();
@@ -851,7 +878,7 @@
         function convertToGrayscale() {
             const activeObject = canvas.getActiveObject();
             if (!activeObject) {
-                alert('Please select an image first');
+                alert('Seleccione primero una imagen.');
                 return;
             }
 
@@ -1047,7 +1074,7 @@
         scaleUpBtn.addEventListener('click', scaleUp);
         scaleDownBtn.addEventListener('click', scaleDown);
         arrangeBtn.addEventListener('click', selectArrangeImageLayout);
-        setSizeBtn.addEventListener('click', setImageWidthInCm);
+        setSizeBtn.addEventListener('click', setImageSizeInCm);
 
         rotateCheckbox.addEventListener('change', function (e) {
             canvas.getObjects().forEach(obj => {
