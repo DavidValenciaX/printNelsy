@@ -1199,6 +1199,8 @@
 
             // Store current angle for next comparison
             obj.previousAngle = currentAngle;
+
+            console.log("====================================");
         }
 
         canvas.on('object:rotating', function (event) {
@@ -1206,8 +1208,6 @@
             obj.setCoords();
 
             calculateTotalRotation(obj);
-
-            console.log("====================================");
 
             let TOP = obj.top;
             let LEFT = obj.left;
