@@ -575,14 +575,19 @@
         function handleImageUpload(e) {
             const files = e.target.files;
             const loadedImages = [];
+            let processedCount = 0;
 
             for (const element of files) {
                 const file = element;
                 const reader = new FileReader();
                 reader.onload = function (event) {
                     fabric.Image.fromURL(event.target.result, function (img) {
-                        const imageId = `image-${Date.now()}`;
-                        img.id = imageId;
+                        // Asignar un id único permanente si no lo tiene
+                        if (!img.id) {
+                            const uniqueId = `image-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                            img.id = uniqueId;
+                        }
+                        // Guardar la URL de origen
                         img.originalUrl = event.target.result;
 
                         img.setControlsVisibility({
@@ -590,9 +595,10 @@
                         });
 
                         loadedImages.push(img);
+                        processedCount++;
 
-                        if (loadedImages.length === files.length) {
-                            // Choose arrangement function based on number of images
+                        if (processedCount === files.length) {
+                            // Primero, se organiza el layout de las imágenes
                             if (files.length <= 2) {
                                 arrangeImages(loadedImages, 'cols', 'forward');
                                 lastLayout = 'cols';
@@ -603,7 +609,21 @@
                                 lastDirection = 'forward';
                             }
 
-                            // Auto-select if only one image
+                            // Luego, se guardan los datos originales ya con sus valores de top, left, scaleX y scaleY actualizados
+                            loadedImages.forEach(img => {
+                                originalImages[img.id] = {
+                                    url: img.originalUrl,
+                                    width: img.width,
+                                    height: img.height,
+                                    scaleX: img.scaleX,
+                                    scaleY: img.scaleY,
+                                    angle: img.angle,
+                                    left: img.left,
+                                    top: img.top
+                                };
+                            });
+
+                            // Seleccionar automáticamente si solo hay una imagen
                             if (files.length === 1) {
                                 canvas.discardActiveObject();
                                 canvas.setActiveObject(loadedImages[0]);
@@ -626,7 +646,7 @@
             let marginAdjustment = count <= 2 ? 100 : 20;
             const margin = marginWidth + marginAdjustment;
 
-            // Sort images array based on order parameter
+            // Crear copia y ordenar según order
             const sortedImages = [...images];
             if (order === 'reverse') {
                 sortedImages.reverse();
@@ -644,10 +664,8 @@
             const cellWidth = (canvas.width - margin * 2) / cols;
             const cellHeight = (canvas.height - margin * 2) / rows;
 
-            // Process images
             sortedImages.forEach((img, index) => {
-                img.id = `image-${Date.now()}-${index}`;
-
+                // Determinar fila y columna sin alterar el id permanente
                 let row, col;
                 if (orientation === 'rows') {
                     row = Math.floor(index / cols);
@@ -657,13 +675,12 @@
                     row = index % rows;
                 }
 
-                let realImagetWidth = img.width * img.scaleX;
+                let realImageWidth = img.width * img.scaleX;
                 let realImageHeight = img.height * img.scaleY;
                 let bounds = img.getBoundingRect();
 
-                // Redondear antes de calcular el offset
                 let roundedBoundsWidth = roundToDecimals(bounds.width, 2);
-                let roundedImageWidth = roundToDecimals(realImagetWidth, 2);
+                let roundedImageWidth = roundToDecimals(realImageWidth, 2);
                 const offsetWidthImageBound = roundToDecimals(roundedBoundsWidth - roundedImageWidth, 2);
 
                 let roundedBoundsHeight = roundToDecimals(bounds.height, 2);
@@ -683,18 +700,7 @@
                     originY: 'center'
                 });
 
-                // Store original state
-                originalImages[img.id] = {
-                    url: img.originalUrl,
-                    width: img.width,
-                    height: img.height,
-                    scaleX: img.scaleX,
-                    scaleY: img.scaleY,
-                    angle: img.angle,
-                    left: img.left,
-                    top: img.top
-                };
-
+                // Se mantiene originalImages intacto con la información original
                 canvas.add(img);
             });
 
