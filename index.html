@@ -1027,14 +1027,10 @@
             let angleDiff = currentAngle - obj.previousAngle;
 
             // Handle angle wrap-around
-            if (Math.abs(angleDiff) > 270) {
-                if (angleDiff > 0) {
-                    // Counter-clockwise wrap from 0 to 359
-                    angleDiff -= 360;
-                } else {
-                    // Clockwise wrap from 359 to 0
-                    angleDiff += 360;
-                }
+            if (angleDiff > 270) {
+                angleDiff -= 360;  // Counter-clockwise wrap from 0 to 359
+            } else if (angleDiff < -270) {
+                angleDiff += 360;  // Clockwise wrap from 359 to 0
             }
 
             console.log("angleDiff: ", angleDiff);
