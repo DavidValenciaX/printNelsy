@@ -1007,13 +1007,12 @@
 
         let clockwise = false;
 
+        let accumulatedRestrictedAngle = 0;
+
         function calculateTotalRotation(obj) {
             // Initialize accumulated angle if not exists
-            if (typeof obj.accumulatedAngle === 'undefined') {
-                obj.accumulatedAngle = 0;
-                obj.turns = 0;
+            if (typeof obj.previousAngle === 'undefined') {
                 obj.previousAngle = 0;
-                obj.totalRotation = 0;
             }
 
             // Get current angle and calculate direction
@@ -1024,7 +1023,7 @@
             console.log("obj.previousAngle: ", obj.previousAngle);
 
             // Detect direction and full rotations
-            let angleDiff = currentAngle - obj.previousAngle;
+            angleDiff = currentAngle - obj.previousAngle;
 
             // Handle angle wrap-around
             if (angleDiff > 270) {
@@ -1035,36 +1034,17 @@
 
             console.log("angleDiff: ", angleDiff);
 
-            // Update rotation tracking
-            obj.accumulatedAngle += angleDiff;
             clockwise = angleDiff > 0;
 
             console.log("clockwise: ", clockwise);
-
-            // Update full rotations
-            while (obj.accumulatedAngle >= 360) {
-                obj.turns++;
-                obj.accumulatedAngle -= 360;
-            }
-            while (obj.accumulatedAngle <= -360) {
-                obj.turns--;
-                obj.accumulatedAngle += 360;
-            }
-
-            console.log("obj.accumulatedAngle: ", obj.accumulatedAngle);
-
-            console.log("obj.turns: ", obj.turns);
-
-            // Calculate total rotation
-            obj.totalRotation = obj.turns * 360 + obj.accumulatedAngle;
-
-            console.log("obj.totalRotation: ", obj.totalRotation);
 
             // Store current angle for next comparison
             obj.previousAngle = currentAngle;
 
             console.log("====================================");
         }
+
+        let angleDiff = 0;
 
         canvas.on('object:rotating', function (event) {
             const obj = event.target;
@@ -1177,11 +1157,20 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
 
                             obj.angle = radToDeg(restrictedAngle);
 
                         } else if (BR.x > rightMargin && !clockwise) {
+
+                            accumulatedRestrictedAngle = 0;
 
                             activeRestriction = 'BR_RIGHT_CCW';
                         }
@@ -1197,11 +1186,20 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = (2 * Math.PI) - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle) - 360) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
 
                             obj.angle = radToDeg(restrictedAngle);
 
                         } else if (TR.x > rightMargin && clockwise) {
+
+                            accumulatedRestrictedAngle = 0;
 
                             activeRestriction = 'TR_RIGHT_CW';
                         }
@@ -1218,11 +1216,19 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = (Math.PI / 2) + innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
 
                             obj.angle = radToDeg(restrictedAngle);
 
                         } else if (TR.x > rightMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
 
                             activeRestriction = 'TR_RIGHT_CCW';
                         }
@@ -1237,11 +1243,19 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = (Math.PI / 2) - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
 
                             obj.angle = radToDeg(restrictedAngle);
 
                         } else if (TL.x > rightMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
 
                             activeRestriction = 'TL_RIGHT_CW';
                         }
@@ -1257,9 +1271,17 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = Math.PI + innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (TL.x > rightMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'TL_RIGHT_CCW';
                         }
                         break;
@@ -1273,9 +1295,17 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = Math.PI - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BL.x > rightMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BL_RIGHT_CW';
                         }
                         break;
@@ -1289,9 +1319,17 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = (3 * Math.PI / 2) + innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BL.x > rightMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BL_RIGHT_CCW';
                         }
                         break;
@@ -1305,9 +1343,17 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = (3 * Math.PI / 2) - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BR.x > rightMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BR_RIGHT_CW';
                         }
                         break;
@@ -1321,9 +1367,17 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BL.y > bottomMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BL_BOTTOM_CCW';
                         }
                         break;
@@ -1337,9 +1391,17 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = (2 * Math.PI) - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle) - 360) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BR.y > bottomMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BR_BOTTOM_CW';
                         }
                         break;
@@ -1353,9 +1415,17 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = (Math.PI / 2) + innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BR.y > bottomMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BR_BOTTOM_CCW';
                         }
                         break;
@@ -1369,9 +1439,17 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = (Math.PI / 2) - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (TR.y > bottomMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'TR_BOTTOM_CW';
                         }
                         break;
@@ -1385,9 +1463,17 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = Math.PI + innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (TR.y > bottomMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'TR_BOTTOM_CCW';
                         }
                         break;
@@ -1401,9 +1487,17 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = Math.PI - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (TL.y > bottomMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'TL_BOTTOM_CW';
                         }
                         break;
@@ -1417,9 +1511,17 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = (3 * Math.PI / 2) + innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (TL.y > bottomMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'TL_BOTTOM_CCW';
                         }
                         break;
@@ -1433,9 +1535,17 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = (3 * Math.PI / 2) - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BL.y > bottomMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BL_BOTTOM_CW';
                         }
                         break;
@@ -1449,9 +1559,17 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = (2 * Math.PI) - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle) - 360) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BL.x < leftMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BL_LEFT_CW';
                         }
                         break;
@@ -1465,9 +1583,17 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (TL.x < leftMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'TL_LEFT_CCW';
                         }
                         break;
@@ -1481,9 +1607,17 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = (Math.PI / 2) - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BR.x < leftMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BR_LEFT_CW';
                         }
                         break;
@@ -1497,9 +1631,17 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = (Math.PI / 2) + innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BL.x < leftMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BL_LEFT_CCW';
                         }
                         break;
@@ -1513,9 +1655,17 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = Math.PI - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (TR.x < leftMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'TR_LEFT_CW';
                         }
                         break;
@@ -1529,9 +1679,17 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = Math.PI + innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BR.x < leftMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BR_LEFT_CCW';
                         }
                         break;
@@ -1545,9 +1703,17 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = (3 * Math.PI / 2) - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (TL.x < leftMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'TL_LEFT_CW';
                         }
                         break;
@@ -1561,9 +1727,17 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = (3 * Math.PI / 2) + innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (TR.x < leftMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'TR_LEFT_CCW';
                         }
                         break;
@@ -1577,9 +1751,17 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (TR.y < topMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'TR_TOP_CCW';
                         }
                         break;
@@ -1593,9 +1775,17 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = (2 * Math.PI) - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle) - 360) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (TL.y < topMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'TL_TOP_CW';
                         }
                         break;
@@ -1609,9 +1799,17 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = (Math.PI / 2) + innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (TL.y < topMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'TL_TOP_CCW';
                         }
                         break;
@@ -1625,9 +1823,17 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = (Math.PI / 2) - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BL.y < topMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BL_TOP_CW';
                         }
                         break;
@@ -1641,9 +1847,17 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = Math.PI + innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BL.y < topMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BL_TOP_CCW';
                         }
                         break;
@@ -1657,9 +1871,17 @@
                         let innerAngle = marginAngle - diagAngle;
                         let restrictedAngle = Math.PI - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BR.y < topMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BR_TOP_CW';
                         }
                         break;
@@ -1673,9 +1895,17 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = (3 * Math.PI / 2) + innerAngle;
 
-                        if (obj.totalRotation > radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle >= 360) {
+                            accumulatedRestrictedAngle -= 360;
+                        }
+
+                        if (accumulatedRestrictedAngle > 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (BR.y < topMargin && !clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'BR_TOP_CCW';
                         }
                         break;
@@ -1689,9 +1919,17 @@
                         let innerAngle = marginAngle - complementDiagAngle;
                         let restrictedAngle = (3 * Math.PI / 2) - innerAngle;
 
-                        if (obj.totalRotation < radToDeg(restrictedAngle)) {
+                        accumulatedRestrictedAngle += angleDiff;
+
+                        // Update full rotations
+                        while (accumulatedRestrictedAngle <= -360) {
+                            accumulatedRestrictedAngle += 360;
+                        }
+
+                        if (accumulatedRestrictedAngle < 0) {
                             obj.angle = radToDeg(restrictedAngle);
                         } else if (TR.y < topMargin && clockwise) {
+                            accumulatedRestrictedAngle = 0;
                             activeRestriction = 'TR_TOP_CW';
                         }
                         break;
