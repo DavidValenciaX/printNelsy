@@ -1011,6 +1011,8 @@
 
         let angleDiff = 0;
 
+        let activeRestriction = null;
+
         canvas.on('object:rotating', function (event) {
             const obj = event.target;
             obj.setCoords();
@@ -1946,10 +1948,6 @@
             let obj = canvas.getActiveObject();
             //console.log('Antes de transformar el objeto:', obj);
         });
-
-
-        // Add this variable outside the event handler
-        let activeRestriction = null;
 
         canvas.on('object:scaling', function (e) {
             let obj = e.target;
