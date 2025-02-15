@@ -1066,6 +1066,7 @@
                 }
 
                 if (!activeRestriction) {
+                    accumulatedRestrictedAngle = 0;
                     if (isMouseDown && TR.x > rightMargin && clockwise) {
                         activeRestriction = 'TR_RIGHT_CW';
                     } else if (isMouseDown && BR.x > rightMargin && !clockwise) {
@@ -1936,7 +1937,6 @@
         });
 
         canvas.on('object:modified', function (e) {
-
             // Reset restrictions
             activeRestriction = null;
         });
