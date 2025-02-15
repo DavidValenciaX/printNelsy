@@ -1009,7 +1009,12 @@
 
         let accumulatedRestrictedAngle = 0;
 
-        function calculateTotalRotation(obj) {
+        let angleDiff = 0;
+
+        canvas.on('object:rotating', function (event) {
+            const obj = event.target;
+            obj.setCoords();
+
             // Initialize accumulated angle if not exists
             if (typeof obj.previousAngle === 'undefined') {
                 obj.previousAngle = 0;
@@ -1017,10 +1022,6 @@
 
             // Get current angle and calculate direction
             const currentAngle = obj.angle;
-
-            console.log("currentAngle: ", currentAngle);
-
-            console.log("obj.previousAngle: ", obj.previousAngle);
 
             // Detect direction and full rotations
             angleDiff = currentAngle - obj.previousAngle;
@@ -1032,25 +1033,10 @@
                 angleDiff += 360;  // Clockwise wrap from 359 to 0
             }
 
-            console.log("angleDiff: ", angleDiff);
-
             clockwise = angleDiff > 0;
-
-            console.log("clockwise: ", clockwise);
 
             // Store current angle for next comparison
             obj.previousAngle = currentAngle;
-
-            console.log("====================================");
-        }
-
-        let angleDiff = 0;
-
-        canvas.on('object:rotating', function (event) {
-            const obj = event.target;
-            obj.setCoords();
-
-            calculateTotalRotation(obj);
 
             let TOP = obj.top;
             let LEFT = obj.left;
