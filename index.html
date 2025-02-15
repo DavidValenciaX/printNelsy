@@ -1943,12 +1943,6 @@
             activeRestriction = null;
         });
 
-        // Detectar inicio de la manipulación de un objeto
-        canvas.on('before:transform', function () {
-            let obj = canvas.getActiveObject();
-            //console.log('Antes de transformar el objeto:', obj);
-        });
-
         canvas.on('object:scaling', function (e) {
             let obj = e.target;
             obj.setCoords();
