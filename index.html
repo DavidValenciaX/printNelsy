@@ -226,30 +226,122 @@
             const images = canvas.getObjects().filter(obj => obj.type === 'image' && obj !== marginRect && obj !== canvasBackground);
             if (images.length === 0) return;
 
+            // Preserve selectable state and enable interaction
+            images.forEach(img => {
+                img.set({
+                    selectable: true,
+                    evented: true,
+                    hasControls: true,
+                    hasBorders: true
+                });
+            });
+
+
             // Sort images by area (descending) to place larger images first
             images.sort((a, b) => (b.width * b.height) - (a.width * a.height));
 
             const padding = 20; // Spacing between images
-            const columns = 3;  // Number of columns in the masonry layout
             const availableWidth = marginRect.width;
-            const columnWidth = (availableWidth - (columns - 1) * padding) / columns;
+            const availableHeight = marginRect.height;
 
+            // Determine the optimal number of columns
+            let bestColumns = 1;
+            let bestMaxHeight = Infinity;
+
+            // Maximum possible columns based on minimum column width of 100px and available width
+            const maxPossibleColumns = Math.min(
+                images.length,
+                Math.floor((availableWidth + padding) / (100 + padding))
+            );
+
+            for (let columns = 1; columns <= maxPossibleColumns; columns++) {
+                const columnWidth = (availableWidth - (columns - 1) * padding) / columns;
+                const colHeights = new Array(columns).fill(0);
+                let maxHeight = 0;
+
+                for (const img of images) {
+                    const minHeight = Math.min(...colHeights);
+                    const colIndex = colHeights.indexOf(minHeight);
+
+                    let currentHeight = colHeights[colIndex];
+                    let availableVerticalSpace = availableHeight - currentHeight;
+
+                    // Subtract padding if there are previous images in the column
+                    if (currentHeight > 0) {
+                        availableVerticalSpace -= padding;
+                    }
+
+                    // Calculate initial scale to fit column width
+                    let scaleFactor = columnWidth / img.width;
+                    let scaledHeight = img.height * scaleFactor;
+
+                    // Check if the image fits vertically
+                    if (scaledHeight > availableVerticalSpace) {
+                        // Adjust scale to fit available vertical space
+                        scaleFactor = availableVerticalSpace / img.height;
+                        scaledHeight = availableVerticalSpace;
+
+                        // Ensure width doesn't exceed column width after vertical adjustment
+                        const scaledWidth = img.width * scaleFactor;
+                        if (scaledWidth > columnWidth) {
+                            scaleFactor = columnWidth / img.width;
+                            scaledHeight = img.height * scaleFactor;
+                        }
+                    }
+
+                    // Update column height
+                    let newHeight = currentHeight + scaledHeight;
+                    if (currentHeight > 0) {
+                        newHeight += padding;
+                    }
+                    colHeights[colIndex] = newHeight;
+
+                    if (newHeight > maxHeight) {
+                        maxHeight = newHeight;
+                    }
+                }
+
+                // Check if this column count is better
+                if (maxHeight <= availableHeight) {
+                    if (columns > bestColumns || (columns === bestColumns && maxHeight < bestMaxHeight)) {
+                        bestColumns = columns;
+                        bestMaxHeight = maxHeight;
+                    }
+                } else {
+                    if (maxHeight < bestMaxHeight || (maxHeight === bestMaxHeight && columns > bestColumns)) {
+                        bestColumns = columns;
+                        bestMaxHeight = maxHeight;
+                    }
+                }
+            }
+
+            // Use the best column count to layout the images
+            const columns = bestColumns;
+            const columnWidth = (availableWidth - (columns - 1) * padding) / columns;
             let colHeights = new Array(columns).fill(0);
 
             images.forEach(img => {
                 const minHeight = Math.min(...colHeights);
                 const colIndex = colHeights.indexOf(minHeight);
 
+                let currentHeight = colHeights[colIndex];
+                let availableVerticalSpace = availableHeight - currentHeight;
+
+                // Subtract padding if there are previous images in the column
+                if (currentHeight > 0) {
+                    availableVerticalSpace -= padding;
+                }
+
                 // Calculate initial scale to fit column width
                 let scaleFactor = columnWidth / img.width;
                 let scaledHeight = img.height * scaleFactor;
 
                 // Check if the image fits vertically
-                const availableVerticalSpace = marginRect.height - minHeight;
                 if (scaledHeight > availableVerticalSpace) {
                     // Adjust scale to fit available vertical space
                     scaleFactor = availableVerticalSpace / img.height;
                     scaledHeight = availableVerticalSpace;
+
                     // Ensure width doesn't exceed column width after vertical adjustment
                     const scaledWidth = img.width * scaleFactor;
                     if (scaledWidth > columnWidth) {
@@ -258,9 +350,9 @@
                     }
                 }
 
-                // Position the image
+                // Calculate position
                 const x = marginRect.left + colIndex * (columnWidth + padding) + columnWidth / 2;
-                const y = marginRect.top + minHeight + scaledHeight / 2;
+                const y = marginRect.top + currentHeight + scaledHeight / 2;
 
                 img.set({
                     scaleX: scaleFactor,
@@ -268,11 +360,19 @@
                     left: x,
                     top: y,
                     originX: 'center',
-                    originY: 'center'
-                });
+                    originY: 'center',
+                    selectable: true,       // Ensure selectable
+                    evented: true,           // Enable interaction
+                    hasControls: true,      // Show transformation controls
+                    hasBorders: true        // Show borders
+                }).setCoords();  // Critical: Update coordinates after transformation
 
                 // Update column height
-                colHeights[colIndex] += scaledHeight + padding;
+                let newHeight = currentHeight + scaledHeight;
+                if (currentHeight > 0) {
+                    newHeight += padding;
+                }
+                colHeights[colIndex] = newHeight;
             });
 
             canvas.renderAll();
