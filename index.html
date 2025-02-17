@@ -238,8 +238,18 @@
                     return;
                 }
                 const targetWidthPixels = (cmWidth / 2.54) * dpi;
-                const newScaleX = (targetWidthPixels * canvasScaleX) / activeObject.width;
-                activeObject.scaleX = newScaleX;
+                // Nuevo scale calculado
+                const intendedScaleX = (targetWidthPixels * canvasScaleX) / activeObject.width;
+
+                // Calcular escala permitida de acuerdo al margen (usando la posición central del objeto)
+                const leftBound = marginRect.left;
+                const rightBound = marginRect.left + marginRect.width;
+                // Se asume que el objeto tiene su origen centrado
+                const allowedHalfWidth = Math.min(activeObject.left - leftBound, rightBound - activeObject.left);
+                const allowedScaleX = (allowedHalfWidth * 2) / activeObject.width;
+
+                const finalScaleX = Math.min(intendedScaleX, allowedScaleX);
+                activeObject.scaleX = finalScaleX;
                 updated = true;
             }
 
@@ -251,8 +261,15 @@
                     return;
                 }
                 const targetHeightPixels = (cmHeight / 2.54) * dpi;
-                const newScaleY = (targetHeightPixels * canvasScaleY) / activeObject.height;
-                activeObject.scaleY = newScaleY;
+                const intendedScaleY = (targetHeightPixels * canvasScaleY) / activeObject.height;
+
+                const topBound = marginRect.top;
+                const bottomBound = marginRect.top + marginRect.height;
+                const allowedHalfHeight = Math.min(activeObject.top - topBound, bottomBound - activeObject.top);
+                const allowedScaleY = (allowedHalfHeight * 2) / activeObject.height;
+
+                const finalScaleY = Math.min(intendedScaleY, allowedScaleY);
+                activeObject.scaleY = finalScaleY;
                 updated = true;
             }
 
