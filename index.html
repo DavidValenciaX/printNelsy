@@ -843,31 +843,15 @@
             const activeObject = canvas.getActiveObject();
             if (!activeObject) return;
 
-            // Calculate proposed new scales
-            const newScaleX = activeObject.scaleX + SCALE_FACTOR;
-            const newScaleY = activeObject.scaleY + SCALE_FACTOR;
+            // Compute the intended multiplier (uniformly applied to both scaleX and scaleY)
+            const intendedMultiplier = (activeObject.scaleX + SCALE_FACTOR) / activeObject.scaleX;
 
-            // Calculate scale multipliers (assuming scaleX and scaleY may differ)
-            const multiplierX = newScaleX / activeObject.scaleX;
-            const multiplierY = newScaleY / activeObject.scaleY;
-
-            // Obtain current boundary rectangle of the object.
-            // Note: getBoundingRect() returns an axis-aligned bounding box (AABB) covering the rotated object.
+            // Obtain the current bounding rectangle (AABB) of the object
             const currentBR = activeObject.getBoundingRect();
 
-            // Calculate proposed bounding dimensions
-            const proposedBRWidth = currentBR.width * multiplierX;
-            const proposedBRHeight = currentBR.height * multiplierY;
-
-            // Use the current object center as the center for its bounding rectangle.
+            // Use the object's center as reference
             const centerX = activeObject.left;
             const centerY = activeObject.top;
-
-            // Calculate the proposed boundaries assuming the object remains centered.
-            const proposedLeft = centerX - proposedBRWidth / 2;
-            const proposedRight = centerX + proposedBRWidth / 2;
-            const proposedTop = centerY - proposedBRHeight / 2;
-            const proposedBottom = centerY + proposedBRHeight / 2;
 
             // Margin rectangle boundaries
             const leftBound = marginRect.left;
@@ -875,20 +859,25 @@
             const topBound = marginRect.top;
             const bottomBound = marginRect.top + marginRect.height;
 
-            // Check if the new bounding box would exceed the margin rectangle.
-            if (
-                proposedLeft < leftBound ||
-                proposedRight > rightBound ||
-                proposedTop < topBound ||
-                proposedBottom > bottomBound
-            ) {
-                // Abort scaling if the boundary would exceed the margin.
-                return;
-            }
+            // Determine maximum allowed multiplier based on each side:
+            const maxMultiplierLeft = (centerX - leftBound) * 2 / currentBR.width;
+            const maxMultiplierRight = (rightBound - centerX) * 2 / currentBR.width;
+            const maxMultiplierTop = (centerY - topBound) * 2 / currentBR.height;
+            const maxMultiplierBottom = (bottomBound - centerY) * 2 / currentBR.height;
 
-            // Apply new scaling if within bounds
-            activeObject.scaleX = newScaleX;
-            activeObject.scaleY = newScaleY;
+            // The allowed multiplier is the smallest of these factors
+            const allowedMultiplier = Math.min(maxMultiplierLeft, maxMultiplierRight, maxMultiplierTop, maxMultiplierBottom);
+
+            // Use the intended multiplier if it fits; otherwise, use the allowed multiplier.
+            const finalMultiplier = Math.min(intendedMultiplier, allowedMultiplier);
+
+            // If no further scaling is possible (finalMultiplier <= 1), exit
+            if (finalMultiplier <= 1) return;
+
+            // Apply the new scale uniformly
+            activeObject.scaleX *= finalMultiplier;
+            activeObject.scaleY *= finalMultiplier;
+
             constrainObjectToMargin(activeObject, marginRect);
             canvas.renderAll();
         }
