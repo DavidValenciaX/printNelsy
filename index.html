@@ -132,6 +132,14 @@
                         <i class="fas fa-trash button-icon"></i> Eliminar imagen
                     </button>
                 </div>
+
+                <!-- Collage -->
+                <div class="button-group">
+                    <div class="group-title">Collage</div>
+                    <button type="button" id="collageButton" class="control-button">
+                        <i class="fas fa-th-large button-icon"></i> Crear Collage
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -194,6 +202,7 @@
         const centerVerticallyBtn = document.getElementById('centerVerticallyBtn');
         const centerHorizontallyBtn = document.getElementById('centerHorizontallyBtn');
         const setSizeBtn = document.getElementById('setSizeButton');
+        const collageBtn = document.getElementById('collageButton');
 
         const dpi = 300;
         const marginInches = 0.2;
@@ -212,6 +221,62 @@
         let activeImage = null;
         let isCropping = false;
         let inactivatedObjects = [];
+
+        function createCollage() {
+            const images = canvas.getObjects().filter(obj => obj.type === 'image' && obj !== marginRect && obj !== canvasBackground);
+            if (images.length === 0) return;
+
+            // Sort images by area (descending) to place larger images first
+            images.sort((a, b) => (b.width * b.height) - (a.width * a.height));
+
+            const padding = 20; // Spacing between images
+            const columns = 3;  // Number of columns in the masonry layout
+            const availableWidth = marginRect.width;
+            const columnWidth = (availableWidth - (columns - 1) * padding) / columns;
+
+            let colHeights = new Array(columns).fill(0);
+
+            images.forEach(img => {
+                const minHeight = Math.min(...colHeights);
+                const colIndex = colHeights.indexOf(minHeight);
+
+                // Calculate initial scale to fit column width
+                let scaleFactor = columnWidth / img.width;
+                let scaledHeight = img.height * scaleFactor;
+
+                // Check if the image fits vertically
+                const availableVerticalSpace = marginRect.height - minHeight;
+                if (scaledHeight > availableVerticalSpace) {
+                    // Adjust scale to fit available vertical space
+                    scaleFactor = availableVerticalSpace / img.height;
+                    scaledHeight = availableVerticalSpace;
+                    // Ensure width doesn't exceed column width after vertical adjustment
+                    const scaledWidth = img.width * scaleFactor;
+                    if (scaledWidth > columnWidth) {
+                        scaleFactor = columnWidth / img.width;
+                        scaledHeight = img.height * scaleFactor;
+                    }
+                }
+
+                // Position the image
+                const x = marginRect.left + colIndex * (columnWidth + padding) + columnWidth / 2;
+                const y = marginRect.top + minHeight + scaledHeight / 2;
+
+                img.set({
+                    scaleX: scaleFactor,
+                    scaleY: scaleFactor,
+                    left: x,
+                    top: y,
+                    originX: 'center',
+                    originY: 'center'
+                });
+
+                // Update column height
+                colHeights[colIndex] += scaledHeight + padding;
+            });
+
+            canvas.renderAll();
+        }
 
         function setImageSizeInCm() {
             const activeObject = canvas.getActiveObject();
@@ -973,6 +1038,7 @@
         scaleDownBtn.addEventListener('click', scaleDown);
         arrangeBtn.addEventListener('click', selectArrangeImageLayout);
         setSizeBtn.addEventListener('click', setImageSizeInCm);
+        collageBtn.addEventListener('click', createCollage);
 
         rotateCheckbox.addEventListener('change', function (e) {
             canvas.getObjects().forEach(obj => {
