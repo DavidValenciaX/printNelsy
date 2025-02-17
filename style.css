@@ -1,201 +1,201 @@
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #f5f5f5;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f5f5f5;
 }
 
 .main-container {
-    display: flex;
-    gap: 1.25rem;
-    align-items: flex-start;
-    background-color: white;
-    padding: 1.25rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  background-color: white;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 #canvas-container {
-    border: 1px solid #e0e0e0;
-    border-radius: 0.25rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.25rem;
 }
 
 .button-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    min-width: 12.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  min-width: 12.5rem;
 }
 
 .button-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 1rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 0.5rem;
-    background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.5rem;
+  background-color: #f8f9fa;
 }
 
 .group-title {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #666;
-    margin-bottom: 0.5rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .rotate-90 {
-    transform: rotate(90deg);
+  transform: rotate(90deg);
 }
 
 .size-button,
 .control-button,
 .orientation-button {
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    cursor: pointer;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 0.25rem;
-    transition: all 0.2s ease;
-    width: 100%;
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .size-button:hover,
 .control-button:hover,
 .orientation-button:hover {
-    background-color: #45a049;
-    transform: translateY(-1px);
+  background-color: #45a049;
+  transform: translateY(-1px);
 }
 
 .size-button:active,
 .control-button:active,
 .orientation-button:active {
-    background-color: #3e8e41;
-    transform: translateY(0);
+  background-color: #3e8e41;
+  transform: translateY(0);
 }
 
 .danger-button {
-    background-color: #dc3545;
+  background-color: #dc3545;
 }
 
 .danger-button:hover {
-    background-color: #c82333;
+  background-color: #c82333;
 }
 
 #imageLoader {
-    display: none;
+  display: none;
 }
 
 .control-button[for="imageLoader"] {
-    background-color: #007bff;
+  background-color: #007bff;
 }
 
 .control-button[for="imageLoader"]:hover {
-    background-color: #0056b3;
+  background-color: #0056b3;
 }
 
 .control-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    background-color: white;
-    border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: white;
+  border-radius: 0.25rem;
 }
 
 .control-group input[type="checkbox"] {
-    width: 1rem;
-    height: 1rem;
-    cursor: pointer;
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
 }
 
 .control-group label {
-    font-size: 0.875rem;
-    color: #333;
-    cursor: pointer;
+  font-size: 0.875rem;
+  color: #333;
+  cursor: pointer;
 }
 
 .zoom-controls {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    display: flex;
-    gap: 0.75rem;
-    z-index: 1000;
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  gap: 0.75rem;
+  z-index: 1000;
 }
 
 .zoom-btn {
-    width: 4rem;
-    height: 4rem;
-    border-radius: 50%;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    transition: all 0.2s ease;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
 
-    i {
-        font-size: 2rem;
-    }
+  i {
+    font-size: 2rem;
+  }
 }
 
 .zoom-btn:hover {
-    background-color: #45a049;
-    transform: translateY(-2px);
+  background-color: #45a049;
+  transform: translateY(-2px);
 }
 
 .zoom-btn:active {
-    transform: translateY(0);
+  transform: translateY(0);
 }
 
 #widthInput,
 #heightInput {
-    padding: 0.75rem;
-    font-size: 0.875rem;
-    border: 1px solid #ddd;
-    border-radius: 0.25rem;
-    width: 100%;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  width: 100%;
 }
 
 #widthInput:focus,
 #heightInput:focus {
-    outline: none;
-    border-color: #4CAF50;
-    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
 #confirmCrop,
 #cancelCrop {
-    display: none;
+  display: none;
 }
 
 #confirmCrop {
-    background-color: #28a745;
+  background-color: #28a745;
 }
 
 #cancelCrop {
-    background-color: #dc3545;
+  background-color: #dc3545;
 }
 
 .button-icon {
-    font-size: 1rem;
+  font-size: 1rem;
 }
