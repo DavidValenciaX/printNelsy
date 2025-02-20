@@ -231,7 +231,7 @@
                 return;
             }
 
-            // Preserve selectable state and enable interaction
+            // Habilitar interacción en todas las imágenes
             images.forEach(img => {
                 img.set({
                     selectable: true,
@@ -242,25 +242,34 @@
             });
             console.log("Updated images: selectable, evented, hasControls, and hasBorders set to true.");
 
-            // Sort images by area (descending) to place larger images first
-            images.sort((a, b) => (b.width * b.height) - (a.width * a.height));
-            console.log("Images sorted by area (descending).");
-
-            const padding = 20; // Spacing between images
+            // Parámetros del collage
+            const padding = 20; // Espacio entre imágenes
             const availableWidth = marginRect.width;
             const availableHeight = marginRect.height;
             console.log("Available area - Width:", availableWidth, "Height:", availableHeight);
 
-            // Determine the optimal number of columns
-            let bestColumns = 1;
-            let bestMaxHeight = Infinity;
+            // Escala mínima permitida
+            const minScale = 0.5;
 
-            // Maximum possible columns based on minimum column width of 100px and available width
+            // Determinar el número óptimo de columnas (simplemente basado en el ancho disponible)
+
+            //cancular la raíz cuadrada del total de imagenes más uno
+            const rootSquareImages = Math.sqrt(images.length) + 1;
+            console.log("Root square of images:", rootSquareImages);
+
+            //calcular el ancho de la columna
+            const minColumnWidth = availableWidth / rootSquareImages;
+            console.log("Minimum column width:", minColumnWidth);
+
             const maxPossibleColumns = Math.min(
                 images.length,
-                Math.floor((availableWidth + padding) / (100 + padding))
+                Math.floor((availableWidth + padding) / (minColumnWidth + padding))
             );
             console.log("Max possible columns:", maxPossibleColumns);
+
+            let bestColumns = 1;
+            let bestMaxHeight = Infinity;
+            let bestLayoutScore = -Infinity;
 
             for (let columns = 1; columns <= maxPossibleColumns; columns++) {
                 console.log("Evaluating layout with", columns, "columns");
@@ -269,7 +278,8 @@
                 let maxHeight = 0;
                 console.log("Column width:", columnWidth, "Initial colHeights:", colHeights);
 
-                for (const [index, img] of images.entries()) {
+                // Usamos la versión "First Fit" para evaluar el layout
+                images.forEach((img, index) => {
                     const minHeight = Math.min(...colHeights);
                     const colIndex = colHeights.indexOf(minHeight);
                     let currentHeight = colHeights[colIndex];
@@ -277,24 +287,19 @@
                     if (currentHeight > 0) {
                         availableVerticalSpace -= padding;
                     }
-
-                    // Calculate initial scale to fit column width
-                    let scaleFactor = columnWidth / img.width;
+                    let scaleFactor = Math.max(minScale, columnWidth / img.width);
                     let scaledHeight = img.height * scaleFactor;
-
-                    // Check if the image fits vertically
                     if (scaledHeight > availableVerticalSpace) {
-                        scaleFactor = availableVerticalSpace / img.height;
-                        scaledHeight = availableVerticalSpace;
-                        // Ensure width doesn't exceed column width after vertical adjustment
-                        const scaledWidth = img.width * scaleFactor;
-                        if (scaledWidth > columnWidth) {
-                            scaleFactor = columnWidth / img.width;
+                        if (scaleFactor !== minScale) {
+                            scaleFactor = availableVerticalSpace / img.height;
                             scaledHeight = img.height * scaleFactor;
+                            const scaledWidth = img.width * scaleFactor;
+                            if (scaledWidth > columnWidth) {
+                                scaleFactor = columnWidth / img.width;
+                                scaledHeight = img.height * scaleFactor;
+                            }
                         }
                     }
-
-                    // Update column height
                     let newHeight = currentHeight + scaledHeight;
                     if (currentHeight > 0) {
                         newHeight += padding;
@@ -304,54 +309,62 @@
                         maxHeight = newHeight;
                     }
                     console.log(`Image ${index}: colIndex ${colIndex}, scaleFactor: ${scaleFactor.toFixed(2)}, scaledHeight: ${scaledHeight.toFixed(2)}, newHeight: ${newHeight.toFixed(2)}, colHeights: ${colHeights}`);
-                }
+                });
 
                 console.log("For", columns, "columns, maxHeight =", maxHeight);
-                if (maxHeight <= availableHeight) {
-                    if (columns > bestColumns || (columns === bestColumns && maxHeight < bestMaxHeight)) {
-                        bestColumns = columns;
-                        bestMaxHeight = maxHeight;
-                        console.log("New best layout found: columns =", bestColumns, "with maxHeight =", bestMaxHeight);
-                    }
-                } else {
-                    if (maxHeight < bestMaxHeight || (maxHeight === bestMaxHeight && columns > bestColumns)) {
-                        bestColumns = columns;
-                        bestMaxHeight = maxHeight;
-                        console.log("New best layout found under overflow: columns =", bestColumns, "with maxHeight =", bestMaxHeight);
-                    }
+                const spaceEfficiency = (availableHeight - maxHeight) / availableHeight;
+                const balancePenalty = Math.abs(maxHeight - Math.min(...colHeights)) / availableHeight;
+                const layoutScore = spaceEfficiency - balancePenalty;
+                console.log("Layout score:", layoutScore.toFixed(2));
+
+                if (layoutScore > bestLayoutScore) {
+                    bestLayoutScore = layoutScore;
+                    bestColumns = columns;
+                    bestMaxHeight = maxHeight;
+                    console.log("New best layout found: columns =", bestColumns, "with maxHeight =", bestMaxHeight, "and score =", bestLayoutScore.toFixed(2));
                 }
             }
 
             console.log("Final bestColumns:", bestColumns, "Final bestMaxHeight:", bestMaxHeight);
 
-            // Use the best column count to layout the images
+            // Definir columnas y calcular el ancho de cada columna
             const columns = bestColumns;
             const columnWidth = (availableWidth - (columns - 1) * padding) / columns;
             let colHeights = new Array(columns).fill(0);
             console.log("Laying out images with", columns, "columns, columnWidth:", columnWidth);
 
-            images.forEach((img, index) => {
-                const minHeight = Math.min(...colHeights);
-                const colIndex = colHeights.indexOf(minHeight);
-                let currentHeight = colHeights[colIndex];
-                let availableVerticalSpace = availableHeight - currentHeight;
-                if (currentHeight > 0) {
-                    availableVerticalSpace -= padding;
+            // Ordenar las imágenes de mayor a menor altura para Best Fit Decreasing
+            images.sort((a, b) => b.height - a.height);
+
+            images.forEach((img) => {
+                // Usar Best Fit: se mapea cada columna para ver cuánto espacio disponible tiene
+                let candidateCols = colHeights.map((h, i) => ({
+                    index: i,
+                    space: availableHeight - h,
+                    scaledHeight: img.height * (columnWidth / img.width)
+                })).filter(col => col.space >= col.scaledHeight);
+
+                let chosenCol, scaleFactor;
+                if (candidateCols.length > 0) {
+                    // Se elige la columna donde el espacio sobrante es el menor
+                    candidateCols.sort((a, b) => a.space - b.space);
+                    chosenCol = candidateCols[0];
+                    scaleFactor = columnWidth / img.width;
+                } else {
+                    // Si ninguna columna tiene espacio suficiente, se elige la columna con menor altura y se escala la imagen para aprovechar el espacio
+                    let minCol = colHeights.map((h, i) => ({ index: i, height: h }))
+                        .sort((a, b) => a.height - b.height)[0];
+                    chosenCol = minCol;
+                    scaleFactor = Math.min(
+                        columnWidth / img.width,
+                        (availableHeight - minCol.height) / img.height
+                    );
                 }
-                let scaleFactor = columnWidth / img.width;
-                let scaledHeight = img.height * scaleFactor;
-                if (scaledHeight > availableVerticalSpace) {
-                    scaleFactor = availableVerticalSpace / img.height;
-                    scaledHeight = availableVerticalSpace;
-                    const scaledWidth = img.width * scaleFactor;
-                    if (scaledWidth > columnWidth) {
-                        scaleFactor = columnWidth / img.width;
-                        scaledHeight = img.height * scaleFactor;
-                    }
-                }
-                // Calculate position
-                const x = marginRect.left + colIndex * (columnWidth + padding) + columnWidth / 2;
-                const y = marginRect.top + currentHeight + scaledHeight / 2;
+
+                const scaledWidth = img.width * scaleFactor;
+                const scaledHeight = img.height * scaleFactor;
+                const x = marginRect.left + chosenCol.index * (columnWidth + padding) + columnWidth / 2;
+                const y = marginRect.top + colHeights[chosenCol.index] + scaledHeight / 2;
 
                 img.set({
                     scaleX: scaleFactor,
@@ -366,10 +379,11 @@
                     hasBorders: true
                 }).setCoords();
 
-                colHeights[colIndex] += scaledHeight + (currentHeight > 0 ? padding : 0);
-                console.log(`Placed image ${index}: colIndex: ${colIndex}, scaleFactor: ${scaleFactor.toFixed(2)}, x: ${x.toFixed(2)}, y: ${y.toFixed(2)}, updated colHeights: ${colHeights}`);
+                colHeights[chosenCol.index] += scaledHeight + padding;
+                console.log(`Placed image: column ${chosenCol.index}, scaleFactor: ${scaleFactor.toFixed(2)}, x: ${x.toFixed(2)}, y: ${y.toFixed(2)}, updated colHeights: ${colHeights}`);
             });
 
+            // Opcional: Rellenar espacios vacíos en columnas, similar a la estrategia anterior, si se requiere
             canvas.renderAll();
             console.log("Collage layout complete.");
         }
