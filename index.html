@@ -278,8 +278,7 @@
                 let maxHeight = 0;
                 console.log("Column width:", columnWidth, "Initial colHeights:", colHeights);
 
-                // Usamos la versión "First Fit" para evaluar el layout
-                images.forEach((img, index) => {
+                for (const [index, img] of images.entries()) {
                     const minHeight = Math.min(...colHeights);
                     const colIndex = colHeights.indexOf(minHeight);
                     let currentHeight = colHeights[colIndex];
@@ -287,19 +286,24 @@
                     if (currentHeight > 0) {
                         availableVerticalSpace -= padding;
                     }
-                    let scaleFactor = Math.max(minScale, columnWidth / img.width);
+
+                    // Calculate initial scale to fit column width
+                    let scaleFactor = columnWidth / img.width;
                     let scaledHeight = img.height * scaleFactor;
+
+                    // Check if the image fits vertically
                     if (scaledHeight > availableVerticalSpace) {
-                        if (scaleFactor !== minScale) {
-                            scaleFactor = availableVerticalSpace / img.height;
+                        scaleFactor = availableVerticalSpace / img.height;
+                        scaledHeight = availableVerticalSpace;
+                        // Ensure width doesn't exceed column width after vertical adjustment
+                        const scaledWidth = img.width * scaleFactor;
+                        if (scaledWidth > columnWidth) {
+                            scaleFactor = columnWidth / img.width;
                             scaledHeight = img.height * scaleFactor;
-                            const scaledWidth = img.width * scaleFactor;
-                            if (scaledWidth > columnWidth) {
-                                scaleFactor = columnWidth / img.width;
-                                scaledHeight = img.height * scaleFactor;
-                            }
                         }
                     }
+
+                    // Update column height
                     let newHeight = currentHeight + scaledHeight;
                     if (currentHeight > 0) {
                         newHeight += padding;
@@ -309,19 +313,21 @@
                         maxHeight = newHeight;
                     }
                     console.log(`Image ${index}: colIndex ${colIndex}, scaleFactor: ${scaleFactor.toFixed(2)}, scaledHeight: ${scaledHeight.toFixed(2)}, newHeight: ${newHeight.toFixed(2)}, colHeights: ${colHeights}`);
-                });
+                }
 
                 console.log("For", columns, "columns, maxHeight =", maxHeight);
-                const spaceEfficiency = (availableHeight - maxHeight) / availableHeight;
-                const balancePenalty = Math.abs(maxHeight - Math.min(...colHeights)) / availableHeight;
-                const layoutScore = spaceEfficiency - balancePenalty;
-                console.log("Layout score:", layoutScore.toFixed(2));
-
-                if (layoutScore > bestLayoutScore) {
-                    bestLayoutScore = layoutScore;
-                    bestColumns = columns;
-                    bestMaxHeight = maxHeight;
-                    console.log("New best layout found: columns =", bestColumns, "with maxHeight =", bestMaxHeight, "and score =", bestLayoutScore.toFixed(2));
+                if (maxHeight <= availableHeight) {
+                    if (columns > bestColumns || (columns === bestColumns && maxHeight < bestMaxHeight)) {
+                        bestColumns = columns;
+                        bestMaxHeight = maxHeight;
+                        console.log("New best layout found: columns =", bestColumns, "with maxHeight =", bestMaxHeight);
+                    }
+                } else {
+                    if (maxHeight < bestMaxHeight || (maxHeight === bestMaxHeight && columns > bestColumns)) {
+                        bestColumns = columns;
+                        bestMaxHeight = maxHeight;
+                        console.log("New best layout found under overflow: columns =", bestColumns, "with maxHeight =", bestMaxHeight);
+                    }
                 }
             }
 
