@@ -224,7 +224,10 @@
 
         function createMasonryCollage() {
             const images = canvas.getObjects('image');
-            if (images.length === 0) return;
+            if (images.length === 0) {
+                alert('Debe haber al menos una imagen en el canvas.');
+                return;
+            }
 
             const N = images.length;
             const M = Math.max(2, Math.floor(Math.sqrt(N))); // Number of columns
@@ -350,7 +353,7 @@
                 updated = true;
             }
             if (!updated) {
-                alert('Introduzca al menos una dimensión válida.');
+                alert('Introduzca al menos una medida válida.');
                 return;
             }
 
@@ -383,7 +386,10 @@
 
         function centerVertically() {
             const activeObject = canvas.getActiveObject();
-            if (!activeObject) return;
+            if (!activeObject) {
+                alert('Seleccione primero una imagen.');
+                return;
+            }
 
             const canvasHeight = canvas.getHeight();
 
@@ -400,7 +406,10 @@
 
         function centerHorizontally() {
             const activeObject = canvas.getActiveObject();
-            if (!activeObject) return;
+            if (!activeObject) {
+                alert('Seleccione primero una imagen.');
+                return;
+            };
 
             const canvasWidth = canvas.getWidth();
 
@@ -523,7 +532,10 @@
         }
 
         function confirmCrop() {
-            if (!isCropping || !cropRect || !activeImage) return;
+            if (!isCropping || !cropRect || !activeImage) {
+                alert('Seleccione primero una imagen y active el modo de recorte.');
+                return;
+            }
 
             // Get the cropping rect and original image's ID
             const rect = cropRect;
@@ -827,7 +839,7 @@
         function resetActiveImage() {
             const activeObject = canvas.getActiveObject();
             if (!activeObject || !activeObject.id || !originalImages[activeObject.id]) {
-                alert('Por favor seleccione una imagen para restablecer');
+                alert('Seleccione primero una imagen.');
                 return;
             }
 
@@ -912,23 +924,28 @@
 
         function rotateImage(deg) {
             const activeObject = canvas.getActiveObject();
-            if (activeObject) {
-                activeObject.rotate((activeObject.angle + deg) % 360);
 
-                activeObject.setCoords();
-
-                constrainObjectToMargin(activeObject, marginRect);
-
-                canvas.renderAll();
+            if (!activeObject) {
+                alert('Seleccione primero una imagen.');
+                return;
             }
+
+            activeObject.rotate((activeObject.angle + deg) % 360);
+            activeObject.setCoords();
+            constrainObjectToMargin(activeObject, marginRect);
+            canvas.renderAll();
         }
 
         function deleteActiveObject() {
             const activeObject = canvas.getActiveObject();
-            if (activeObject) {
-                canvas.remove(activeObject);
-                canvas.renderAll();
+
+            if (!activeObject) {
+                alert('Seleccione primero una imagen.');
+                return;
             }
+
+            canvas.remove(activeObject);
+            canvas.renderAll();
         }
 
         function convertToGrayscale() {
@@ -957,7 +974,10 @@
 
         function scaleUp() {
             const activeObject = canvas.getActiveObject();
-            if (!activeObject) return;
+            if (!activeObject) {
+                alert('Seleccione primero una imagen.');
+                return;
+            }
 
             // Compute the intended multiplier (uniformly applied to both scaleX and scaleY)
             const intendedMultiplier = (activeObject.scaleX + SCALE_FACTOR) / activeObject.scaleX;
@@ -1000,7 +1020,10 @@
 
         function scaleDown() {
             const activeObject = canvas.getActiveObject();
-            if (!activeObject) return;
+            if (!activeObject) {
+                alert('Seleccione primero una imagen.');
+                return;
+            }
 
             const currentScaleX = activeObject.scaleX;
             const currentScaleY = activeObject.scaleY;
@@ -1081,7 +1104,10 @@
 
         cropButton.addEventListener('click', function () {
             const activeObject = canvas.getActiveObject();
-            if (!activeObject || activeObject.type !== 'image') return;
+            if (!activeObject || activeObject.type !== 'image') {
+                alert('Seleccione primero una imagen.');
+                return;
+            }
 
             enterCropMode(activeObject);
         });
