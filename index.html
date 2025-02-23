@@ -959,6 +959,9 @@
                         originY: 'center'
                     });
 
+                    // Si la imagen queda fuera del canvas, se reubica dentro de los márgenes.
+                    img = constrainObjectToMargin(img, marginRect);
+
                     // Replace old image with the new one
                     canvas.remove(activeObject);
                     canvas.add(img);
