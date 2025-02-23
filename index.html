@@ -493,7 +493,7 @@
             canvas.renderAll();
         }
 
-        const SCALE_FACTOR = 0.05;
+        const SCALE_FACTOR = 0.01;
 
         function disableOtherObjects() {
             canvas.getObjects().forEach(obj => {
@@ -1140,12 +1140,24 @@
                 return;
             }
 
+            // Obtiene el centro actual de la selección (ya sea individual o múltiple)
+            const center = activeObject.getCenterPoint();
+
             const currentScaleX = activeObject.scaleX;
             const currentScaleY = activeObject.scaleY;
-            // Prevent scaling below 0.1 to avoid object disappearing
+            // Prevenir escala menor a 0.1 para evitar que el objeto desaparezca
             if (currentScaleX > 0.1 && currentScaleY > 0.1) {
                 activeObject.scaleX = currentScaleX - SCALE_FACTOR;
                 activeObject.scaleY = currentScaleY - SCALE_FACTOR;
+
+                // Reposicionar el objeto usando su centro actual como referencia
+                activeObject.set({
+                    left: center.x,
+                    top: center.y,
+                    originX: 'center',
+                    originY: 'center'
+                });
+
                 constrainObjectToMargin(activeObject, marginRect);
                 canvas.renderAll();
             }
