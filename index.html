@@ -331,17 +331,32 @@
                 return;
             }
 
+            // Deactivate the current selection to avoid group transformation context
+            canvas.discardActiveObject();
+
             selectedImages.forEach(obj => {
                 if (obj.type === 'image') {
+                    // Ensure origin is set to center for individual scaling
+                    obj.set({
+                        originX: 'center',
+                        originY: 'center'
+                    });
                     setSingleImageSizeInCm(obj);
                 }
             });
+
+            // Re-select the images if there are multiple
+            if (selectedImages.length > 0) {
+                const newSelection = new fabric.ActiveSelection(selectedImages, { canvas: canvas });
+                canvas.setActiveObject(newSelection);
+                canvas.requestRenderAll();
+            }
 
             widthInput.value = '';
             heightInput.value = '';
         }
 
-        function setSingleImageSizeInCm(activeObject) {
+        function setSingleImageSizeInCm(selectedImage) {
 
             // Obtener los valores de ancho y alto ingresados
             const widthInputValue = widthInput.value;
@@ -351,10 +366,10 @@
             const canvasScaleX = canvas.getWidth() / paperSizes[currentSize].width;
             const canvasScaleY = canvas.getHeight() / paperSizes[currentSize].height;
 
-            const originalTop = activeObject.top;
-            const originalLeft = activeObject.left;
-            const originalScaleX = activeObject.scaleX;
-            const originalScaleY = activeObject.scaleY;
+            const originalTop = selectedImage.top;
+            const originalLeft = selectedImage.left;
+            const originalScaleX = selectedImage.scaleX;
+            const originalScaleY = selectedImage.scaleY;
 
             let newScaleX = originalScaleX;
             let newScaleY = originalScaleY;
@@ -368,7 +383,7 @@
                     return;
                 }
                 const targetWidthPixels = (cmWidth / 2.54) * dpi;
-                newScaleX = (targetWidthPixels * canvasScaleX) / activeObject.width;
+                newScaleX = (targetWidthPixels * canvasScaleX) / selectedImage.width;
                 updated = true;
             }
             if (heightInputValue) {
@@ -379,7 +394,7 @@
                     return;
                 }
                 const targetHeightPixels = (cmHeight / 2.54) * dpi;
-                newScaleY = (targetHeightPixels * canvasScaleY) / activeObject.height;
+                newScaleY = (targetHeightPixels * canvasScaleY) / selectedImage.height;
                 updated = true;
             }
             if (!updated) {
@@ -390,21 +405,21 @@
             }
 
             // Aplica las nuevas escalas
-            activeObject.scaleX = newScaleX;
-            activeObject.scaleY = newScaleY;
-            activeObject.setCoords();
+            selectedImage.scaleX = newScaleX;
+            selectedImage.scaleY = newScaleY;
+            selectedImage.setCoords();
 
             // Se recalcula primero el bounding rect y se intenta ajustar
-            let br = activeObject.getBoundingRect();
+            let br = selectedImage.getBoundingRect();
             if (
                 br.left < marginRect.left ||
                 br.top < marginRect.top ||
                 (br.left + br.width) > (marginRect.left + marginRect.width) ||
                 (br.top + br.height) > (marginRect.top + marginRect.height)
             ) {
-                constrainObjectToMargin(activeObject, marginRect);
+                constrainObjectToMargin(selectedImage, marginRect);
                 // Recalcula el bounding rect luego de ajustar la posición
-                br = activeObject.getBoundingRect();
+                br = selectedImage.getBoundingRect();
             }
 
             // Si tras el ajuste la imagen sigue saliéndose, se revierte al estado original
@@ -414,11 +429,11 @@
                 (br.left + br.width) > (marginRect.left + marginRect.width) ||
                 (br.top + br.height) > (marginRect.top + marginRect.height)
             ) {
-                activeObject.top = originalTop;
-                activeObject.left = originalLeft;
-                activeObject.scaleX = originalScaleX;
-                activeObject.scaleY = originalScaleY;
-                activeObject.setCoords();
+                selectedImage.top = originalTop;
+                selectedImage.left = originalLeft;
+                selectedImage.scaleX = originalScaleX;
+                selectedImage.scaleY = originalScaleY;
+                selectedImage.setCoords();
                 Swal.fire({ text: 'El tamaño deseado excede el límite de los márgenes.', icon: 'warning' });
                 canvas.renderAll();
                 return;
