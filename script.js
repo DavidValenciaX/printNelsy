@@ -18,10 +18,21 @@ function zoomOut() {
 }
 
 function applyZoom() {
-  document.getElementById(
-    "main-content"
-  ).style.transform = `scale(${currentZoom})`;
-}
+    const mainContent = document.getElementById("main-content");
+    // Anchor scaling from the top center
+    mainContent.style.transformOrigin = "top center";
+    mainContent.style.transform = `scale(${currentZoom})`;
+  
+    // Adjust vertical position if the top is off-screen
+    const rect = mainContent.getBoundingClientRect();
+    if (rect.top < 0) {
+      // Shift main-content down so that it is fully visible
+      mainContent.style.position = "relative";
+      mainContent.style.top = `${-rect.top}px`;
+    } else {
+      mainContent.style.top = "0";
+    }
+  }
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
