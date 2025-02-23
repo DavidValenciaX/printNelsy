@@ -713,7 +713,7 @@ function handleImageUpload(e) {
         if (!img.id) {
           const uniqueId = `image-${Date.now()}-${Math.random()
             .toString(36)
-            .substr(2, 9)}`;
+            .slice(2, 11)}`;
           img.id = uniqueId;
         }
         // Guardar la URL de origen
