@@ -345,11 +345,11 @@
                 }
             });
 
+            console.log(selectedImages.length);
+
             // Re-select the images if there are multiple
             if (selectedImages.length > 0) {
-                const newSelection = new fabric.ActiveSelection(selectedImages, { canvas: canvas });
-                canvas.setActiveObject(newSelection);
-                canvas.requestRenderAll();
+                deactivateObjects({ target: null });
             }
 
             widthInput.value = '';
@@ -673,6 +673,13 @@
         }
 
         function deactivateObjects(event) {
+            // Si event.target es nulo, deseleccionar directamente
+            if (!event.target) {
+                canvas.discardActiveObject();
+                canvas.requestRenderAll();
+                return;
+            }
+
             const canvasElement = canvas.getElement();
             const isOnCanvasElement = event.target === canvasElement;
             const isOnFabricControls = event.target.classList.contains('canvas-container') ||
