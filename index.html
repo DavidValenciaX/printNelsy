@@ -335,7 +335,8 @@
             const canvasScaleX = canvas.getWidth() / paperSizes[currentSize].width;
             const canvasScaleY = canvas.getHeight() / paperSizes[currentSize].height;
 
-            // Guardar los valores originales
+            const originalTop = activeObject.top;
+            const originalLeft = activeObject.left;
             const originalScaleX = activeObject.scaleX;
             const originalScaleY = activeObject.scaleY;
 
@@ -368,22 +369,33 @@
                 return;
             }
 
-            // Apply the new scales temporarily
+            // Aplica las nuevas escalas
             activeObject.scaleX = newScaleX;
             activeObject.scaleY = newScaleY;
             activeObject.setCoords();
 
-            // Get the updated bounding rectangle (taking rotation into account)
-            const br = activeObject.getBoundingRect();
-
-            // Check if the bounding rectangle goes beyond the margins
+            // Se recalcula primero el bounding rect y se intenta ajustar
+            let br = activeObject.getBoundingRect();
             if (
                 br.left < marginRect.left ||
                 br.top < marginRect.top ||
                 (br.left + br.width) > (marginRect.left + marginRect.width) ||
                 (br.top + br.height) > (marginRect.top + marginRect.height)
             ) {
-                // Revert to original scales and notify the user
+                constrainObjectToMargin(activeObject, marginRect);
+                // Recalcula el bounding rect luego de ajustar la posición
+                br = activeObject.getBoundingRect();
+            }
+
+            // Si tras el ajuste la imagen sigue saliéndose, se revierte al estado original
+            if (
+                br.left < marginRect.left ||
+                br.top < marginRect.top ||
+                (br.left + br.width) > (marginRect.left + marginRect.width) ||
+                (br.top + br.height) > (marginRect.top + marginRect.height)
+            ) {
+                activeObject.top = originalTop;
+                activeObject.left = originalLeft;
                 activeObject.scaleX = originalScaleX;
                 activeObject.scaleY = originalScaleY;
                 activeObject.setCoords();
