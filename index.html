@@ -438,20 +438,28 @@
         }
 
         function centerVertically() {
-            const activeObject = canvas.getActiveObject();
-            if (!activeObject) {
-                Swal.fire({ text: 'Seleccione primero una imagen.', icon: 'warning' });
+            const activeObjects = canvas.getActiveObjects();
+            const selectedImages = activeObjects.filter(obj => obj.type === 'image');
+
+            if (selectedImages.length === 0) {
+                Swal.fire({ text: 'Seleccione primero una o más imágenes.', icon: 'warning' });
                 return;
             }
 
-            const canvasHeight = canvas.getHeight();
+            // Si se han seleccionado varias imágenes, se descarta el objeto activo para tratar cada una individualmente
+            if (selectedImages.length > 1) {
+                canvas.discardActiveObject();
+            }
 
-            // Calculate vertical center position
+            const canvasHeight = canvas.getHeight();
             const centerY = canvasHeight / 2;
 
-            // Set new position
-            activeObject.set({
-                top: centerY
+            selectedImages.forEach(image => {
+                image.set({
+                    top: centerY,
+                    originY: 'center'
+                });
+                image.setCoords();
             });
 
             canvas.renderAll();
