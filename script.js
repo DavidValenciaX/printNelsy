@@ -1209,7 +1209,7 @@ document.addEventListener("keydown", function (event) {
   }
 });
 
-document.body.addEventListener("click", () => deactivateObjects(event));
+document.body.addEventListener("click", (event) => deactivateObjects(event));
 
 fabric.Object.prototype.transparentCorners = false;
 fabric.Object.prototype.cornerColor = "limegreen";
