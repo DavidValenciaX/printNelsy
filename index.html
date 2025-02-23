@@ -534,10 +534,6 @@
         }
 
         function enterCropMode(imgObject) {
-            if (!imgObject || imgObject.type !== 'image') {
-                Swal.fire({ text: 'Seleccione primero una imagen.', icon: 'warning' });
-                return;
-            }
             activeImage = imgObject;
             isCropping = true;
 
@@ -1204,9 +1200,23 @@
         });
 
         cropButton.addEventListener('click', function () {
-            const activeObject = canvas.getActiveObject();
-            if (!activeObject || activeObject.type !== 'image') {
+            const activeObjects = canvas.getActiveObjects();
+
+            console.log(activeObjects);
+
+            if (activeObjects.length === 0) {
                 Swal.fire({ text: 'Seleccione primero una imagen.', icon: 'warning' });
+                return;
+            }
+
+            if (activeObjects.length !== 1) {
+                Swal.fire({ text: 'Seleccione solo una imagen para recortar.', icon: 'warning' });
+                return;
+            }
+
+            const activeObject = activeObjects[0];
+            if (activeObject.type !== 'image') {
+                Swal.fire({ text: 'La selección debe ser una imagen válida.', icon: 'warning' });
                 return;
             }
 
