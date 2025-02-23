@@ -278,12 +278,20 @@
             });
 
             // Step 5: Adjust columns exceeding max height
-            const maxAllowedHeight = marginRect.height - vertical_gap; // Account for the last gap
+            const maxAllowedHeight = marginRect.height; // Corrected to marginRect.height
 
             columnHeights.forEach((height, k) => {
-                if (height > maxAllowedHeight) {
-                    // Calculate scaling factor to fit within max height
-                    const scaleFactor = maxAllowedHeight / height;
+                const numImages = columnImages[k].length;
+                if (numImages === 0) return;
+
+                // Calculate total gaps and original image heights
+                const totalGaps = (numImages - 1) * vertical_gap;
+                const totalImageHeight = height - numImages * vertical_gap; // Subtract gaps added during placement
+
+                const availableHeight = maxAllowedHeight - totalGaps;
+
+                if (totalImageHeight > availableHeight) {
+                    const scaleFactor = availableHeight / totalImageHeight;
                     let currentTop = marginRect.top;
 
                     // Adjust each image in the column
