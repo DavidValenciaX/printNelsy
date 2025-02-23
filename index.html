@@ -1094,40 +1094,45 @@
                 return;
             }
 
+            // Calcular el centro actual de la selección
+            const center = activeObject.getCenterPoint();
+
             // Compute the intended multiplier (uniformly applied to both scaleX and scaleY)
             const intendedMultiplier = (activeObject.scaleX + SCALE_FACTOR) / activeObject.scaleX;
 
-            // Obtain the current bounding rectangle (AABB) of the object
+            // Obtener el bounding rect actual
             const currentBR = activeObject.getBoundingRect();
 
-            // Use the object's center as reference
-            const centerX = activeObject.left;
-            const centerY = activeObject.top;
-
-            // Margin rectangle boundaries
+            // Margen: límites de la zona en la que se permiten los objetos
             const leftBound = marginRect.left;
             const rightBound = marginRect.left + marginRect.width;
             const topBound = marginRect.top;
             const bottomBound = marginRect.top + marginRect.height;
 
-            // Determine maximum allowed multiplier based on each side:
-            const maxMultiplierLeft = (centerX - leftBound) * 2 / currentBR.width;
-            const maxMultiplierRight = (rightBound - centerX) * 2 / currentBR.width;
-            const maxMultiplierTop = (centerY - topBound) * 2 / currentBR.height;
-            const maxMultiplierBottom = (bottomBound - centerY) * 2 / currentBR.height;
+            // Determinar el multiplicador máximo basado en cada lado, usando el centro calculado
+            const maxMultiplierLeft = (center.x - leftBound) * 2 / currentBR.width;
+            const maxMultiplierRight = (rightBound - center.x) * 2 / currentBR.width;
+            const maxMultiplierTop = (center.y - topBound) * 2 / currentBR.height;
+            const maxMultiplierBottom = (bottomBound - center.y) * 2 / currentBR.height;
 
-            // The allowed multiplier is the smallest of these factors
+            // El multiplicador permitido es el menor de los anteriores
             const allowedMultiplier = Math.min(maxMultiplierLeft, maxMultiplierRight, maxMultiplierTop, maxMultiplierBottom);
 
-            // Use the intended multiplier if it fits; otherwise, use the allowed multiplier.
+            // Seleccionar el multiplicador final
             const finalMultiplier = Math.min(intendedMultiplier, allowedMultiplier);
 
-            // If no further scaling is possible (finalMultiplier <= 1), exit
+            // Si no se puede escalar más, salir
             if (finalMultiplier <= 1) return;
 
-            // Apply the new scale uniformly
+            // Aplicar la escala y reubicar usando el centro original
             activeObject.scaleX *= finalMultiplier;
             activeObject.scaleY *= finalMultiplier;
+            activeObject.set({
+                left: center.x,
+                top: center.y,
+                originX: 'center',
+                originY: 'center'
+            });
 
             constrainObjectToMargin(activeObject, marginRect);
             canvas.renderAll();
