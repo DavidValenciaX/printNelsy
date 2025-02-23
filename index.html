@@ -73,7 +73,7 @@
                     <button type="button" id="cancelCrop" class="control-button">
                         <i class="fas fa-times button-icon"></i> Cancelar
                     </button>
-                    <button type="button" id="grayScaleBtn" class="control-button">
+                    <button type="button" id="grayScaleButton" class="control-button">
                         <i class="fas fa-adjust button-icon"></i> Convertir a B/N
                     </button>
                     <button type="button" id="resetImageButton" class="control-button">
@@ -99,10 +99,10 @@
                 <!-- Size Controls -->
                 <div class="button-group">
                     <div class="group-title">Tamaño</div>
-                    <button type="button" id="scaleUp" class="control-button">
+                    <button type="button" id="scaleUpButton" class="control-button">
                         <i class="fas fa-expand button-icon"></i> Ampliar imagen
                     </button>
-                    <button type="button" id="scaleDown" class="control-button">
+                    <button type="button" id="scaleDownButton" class="control-button">
                         <i class="fas fa-compress button-icon"></i> Reducir imagen
                     </button>
                     <input type="number" id="widthInput" placeholder="Ancho en cm" step="0.1" />
@@ -115,13 +115,13 @@
                 <!-- Position Controls -->
                 <div class="button-group">
                     <div class="group-title">Posición</div>
-                    <button type="button" id="centerVerticallyBtn" class="control-button">
+                    <button type="button" id="centerVerticallyButton" class="control-button">
                         <i class="fas fa-arrows-alt-v button-icon"></i> Centrar vertical
                     </button>
-                    <button type="button" id="centerHorizontallyBtn" class="control-button">
+                    <button type="button" id="centerHorizontallyButton" class="control-button">
                         <i class="fas fa-arrows-alt-h button-icon"></i> Centrar horizontal
                     </button>
-                    <button type="button" id="arrangeBtn" class="control-button">
+                    <button type="button" id="arrangeButton" class="control-button">
                         <i class="fas fa-th button-icon"></i> Re-Ordenar imágenes
                     </button>
                 </div>
@@ -146,10 +146,10 @@
     </div>
 
     <div class="zoom-controls">
-        <button type="button" class="zoom-btn" onclick="zoomIn()" title="Aumentar zoom">
+        <button type="button" class="zoom-button" onclick="zoomIn()" title="Aumentar zoom">
             <i class="fas fa-search-plus"></i>
         </button>
-        <button type="button" class="zoom-btn" onclick="zoomOut()" title="Reducir zoom">
+        <button type="button" class="zoom-button" onclick="zoomOut()" title="Reducir zoom">
             <i class="fas fa-search-minus"></i>
         </button>
     </div>
@@ -192,18 +192,18 @@
         const rotateButton_p90 = document.getElementById('rotateButton+90');
         const rotateButton_n90 = document.getElementById('rotateButton-90');
         const resetImageButton = document.getElementById('resetImageButton');
-        const arrangeBtn = document.getElementById('arrangeBtn');
+        const arrangeButton = document.getElementById('arrangeButton');
         const cropButton = document.getElementById('cropButton');
-        const confirmCropBtn = document.getElementById('confirmCrop');
-        const cancelCropBtn = document.getElementById('cancelCrop');
+        const confirmCropButton = document.getElementById('confirmCrop');
+        const cancelCropButton = document.getElementById('cancelCrop');
         const rotateCheckbox = document.getElementById('rotateControl');
-        const grayScaleBtn = document.getElementById('grayScaleBtn');
-        const scaleUpBtn = document.getElementById('scaleUp');
-        const scaleDownBtn = document.getElementById('scaleDown');
-        const centerVerticallyBtn = document.getElementById('centerVerticallyBtn');
-        const centerHorizontallyBtn = document.getElementById('centerHorizontallyBtn');
-        const setSizeBtn = document.getElementById('setSizeButton');
-        const collageBtn = document.getElementById('collageButton');
+        const grayScaleButton = document.getElementById('grayScaleButton');
+        const scaleUpButton = document.getElementById('scaleUpButton');
+        const scaleDownButton = document.getElementById('scaleDownButton');
+        const centerVerticallyButton = document.getElementById('centerVerticallyButton');
+        const centerHorizontallyButton = document.getElementById('centerHorizontallyButton');
+        const setSizeButton = document.getElementById('setSizeButton');
+        const collageButton = document.getElementById('collageButton');
         const widthInput = document.getElementById('widthInput');
         const heightInput = document.getElementById('heightInput');
 
@@ -570,8 +570,8 @@
             canvas.setActiveObject(cropRect);
 
             // Show crop control buttons
-            confirmCropBtn.style.display = 'inline';
-            cancelCropBtn.style.display = 'inline';
+            confirmCropButton.style.display = 'inline';
+            cancelCropButton.style.display = 'inline';
             cropButton.style.display = 'none';
         }
 
@@ -674,8 +674,8 @@
             restoreOtherObjects();
 
             // Hide crop control buttons
-            confirmCropBtn.style.display = 'none';
-            cancelCropBtn.style.display = 'none';
+            confirmCropButton.style.display = 'none';
+            cancelCropButton.style.display = 'none';
             cropButton.style.display = 'inline';
         }
 
@@ -1214,19 +1214,19 @@
         imageLoader.addEventListener('change', handleImageUpload);
         resetImageButton.addEventListener('click', resetActiveImage);
         printButton.addEventListener('click', printCanvas);
-        grayScaleBtn.addEventListener('click', convertToGrayscale);
+        grayScaleButton.addEventListener('click', convertToGrayscale);
         rotateButton_p90.addEventListener('click', () => rotateImage(90));
         rotateButton_n90.addEventListener('click', () => rotateImage(270));
-        centerVerticallyBtn.addEventListener('click', centerVertically);
-        centerHorizontallyBtn.addEventListener('click', centerHorizontally);
+        centerVerticallyButton.addEventListener('click', centerVertically);
+        centerHorizontallyButton.addEventListener('click', centerHorizontally);
         deleteButton.addEventListener('click', deleteActiveObject);
-        confirmCropBtn.addEventListener('click', confirmCrop);
-        cancelCropBtn.addEventListener('click', exitCropMode);
-        scaleUpBtn.addEventListener('click', scaleUp);
-        scaleDownBtn.addEventListener('click', scaleDown);
-        arrangeBtn.addEventListener('click', selectArrangeImageLayout);
-        setSizeBtn.addEventListener('click', setImageSizeInCm);
-        collageBtn.addEventListener('click', createMasonryCollage);
+        confirmCropButton.addEventListener('click', confirmCrop);
+        cancelCropButton.addEventListener('click', exitCropMode);
+        scaleUpButton.addEventListener('click', scaleUp);
+        scaleDownButton.addEventListener('click', scaleDown);
+        arrangeButton.addEventListener('click', selectArrangeImageLayout);
+        setSizeButton.addEventListener('click', setImageSizeInCm);
+        collageButton.addEventListener('click', createMasonryCollage);
 
         rotateCheckbox.addEventListener('change', function (e) {
             canvas.getObjects().forEach(obj => {

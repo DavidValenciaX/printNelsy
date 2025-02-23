@@ -139,7 +139,7 @@ body {
   z-index: 1000;
 }
 
-.zoom-btn {
+.zoom-button {
   width: 4rem;
   height: 4rem;
   border-radius: 50%;
@@ -158,12 +158,12 @@ body {
   }
 }
 
-.zoom-btn:hover {
+.zoom-button:hover {
   background-color: #45a049;
   transform: translateY(-2px);
 }
 
-.zoom-btn:active {
+.zoom-button:active {
   transform: translateY(0);
 }
 
