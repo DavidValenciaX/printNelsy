@@ -316,6 +316,8 @@
 
             // Step 6: Render the updated canvas
             canvas.renderAll();
+            // Set flag to indicate collage arrangement
+            arrangementStatus = 'collage';
         }
 
         function setImageSizeInCm() {
@@ -712,6 +714,8 @@
 
         // Add this at the top with other variables
         const originalImages = {};
+        // New global flag to track canvas arrangement state: 'none', 'grid', or 'collage'
+        let arrangementStatus = 'none';
 
         function handleImageUpload(e) {
             const files = e.target.files;
@@ -846,6 +850,8 @@
             });
 
             canvas.renderAll();
+            // Set flag to indicate grid arrangement
+            arrangementStatus = 'grid';
         }
 
         // Reset active image to its original state
@@ -2131,6 +2137,7 @@
         canvas.on('object:modified', function (e) {
             // Reset restrictions
             activeRestriction = null;
+            arrangementStatus = 'none';
         });
 
         canvas.on('object:scaling', function (e) {
