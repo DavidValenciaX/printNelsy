@@ -204,6 +204,8 @@
         const centerHorizontallyBtn = document.getElementById('centerHorizontallyBtn');
         const setSizeBtn = document.getElementById('setSizeButton');
         const collageBtn = document.getElementById('collageButton');
+        const widthInput = document.getElementById('widthInput');
+        const heightInput = document.getElementById('heightInput');
 
         const dpi = 300;
         const marginInches = 0.2;
@@ -328,8 +330,8 @@
             }
 
             // Obtener los valores de ancho y alto ingresados
-            const widthInputValue = document.getElementById('widthInput').value;
-            const heightInputValue = document.getElementById('heightInput').value;
+            const widthInputValue = widthInput.value;
+            const heightInputValue = heightInput.value;
 
             // Se utilizan escalas separadas para ancho y alto
             const canvasScaleX = canvas.getWidth() / paperSizes[currentSize].width;
@@ -348,6 +350,7 @@
                 const cmWidth = parseFloat(widthInputValue);
                 if (isNaN(cmWidth) || cmWidth <= 0) {
                     Swal.fire({ text: 'Introduzca una anchura válida en centímetros.', icon: 'warning' });
+                    widthInput.value = '';
                     return;
                 }
                 const targetWidthPixels = (cmWidth / 2.54) * dpi;
@@ -358,6 +361,7 @@
                 const cmHeight = parseFloat(heightInputValue);
                 if (isNaN(cmHeight) || cmHeight <= 0) {
                     Swal.fire({ text: 'Introduzca una altura válida en centímetros.', icon: 'warning' });
+                    heightInput.value = '';
                     return;
                 }
                 const targetHeightPixels = (cmHeight / 2.54) * dpi;
@@ -366,6 +370,8 @@
             }
             if (!updated) {
                 Swal.fire({ text: 'Introduzca al menos una medida válida.', icon: 'warning' });
+                widthInput.value = '';
+                heightInput.value = '';
                 return;
             }
 
@@ -401,10 +407,14 @@
                 activeObject.setCoords();
                 Swal.fire({ text: 'El tamaño deseado excede el límite de los márgenes.', icon: 'warning' });
                 canvas.renderAll();
+                widthInput.value = '';
+                heightInput.value = '';
                 return;
             }
 
             canvas.renderAll();
+            widthInput.value = '';
+            heightInput.value = '';
         }
 
         function centerVertically() {
