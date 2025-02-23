@@ -323,11 +323,25 @@
         }
 
         function setImageSizeInCm() {
-            const activeObject = canvas.getActiveObject();
-            if (!activeObject || activeObject.type !== 'image') {
-                Swal.fire({ text: 'Seleccione primero una imagen.', icon: 'warning' });
+            const activeObjects = canvas.getActiveObjects();
+            const selectedImages = activeObjects.filter(obj => obj.type === 'image');
+
+            if (selectedImages.length === 0) {
+                Swal.fire({ text: 'Seleccione primero una o más imágenes.', icon: 'warning' });
                 return;
             }
+
+            selectedImages.forEach(obj => {
+                if (obj.type === 'image') {
+                    setSingleImageSizeInCm(obj);
+                }
+            });
+
+            widthInput.value = '';
+            heightInput.value = '';
+        }
+
+        function setSingleImageSizeInCm(activeObject) {
 
             // Obtener los valores de ancho y alto ingresados
             const widthInputValue = widthInput.value;
@@ -407,14 +421,10 @@
                 activeObject.setCoords();
                 Swal.fire({ text: 'El tamaño deseado excede el límite de los márgenes.', icon: 'warning' });
                 canvas.renderAll();
-                widthInput.value = '';
-                heightInput.value = '';
                 return;
             }
 
             canvas.renderAll();
-            widthInput.value = '';
-            heightInput.value = '';
         }
 
         function centerVertically() {
