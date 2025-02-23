@@ -1039,13 +1039,17 @@
         }
 
         function deleteActiveObject() {
-            const activeObject = canvas.getActiveObject();
-            if (!activeObject) {
+            const activeObjects = canvas.getActiveObjects();
+            if (activeObjects.length === 0) {
                 Swal.fire({ text: 'Seleccione primero una imagen.', icon: 'warning' });
                 return;
             }
 
-            canvas.remove(activeObject);
+            activeObjects.forEach(obj => {
+                canvas.remove(obj);
+            });
+
+            canvas.discardActiveObject();
             canvas.renderAll();
         }
 
