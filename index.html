@@ -16,6 +16,18 @@
         <div class="main-container">
             <!-- Left Sidebar -->
             <div class="button-container">
+
+                <!-- Orientation -->
+                <div class="button-group">
+                    <div class="group-title">Orientación</div>
+                    <button type="button" class="orientation-button" id="verticalButton">
+                        <i class="fas fa-file button-icon"></i> Vertical
+                    </button>
+                    <button type="button" class="orientation-button" id="horizontalButton">
+                        <i class="fas fa-file rotate-90 button-icon"></i> Horizontal
+                    </button>
+                </div>
+
                 <!-- File Operations -->
                 <div class="button-group">
                     <div class="group-title">Archivo</div>
@@ -42,16 +54,6 @@
                     </button>
                 </div>
 
-                <!-- Orientation -->
-                <div class="button-group">
-                    <div class="group-title">Orientación</div>
-                    <button type="button" class="orientation-button" id="verticalButton">
-                        <i class="fas fa-file button-icon"></i> Vertical
-                    </button>
-                    <button type="button" class="orientation-button" id="horizontalButton">
-                        <i class="fas fa-file rotate-90 button-icon"></i> Horizontal
-                    </button>
-                </div>
             </div>
 
             <!-- Canvas -->
@@ -61,50 +63,10 @@
 
             <!-- Right Sidebar -->
             <div class="button-container">
-                <!-- Image Operations -->
-                <!-- Recorte de Imagen -->
-                <div class="button-group">
-                    <div class="group-title">Recorte de Imagen</div>
-                    <button type="button" id="cropButton" class="control-button">
-                        <i class="fas fa-crop button-icon"></i> Recortar imagen
-                    </button>
-                    <button type="button" id="confirmCrop" class="control-button">
-                        <i class="fas fa-check button-icon"></i> Confirmar
-                    </button>
-                    <button type="button" id="cancelCrop" class="control-button">
-                        <i class="fas fa-times button-icon"></i> Cancelar
-                    </button>
-                </div>
-
-                <!-- Otras Operaciones de Imagen -->
-                <div class="button-group">
-                    <div class="group-title">Operaciones de Imagen</div>
-                    <button type="button" id="grayScaleButton" class="control-button">
-                        <i class="fas fa-adjust button-icon"></i> Convertir a B/N
-                    </button>
-                    <button type="button" id="resetImageButton" class="control-button">
-                        <i class="fas fa-undo button-icon"></i> Restablecer imagen
-                    </button>
-                </div>
-
-                <!-- Transform Controls -->
-                <div class="button-group">
-                    <div class="group-title">Transformación</div>
-                    <button type="button" id="rotateButton+90" class="control-button">
-                        <i class="fas fa-redo button-icon"></i> Girar 90° derecha
-                    </button>
-                    <button type="button" id="rotateButton-90" class="control-button">
-                        <i class="fas fa-undo button-icon"></i> Girar 90° izquierda
-                    </button>
-                    <div class="control-group">
-                        <input type="checkbox" id="rotateControl" />
-                        <label for="rotateControl">Permitir rotación libre</label>
-                    </div>
-                </div>
 
                 <!-- Size Controls -->
                 <div class="button-group">
-                    <div class="group-title">Tamaño</div>
+                    <div class="group-title">Tamaño de imagen</div>
                     <button type="button" id="scaleUpButton" class="control-button">
                         <i class="fas fa-expand button-icon"></i> Ampliar imagen
                     </button>
@@ -132,11 +94,43 @@
                     </button>
                 </div>
 
-                <!-- Danger Zone -->
+                <!-- Transform Controls -->
                 <div class="button-group">
-                    <div class="group-title">Eliminar</div>
-                    <button type="button" id="deleteButton" class="control-button danger-button">
-                        <i class="fas fa-trash button-icon"></i> Eliminar imagen
+                    <div class="group-title">Transformación</div>
+                    <button type="button" id="rotateButton+90" class="control-button">
+                        <i class="fas fa-redo button-icon"></i> Girar 90° derecha
+                    </button>
+                    <button type="button" id="rotateButton-90" class="control-button">
+                        <i class="fas fa-undo button-icon"></i> Girar 90° izquierda
+                    </button>
+                    <div class="control-group">
+                        <input type="checkbox" id="rotateControl" />
+                        <label for="rotateControl">Permitir rotación libre</label>
+                    </div>
+                </div>
+
+                <!-- Otras Operaciones de Imagen -->
+                <div class="button-group">
+                    <div class="group-title">Operaciones de Imagen</div>
+                    <button type="button" id="grayScaleButton" class="control-button">
+                        <i class="fas fa-adjust button-icon"></i> Convertir a B/N
+                    </button>
+                    <button type="button" id="resetImageButton" class="control-button">
+                        <i class="fas fa-undo button-icon"></i> Restablecer imagen
+                    </button>
+                </div>
+
+                <!-- Recorte de Imagen -->
+                <div class="button-group">
+                    <div class="group-title">Recorte de Imagen</div>
+                    <button type="button" id="cropButton" class="control-button">
+                        <i class="fas fa-crop button-icon"></i> Recortar imagen
+                    </button>
+                    <button type="button" id="confirmCrop" class="control-button">
+                        <i class="fas fa-check button-icon"></i> Confirmar
+                    </button>
+                    <button type="button" id="cancelCrop" class="control-button">
+                        <i class="fas fa-times button-icon"></i> Cancelar
                     </button>
                 </div>
 
@@ -147,6 +141,15 @@
                         <i class="fas fa-th-large button-icon"></i> Crear Collage
                     </button>
                 </div>
+
+                <!-- Danger Zone -->
+                <div class="button-group">
+                    <div class="group-title">Eliminar</div>
+                    <button type="button" id="deleteButton" class="control-button danger-button">
+                        <i class="fas fa-trash button-icon"></i> Eliminar imagen
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
