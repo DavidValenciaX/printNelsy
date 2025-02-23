@@ -331,8 +331,10 @@
                 return;
             }
 
-            // Deactivate the current selection to avoid group transformation context
-            canvas.discardActiveObject();
+            // Sólo se descarta la selección si son varias imágenes
+            if (selectedImages.length > 1) {
+                canvas.discardActiveObject();
+            }
 
             selectedImages.forEach(obj => {
                 if (obj.type === 'image') {
@@ -344,13 +346,6 @@
                     setSingleImageSizeInCm(obj);
                 }
             });
-
-            console.log(selectedImages.length);
-
-            // Re-select the images if there are multiple
-            if (selectedImages.length > 0) {
-                deactivateObjects({ target: null });
-            }
 
             widthInput.value = '';
             heightInput.value = '';
