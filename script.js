@@ -854,7 +854,7 @@ function resetActiveImage() {
 
   // Iterate over each selected image
   activeObjects.forEach((activeObject) => {
-    if (!activeObject || !activeObject.id || !originalImages[activeObject.id]) {
+    if (!originalImages[activeObject?.id]) {
       Swal.fire({
         text: `No se pudo restablecer la imagen con id ${
           activeObject.id || "n/a"
