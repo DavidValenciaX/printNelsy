@@ -18,21 +18,21 @@ function zoomOut() {
 }
 
 function applyZoom() {
-    const mainContent = document.getElementById("main-content");
-    // Anchor scaling from the top center
-    mainContent.style.transformOrigin = "top center";
-    mainContent.style.transform = `scale(${currentZoom})`;
-  
-    // Adjust vertical position if the top is off-screen
-    const rect = mainContent.getBoundingClientRect();
-    if (rect.top < 0) {
-      // Shift main-content down so that it is fully visible
-      mainContent.style.position = "relative";
-      mainContent.style.top = `${-rect.top}px`;
-    } else {
-      mainContent.style.top = "0";
-    }
+  const mainContent = document.getElementById("main-content");
+  // Anchor scaling from the top center
+  mainContent.style.transformOrigin = "top center";
+  mainContent.style.transform = `scale(${currentZoom})`;
+
+  // Adjust vertical position if the top is off-screen
+  const rect = mainContent.getBoundingClientRect();
+  if (rect.top < 0) {
+    // Shift main-content down so that it is fully visible
+    mainContent.style.position = "relative";
+    mainContent.style.top = `${-rect.top}px`;
+  } else {
+    mainContent.style.top = "0";
   }
+}
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -947,6 +947,26 @@ function printCanvas() {
   }, 250);
 }
 
+function scaleToFitWithinMargin(obj, marginRect) {
+  obj.setCoords();
+  const br = obj.getBoundingRect();
+  // Si el objeto ya cabe completamente en el margen, no se hace nada.
+  if (br.width <= marginRect.width && br.height <= marginRect.height) {
+    return;
+  }
+  // Calcula el factor de escala mínimo necesario para que br quepa en marginRect.
+  const scaleFactor = Math.min(
+    marginRect.width / br.width,
+    marginRect.height / br.height
+  );
+  // Aplica el factor a la escala actual.
+  obj.scaleX *= scaleFactor;
+  obj.scaleY *= scaleFactor;
+  // Reposiciona para que quede dentro del margen.
+  constrainObjectToMargin(obj, marginRect);
+  obj.setCoords();
+}
+
 function rotateImage(deg) {
   const activeObject = canvas.getActiveObject();
   if (!activeObject) {
@@ -956,7 +976,12 @@ function rotateImage(deg) {
 
   activeObject.rotate((activeObject.angle + deg) % 360);
   activeObject.setCoords();
+
+  // Primero se reubica dentro del margen.
   constrainObjectToMargin(activeObject, marginRect);
+  // Si el objeto sigue excediendo, se reduce su escala.
+  scaleToFitWithinMargin(activeObject, marginRect);
+
   canvas.renderAll();
 }
 
@@ -2303,27 +2328,46 @@ let marginWidth = (canvas.width - marginRect.width) / 2;
 
 // Add accessibility improvements: set ARIA labels and focus outlines on interactive elements.
 function setupAccessibility() {
-	// List all interactive elements by id.
-	const elements = [
-		printButton, deleteButton, cropButton, confirmCropButton, cancelCropButton,
-		cartaButton, oficioButton, a4Button, verticalButton, horizontalButton,
-		rotateButton_p90, rotateButton_n90, resetImageButton, arrangeButton,
-		grayScaleButton, scaleUpButton, scaleDownButton, centerVerticallyButton,
-		centerHorizontallyButton, setSizeButton, collageButton
-	];
-	elements.forEach(el => {
-		if (el) {
-			// Use innerText or id as descriptive label.
-			el.setAttribute('aria-label', el.innerText.trim() || el.getAttribute('id'));
-			// Ensure buttons are focusable with a clear outline
-			el.style.outline = '3px solid transparent';
-			el.addEventListener('focus', () => {
-				el.style.outline = '3px solid #ff0';
-			});
-			el.addEventListener('blur', () => {
-				el.style.outline = '3px solid transparent';
-			});
-		}
-	});
+  // List all interactive elements by id.
+  const elements = [
+    printButton,
+    deleteButton,
+    cropButton,
+    confirmCropButton,
+    cancelCropButton,
+    cartaButton,
+    oficioButton,
+    a4Button,
+    verticalButton,
+    horizontalButton,
+    rotateButton_p90,
+    rotateButton_n90,
+    resetImageButton,
+    arrangeButton,
+    grayScaleButton,
+    scaleUpButton,
+    scaleDownButton,
+    centerVerticallyButton,
+    centerHorizontallyButton,
+    setSizeButton,
+    collageButton,
+  ];
+  elements.forEach((el) => {
+    if (el) {
+      // Use innerText or id as descriptive label.
+      el.setAttribute(
+        "aria-label",
+        el.innerText.trim() || el.getAttribute("id")
+      );
+      // Ensure buttons are focusable with a clear outline
+      el.style.outline = "3px solid transparent";
+      el.addEventListener("focus", () => {
+        el.style.outline = "3px solid #ff0";
+      });
+      el.addEventListener("blur", () => {
+        el.style.outline = "3px solid transparent";
+      });
+    }
+  });
 }
 setupAccessibility();
