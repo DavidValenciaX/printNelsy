@@ -220,6 +220,7 @@ function setSingleImageSizeInCm(selectedImage) {
   // Obtener los valores de ancho y alto ingresados
   const widthInputValue = widthInput.value;
   const heightInputValue = heightInput.value;
+  const maintainAspect = document.getElementById("maintainAspectCheckbox").checked;
 
   // Ajustar dimensiones del papel según orientación
   let paperWidth = paperSizes[currentSize].width;
@@ -227,7 +228,6 @@ function setSingleImageSizeInCm(selectedImage) {
   if (!isVertical) {
     [paperWidth, paperHeight] = [paperHeight, paperWidth];
   }
-
   // Se utilizan escalas separadas para ancho y alto
   const canvasScaleX = canvas.getWidth() / paperWidth;
   const canvasScaleY = canvas.getHeight() / paperHeight;
@@ -240,35 +240,72 @@ function setSingleImageSizeInCm(selectedImage) {
   let newScaleX = originalScaleX;
   let newScaleY = originalScaleY;
   let updated = false;
+  
+  // Si se debe mantener la relación de aspecto,
+  // se utiliza la medida ingresada (si está) para calcular un factor uniforme.
+  if (maintainAspect) {
+    if (widthInputValue) {
+      const cmWidth = parseFloat(widthInputValue);
+      if (isNaN(cmWidth) || cmWidth <= 0) {
+        Swal.fire({
+          text: "Introduzca una anchura válida en centímetros.",
+          icon: "warning",
+        });
+        widthInput.value = "";
+        return;
+      }
+      const targetWidthPixels = (cmWidth / 2.54) * dpi;
+      const uniformScale = (targetWidthPixels * canvasScaleX) / selectedImage.width;
+      newScaleX = uniformScale;
+      newScaleY = uniformScale;
+      updated = true;
+    } else if (heightInputValue) {
+      const cmHeight = parseFloat(heightInputValue);
+      if (isNaN(cmHeight) || cmHeight <= 0) {
+        Swal.fire({
+          text: "Introduzca una altura válida en centímetros.",
+          icon: "warning",
+        });
+        heightInput.value = "";
+        return;
+      }
+      const targetHeightPixels = (cmHeight / 2.54) * dpi;
+      const uniformScale = (targetHeightPixels * canvasScaleY) / selectedImage.height;
+      newScaleX = uniformScale;
+      newScaleY = uniformScale;
+      updated = true;
+    }
+  } else {
+    if (widthInputValue) {
+      const cmWidth = parseFloat(widthInputValue);
+      if (isNaN(cmWidth) || cmWidth <= 0) {
+        Swal.fire({
+          text: "Introduzca una anchura válida en centímetros.",
+          icon: "warning",
+        });
+        widthInput.value = "";
+        return;
+      }
+      const targetWidthPixels = (cmWidth / 2.54) * dpi;
+      newScaleX = (targetWidthPixels * canvasScaleX) / selectedImage.width;
+      updated = true;
+    }
+    if (heightInputValue) {
+      const cmHeight = parseFloat(heightInputValue);
+      if (isNaN(cmHeight) || cmHeight <= 0) {
+        Swal.fire({
+          text: "Introduzca una altura válida en centímetros.",
+          icon: "warning",
+        });
+        heightInput.value = "";
+        return;
+      }
+      const targetHeightPixels = (cmHeight / 2.54) * dpi;
+      newScaleY = (targetHeightPixels * canvasScaleY) / selectedImage.height;
+      updated = true;
+    }
+  }
 
-  if (widthInputValue) {
-    const cmWidth = parseFloat(widthInputValue);
-    if (isNaN(cmWidth) || cmWidth <= 0) {
-      Swal.fire({
-        text: "Introduzca una anchura válida en centímetros.",
-        icon: "warning",
-      });
-      widthInput.value = "";
-      return;
-    }
-    const targetWidthPixels = (cmWidth / 2.54) * dpi;
-    newScaleX = (targetWidthPixels * canvasScaleX) / selectedImage.width;
-    updated = true;
-  }
-  if (heightInputValue) {
-    const cmHeight = parseFloat(heightInputValue);
-    if (isNaN(cmHeight) || cmHeight <= 0) {
-      Swal.fire({
-        text: "Introduzca una altura válida en centímetros.",
-        icon: "warning",
-      });
-      heightInput.value = "";
-      return;
-    }
-    const targetHeightPixels = (cmHeight / 2.54) * dpi;
-    newScaleY = (targetHeightPixels * canvasScaleY) / selectedImage.height;
-    updated = true;
-  }
   if (!updated) {
     Swal.fire({
       text: "Introduzca al menos una medida válida.",
