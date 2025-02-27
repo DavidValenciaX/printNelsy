@@ -823,10 +823,13 @@ function arrangeImages(images, orientation, order = "forward") {
   }
 
   let cols, rows;
-  // Add single-column layout option
+  // Add single-column and single-row layout options
   if (orientation === "single-column") {
     cols = 1;
     rows = count;
+  } else if (orientation === "single-row") {
+    cols = count;
+    rows = 1;
   } else if (orientation === "rows") {
     cols = Math.ceil(Math.sqrt(count));
     rows = Math.ceil(count / cols);
@@ -835,8 +838,12 @@ function arrangeImages(images, orientation, order = "forward") {
     cols = Math.ceil(count / rows);
   }
 
-  const cellWidth = (canvas.width - margin * 2) / cols;
-  // For single-column, optimize vertical space
+  // Adjust cell dimensions based on orientation
+  const cellWidth =
+    orientation === "single-row"
+      ? (canvas.width - margin * 2) / count
+      : (canvas.width - margin * 2) / cols;
+
   const cellHeight =
     orientation === "single-column"
       ? (canvas.height - margin * 2) / count
@@ -854,6 +861,9 @@ function arrangeImages(images, orientation, order = "forward") {
     } else if (orientation === "single-column") {
       col = 0;
       row = index;
+    } else if (orientation === "single-row") {
+      col = index;
+      row = 0;
     }
 
     let realImageWidth = img.width * img.scaleX;
@@ -1214,11 +1224,19 @@ function selectArrangeImageLayout() {
     arrangeImages(images, "single-column", "reverse");
     lastLayout = "single-column";
     lastDirection = "reverse";
+  } else if (lastLayout === "single-column" && lastDirection === "reverse") {
+    arrangeImages(images, "single-row", "forward");
+    lastLayout = "single-row";
+    lastDirection = "forward";
+  } else if (lastLayout === "single-row" && lastDirection === "forward") {
+    arrangeImages(images, "single-row", "reverse");
+    lastLayout = "single-row";
+    lastDirection = "reverse";
   } else {
     arrangeImages(images, "rows", "forward");
     lastLayout = "rows";
     lastDirection = "forward";
-  } 
+  }
 
   canvas.renderAll();
 }
