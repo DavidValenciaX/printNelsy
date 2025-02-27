@@ -220,7 +220,9 @@ function setSingleImageSizeInCm(selectedImage) {
   // Obtener los valores de ancho y alto ingresados
   const widthInputValue = widthInput.value;
   const heightInputValue = heightInput.value;
-  const maintainAspect = document.getElementById("maintainAspectCheckbox").checked;
+  const maintainAspect = document.getElementById(
+    "maintainAspectCheckbox"
+  ).checked;
 
   // Ajustar dimensiones del papel según orientación
   let paperWidth = paperSizes[currentSize].width;
@@ -240,7 +242,7 @@ function setSingleImageSizeInCm(selectedImage) {
   let newScaleX = originalScaleX;
   let newScaleY = originalScaleY;
   let updated = false;
-  
+
   // Si se debe mantener la relación de aspecto,
   // se utiliza la medida ingresada (si está) para calcular un factor uniforme.
   if (maintainAspect) {
@@ -255,7 +257,8 @@ function setSingleImageSizeInCm(selectedImage) {
         return;
       }
       const targetWidthPixels = (cmWidth / 2.54) * dpi;
-      const uniformScale = (targetWidthPixels * canvasScaleX) / selectedImage.width;
+      const uniformScale =
+        (targetWidthPixels * canvasScaleX) / selectedImage.width;
       newScaleX = uniformScale;
       newScaleY = uniformScale;
       updated = true;
@@ -270,7 +273,8 @@ function setSingleImageSizeInCm(selectedImage) {
         return;
       }
       const targetHeightPixels = (cmHeight / 2.54) * dpi;
-      const uniformScale = (targetHeightPixels * canvasScaleY) / selectedImage.height;
+      const uniformScale =
+        (targetHeightPixels * canvasScaleY) / selectedImage.height;
       newScaleX = uniformScale;
       newScaleY = uniformScale;
       updated = true;
@@ -812,14 +816,18 @@ function arrangeImages(images, orientation, order = "forward") {
   let marginAdjustment = count <= 2 ? 100 : 20;
   const margin = marginWidth + marginAdjustment;
 
-  // Crear copia y ordenar según order
+  // Create copy and sort according to order
   const sortedImages = [...images];
   if (order === "reverse") {
     sortedImages.reverse();
   }
 
   let cols, rows;
-  if (orientation === "rows") {
+  // Add single-column layout option
+  if (orientation === "single-column") {
+    cols = 1;
+    rows = count;
+  } else if (orientation === "rows") {
     cols = Math.ceil(Math.sqrt(count));
     rows = Math.ceil(count / cols);
   } else if (orientation === "cols") {
@@ -828,10 +836,14 @@ function arrangeImages(images, orientation, order = "forward") {
   }
 
   const cellWidth = (canvas.width - margin * 2) / cols;
-  const cellHeight = (canvas.height - margin * 2) / rows;
+  // For single-column, optimize vertical space
+  const cellHeight =
+    orientation === "single-column"
+      ? (canvas.height - margin * 2) / count
+      : (canvas.height - margin * 2) / rows;
 
   sortedImages.forEach((img, index) => {
-    // Determinar fila y columna sin alterar el id permanente
+    // Determine row and column without altering permanent id
     let row, col;
     if (orientation === "rows") {
       row = Math.floor(index / cols);
@@ -839,6 +851,9 @@ function arrangeImages(images, orientation, order = "forward") {
     } else if (orientation === "cols") {
       col = Math.floor(index / rows);
       row = index % rows;
+    } else if (orientation === "single-column") {
+      col = 0;
+      row = index;
     }
 
     let realImageWidth = img.width * img.scaleX;
@@ -872,7 +887,7 @@ function arrangeImages(images, orientation, order = "forward") {
       originY: "center",
     });
 
-    // Se mantiene originalImages intacto con la información original
+    // originalImages is kept intact with the original information
     canvas.add(img);
   });
 
@@ -1191,11 +1206,19 @@ function selectArrangeImageLayout() {
     arrangeImages(images, "cols", "reverse");
     lastLayout = "cols";
     lastDirection = "reverse";
+  } else if (lastLayout === "cols" && lastDirection === "reverse") {
+    arrangeImages(images, "single-column", "forward");
+    lastLayout = "single-column";
+    lastDirection = "forward";
+  } else if (lastLayout === "single-column" && lastDirection === "forward") {
+    arrangeImages(images, "single-column", "reverse");
+    lastLayout = "single-column";
+    lastDirection = "reverse";
   } else {
     arrangeImages(images, "rows", "forward");
     lastLayout = "rows";
     lastDirection = "forward";
-  }
+  } 
 
   canvas.renderAll();
 }
