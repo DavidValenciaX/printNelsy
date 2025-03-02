@@ -296,15 +296,21 @@ function binPackArrange() {
     return;
   }
 
-  // Sort images by original area (width * height) in descending order
+  // Calculate target area per image for more uniform sizing
+  const marginArea = marginRect.width * marginRect.height;
+  const targetArea = marginArea / images.length;
+
+  // Sort images by aspect ratio variability to improve uniformity
   const sortedImages = images.slice().sort((a, b) => {
-    const areaA = a.width * a.height;
-    const areaB = b.width * b.height;
-    return areaB - areaA;
+    // Prefer images closer to average aspect ratio
+    const avgAspect = marginRect.width / marginRect.height;
+    const aspectDiffA = Math.abs((a.width/a.height) - avgAspect);
+    const aspectDiffB = Math.abs((b.width/b.height) - avgAspect);
+    return aspectDiffA - aspectDiffB;
   });
 
   // Define the margin area
-  const marginArea = {
+  const marginSpace = {
     x: marginRect.left,
     y: marginRect.top,
     width: marginRect.width,
@@ -312,71 +318,59 @@ function binPackArrange() {
   };
 
   // Initialize free spaces with the margin area
-  let freeSpaces = [marginArea];
+  let freeSpaces = [marginSpace];
 
   sortedImages.forEach((img) => {
     let bestFit = null;
-
     const imgWidth = img.width;
     const imgHeight = img.height;
 
     // Check each free space to find the best fit
-    for (let i = 0; i < freeSpaces.length; i++) {
-      const space = freeSpaces[i];
-
-      // Calculate scale for original orientation
+    freeSpaces.forEach((space, i) => {
+      // Calculate possible scaling options
       const scaleOriginal = Math.min(
         space.width / imgWidth,
         space.height / imgHeight
       );
-      const wOriginal = imgWidth * scaleOriginal;
-      const hOriginal = imgHeight * scaleOriginal;
-      const areaOriginal = wOriginal * hOriginal;
+      const areaOriginal = (imgWidth * scaleOriginal) * (imgHeight * scaleOriginal);
 
-      // Calculate scale for rotated orientation
       const scaleRotated = Math.min(
         space.width / imgHeight,
         space.height / imgWidth
       );
-      const wRotated = imgHeight * scaleRotated;
-      const hRotated = imgWidth * scaleRotated;
-      const areaRotated = wRotated * hRotated;
+      const areaRotated = (imgHeight * scaleRotated) * (imgWidth * scaleRotated);
 
-      // Determine the best fit for this space
-      if (Math.max(areaOriginal, areaRotated) > 0) {
-        const useRotated = areaRotated > areaOriginal;
-        const scale = useRotated ? scaleRotated : scaleOriginal;
-        const width = useRotated ? wRotated : wOriginal;
-        const height = useRotated ? hRotated : hOriginal;
+      // Calculate deviation from target area
+      const originalDiff = Math.abs(areaOriginal - targetArea);
+      const rotatedDiff = Math.abs(areaRotated - targetArea);
 
-        // Update bestFit if this is a better option
-        if (
-          !bestFit ||
-          (useRotated ? areaRotated : areaOriginal) > bestFit.area
-        ) {
-          bestFit = {
-            spaceIndex: i,
-            space: space,
-            scale: scale,
-            rotated: useRotated,
-            width: width,
-            height: height,
-            area: useRotated ? areaRotated : areaOriginal,
-          };
-        }
+      // Select orientation with smallest deviation
+      const useRotated = rotatedDiff < originalDiff;
+      const currentDiff = useRotated ? rotatedDiff : originalDiff;
+      const scale = useRotated ? scaleRotated : scaleOriginal;
+
+      // Update best fit if this is a better match
+      if (!bestFit || currentDiff < bestFit.diff) {
+        bestFit = {
+          spaceIndex: i,
+          space: space,
+          scale: scale,
+          rotated: useRotated,
+          width: useRotated ? imgHeight * scale : imgWidth * scale,
+          height: useRotated ? imgWidth * scale : imgHeight * scale,
+          diff: currentDiff
+        };
       }
-    }
+    });
 
     if (bestFit) {
       const space = bestFit.space;
-      const rotated = bestFit.rotated;
-      const scale = bestFit.scale;
-
-      // Set image properties
+      
+      // Apply calculated scaling and rotation
       img.set({
-        scaleX: scale,
-        scaleY: scale,
-        angle: rotated ? 90 : 0,
+        scaleX: bestFit.scale,
+        scaleY: bestFit.scale,
+        angle: bestFit.rotated ? 90 : 0,
         left: space.x + bestFit.width / 2,
         top: space.y + bestFit.height / 2,
         originX: "center",
@@ -384,31 +378,37 @@ function binPackArrange() {
       });
       img.setCoords();
 
-      // Remove the used space from freeSpaces
+      // Remove used space and split remaining area
       freeSpaces.splice(bestFit.spaceIndex, 1);
-
-      // Split the remaining area into new free spaces
-      // Right segment
+      
+      // Split remaining horizontal space
       if (space.width - bestFit.width > 0) {
         freeSpaces.push({
           x: space.x + bestFit.width,
           y: space.y,
           width: space.width - bestFit.width,
-          height: bestFit.height,
+          height: bestFit.height
         });
       }
-      // Top segment
+      
+      // Split remaining vertical space
       if (space.height - bestFit.height > 0) {
         freeSpaces.push({
           x: space.x,
           y: space.y + bestFit.height,
           width: space.width,
-          height: space.height - bestFit.height,
+          height: space.height - bestFit.height
         });
       }
     } else {
-      // If no space found, scale down to fit the largest possible area (optional)
-      console.warn("No space found for image, consider scaling down further");
+      // Fallback: Uniform scaling for problematic images
+      const fallbackScale = Math.min(
+        marginRect.width / img.width,
+        marginRect.height / img.height
+      );
+      img.scaleX = fallbackScale;
+      img.scaleY = fallbackScale;
+      img.setCoords();
     }
   });
 
@@ -1604,1036 +1604,10 @@ canvas.on("object:moving", function (e) {
   constrainObjectToMargin(e.target, marginRect);
 });
 
-let isMouseDown = false;
-
-canvas.on("mouse:down", function () {
-  isMouseDown = true;
-});
-
-canvas.on("mouse:up", function () {
-  isMouseDown = false;
-});
-
-// From here, the code for rotating restrictions is added
-
-let clockwise = false;
-
-let accumulatedRestrictedAngle = 0;
-
-let angleDiff = 0;
-
-let activeRestriction = null;
-
-canvas.on("object:rotating", function (event) {
-  const obj = event.target;
-  obj.setCoords();
-
-  // Initialize accumulated angle if not exists
-  if (typeof obj.previousAngle === "undefined") {
-    obj.previousAngle = 0;
-  }
-
-  // Get current angle and calculate direction
-  const currentAngle = obj.angle;
-
-  // Detect direction and full rotations
-  angleDiff = currentAngle - obj.previousAngle;
-
-  // Handle angle wrap-around
-  if (angleDiff > 270) {
-    angleDiff -= 360; // Counter-clockwise wrap from 0 to 359
-  } else if (angleDiff < -270) {
-    angleDiff += 360; // Clockwise wrap from 359 to 0
-  }
-
-  clockwise = angleDiff > 0;
-
-  // Store current angle for next comparison
-  obj.previousAngle = currentAngle;
-
-  let TOP = obj.top;
-  let LEFT = obj.left;
-
-  let TL = obj.aCoords.tl;
-  let TR = obj.aCoords.tr;
-  let BL = obj.aCoords.bl;
-  let BR = obj.aCoords.br;
-
-  let realObjectWidth = obj.width * obj.scaleX;
-  let realObjectHeight = obj.height * obj.scaleY;
-
-  let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
-
-  let complementDiagAngle = Math.PI / 2 - diagAngle;
-
-  // Calculate margins from canvas edges
-  const leftMargin = marginRect.left;
-  const rightMargin = marginRect.left + marginRect.width;
-  const topMargin = marginRect.top;
-  const bottomMargin = marginRect.top + marginRect.height;
-
-  // This function restricts the rotation of the object if it is exceeding the margins while it is rotating
-  function checkRotating(point) {
-    if (!isMouseDown) {
-      activeRestriction = null;
-    }
-
-    if (!activeRestriction) {
-      accumulatedRestrictedAngle = 0;
-      if (isMouseDown && TR.x > rightMargin && clockwise) {
-        activeRestriction = "TR_RIGHT_CW";
-      } else if (isMouseDown && BR.x > rightMargin && !clockwise) {
-        activeRestriction = "BR_RIGHT_CCW";
-      } else if (isMouseDown && TL.x > rightMargin && clockwise) {
-        activeRestriction = "TL_RIGHT_CW";
-      } else if (isMouseDown && TR.x > rightMargin && !clockwise) {
-        activeRestriction = "TR_RIGHT_CCW";
-      } else if (isMouseDown && BL.x > rightMargin && clockwise) {
-        activeRestriction = "BL_RIGHT_CW";
-      } else if (isMouseDown && TL.x > rightMargin && !clockwise) {
-        activeRestriction = "TL_RIGHT_CCW";
-      } else if (isMouseDown && BR.x > rightMargin && clockwise) {
-        activeRestriction = "BR_RIGHT_CW";
-      } else if (isMouseDown && BL.x > rightMargin && !clockwise) {
-        activeRestriction = "BL_RIGHT_CCW";
-      } else if (isMouseDown && BR.y > bottomMargin && clockwise) {
-        activeRestriction = "BR_BOTTOM_CW";
-      } else if (isMouseDown && BL.y > bottomMargin && !clockwise) {
-        activeRestriction = "BL_BOTTOM_CCW";
-      } else if (isMouseDown && TR.y > bottomMargin && clockwise) {
-        activeRestriction = "TR_BOTTOM_CW";
-      } else if (isMouseDown && BR.y > bottomMargin && !clockwise) {
-        activeRestriction = "BR_BOTTOM_CCW";
-      } else if (isMouseDown && TL.y > bottomMargin && clockwise) {
-        activeRestriction = "TL_BOTTOM_CW";
-      } else if (isMouseDown && TR.y > bottomMargin && !clockwise) {
-        activeRestriction = "TR_BOTTOM_CCW";
-      } else if (isMouseDown && BL.y > bottomMargin && clockwise) {
-        activeRestriction = "BL_BOTTOM_CW";
-      } else if (isMouseDown && TL.y > bottomMargin && !clockwise) {
-        activeRestriction = "TL_BOTTOM_CCW";
-      } else if (isMouseDown && TL.x < leftMargin && !clockwise) {
-        activeRestriction = "TL_LEFT_CCW";
-      } else if (isMouseDown && BL.x < leftMargin && clockwise) {
-        activeRestriction = "BL_LEFT_CW";
-      } else if (isMouseDown && BL.x < leftMargin && !clockwise) {
-        activeRestriction = "BL_LEFT_CCW";
-      } else if (isMouseDown && BR.x < leftMargin && clockwise) {
-        activeRestriction = "BR_LEFT_CW";
-      } else if (isMouseDown && BR.x < leftMargin && !clockwise) {
-        activeRestriction = "BR_LEFT_CCW";
-      } else if (isMouseDown && TR.x < leftMargin && clockwise) {
-        activeRestriction = "TR_LEFT_CW";
-      } else if (isMouseDown && TR.x < leftMargin && !clockwise) {
-        activeRestriction = "TR_LEFT_CCW";
-      } else if (isMouseDown && TL.x < leftMargin && clockwise) {
-        activeRestriction = "TL_LEFT_CW";
-      } else if (isMouseDown && TL.y < topMargin && clockwise) {
-        activeRestriction = "TL_TOP_CW";
-      } else if (isMouseDown && TR.y < topMargin && !clockwise) {
-        activeRestriction = "TR_TOP_CCW";
-      } else if (isMouseDown && BL.y < topMargin && clockwise) {
-        activeRestriction = "BL_TOP_CW";
-      } else if (isMouseDown && TL.y < topMargin && !clockwise) {
-        activeRestriction = "TL_TOP_CCW";
-      } else if (isMouseDown && BR.y < topMargin && clockwise) {
-        activeRestriction = "BR_TOP_CW";
-      } else if (isMouseDown && BL.y < topMargin && !clockwise) {
-        activeRestriction = "BL_TOP_CCW";
-      } else if (isMouseDown && TR.y < topMargin && clockwise) {
-        activeRestriction = "TR_TOP_CW";
-      } else if (isMouseDown && BR.y < topMargin && !clockwise) {
-        activeRestriction = "BR_TOP_CCW";
-      }
-    }
-
-    switch (activeRestriction) {
-      case "TR_RIGHT_CW": {
-        console.log("TR right margin rotating clockwise");
-        let co = rightMargin - obj.left;
-        let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BR.x > rightMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-
-          activeRestriction = "BR_RIGHT_CCW";
-        }
-
-        break;
-      }
-
-      case "BR_RIGHT_CCW": {
-        console.log("BR right margin rotating counterclockwise");
-        let co = rightMargin - obj.left;
-        let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = 2 * Math.PI - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TR.x > rightMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-
-          activeRestriction = "TR_RIGHT_CW";
-        }
-
-        break;
-      }
-
-      case "TL_RIGHT_CW": {
-        console.log("TL right margin rotating clockwise");
-        let co = rightMargin - obj.left;
-        let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = Math.PI / 2 + innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TR.x > rightMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-
-          activeRestriction = "TR_RIGHT_CCW";
-        }
-        break;
-      }
-
-      case "TR_RIGHT_CCW": {
-        console.log("TR right margin rotating counterclockwise");
-        let co = rightMargin - obj.left;
-        let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = Math.PI / 2 - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TL.x > rightMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-
-          activeRestriction = "TL_RIGHT_CW";
-        }
-
-        break;
-      }
-
-      case "BL_RIGHT_CW": {
-        console.log("BL right margin rotating clockwise");
-        let co = rightMargin - obj.left;
-        let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = Math.PI + innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TL.x > rightMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "TL_RIGHT_CCW";
-        }
-        break;
-      }
-
-      case "TL_RIGHT_CCW": {
-        console.log("TL right margin rotating counterclockwise");
-        let co = rightMargin - obj.left;
-        let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = Math.PI - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BL.x > rightMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BL_RIGHT_CW";
-        }
-        break;
-      }
-
-      case "BR_RIGHT_CW": {
-        console.log("BR right margin rotating clockwise");
-        let co = rightMargin - obj.left;
-        let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = (3 * Math.PI) / 2 + innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BL.x > rightMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BL_RIGHT_CCW";
-        }
-        break;
-      }
-
-      case "BL_RIGHT_CCW": {
-        console.log("BL right margin rotating counterclockwise");
-        let co = rightMargin - obj.left;
-        let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = (3 * Math.PI) / 2 - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BR.x > rightMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BR_RIGHT_CW";
-        }
-        break;
-      }
-
-      case "BR_BOTTOM_CW": {
-        console.log("BR bottom margin rotating clockwise");
-        let co = bottomMargin - obj.top;
-        let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BL.y > bottomMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BL_BOTTOM_CCW";
-        }
-        break;
-      }
-
-      case "BL_BOTTOM_CCW": {
-        console.log("BL bottom margin rotating counterclockwise");
-        let co = bottomMargin - obj.top;
-        let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = 2 * Math.PI - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BR.y > bottomMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BR_BOTTOM_CW";
-        }
-        break;
-      }
-
-      case "TR_BOTTOM_CW": {
-        console.log("TR bottom margin rotating clockwise");
-        let co = bottomMargin - obj.top;
-        let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = Math.PI / 2 + innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BR.y > bottomMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BR_BOTTOM_CCW";
-        }
-        break;
-      }
-
-      case "BR_BOTTOM_CCW": {
-        console.log("BR bottom margin rotating counterclockwise");
-        let co = bottomMargin - obj.top;
-        let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = Math.PI / 2 - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TR.y > bottomMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "TR_BOTTOM_CW";
-        }
-        break;
-      }
-
-      case "TL_BOTTOM_CW": {
-        console.log("TL bottom margin rotating clockwise");
-        let co = bottomMargin - obj.top;
-        let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = Math.PI + innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TR.y > bottomMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "TR_BOTTOM_CCW";
-        }
-        break;
-      }
-
-      case "TR_BOTTOM_CCW": {
-        console.log("TR bottom margin rotating counterclockwise");
-        let co = bottomMargin - obj.top;
-        let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = Math.PI - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TL.y > bottomMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "TL_BOTTOM_CW";
-        }
-        break;
-      }
-
-      case "BL_BOTTOM_CW": {
-        console.log("BL bottom margin rotating clockwise");
-        let co = bottomMargin - obj.top;
-        let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = (3 * Math.PI) / 2 + innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TL.y > bottomMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "TL_BOTTOM_CCW";
-        }
-        break;
-      }
-
-      case "TL_BOTTOM_CCW": {
-        console.log("TL bottom margin rotating counterclockwise");
-        let co = bottomMargin - obj.top;
-        let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = (3 * Math.PI) / 2 - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BL.y > bottomMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BL_BOTTOM_CW";
-        }
-        break;
-      }
-
-      case "TL_LEFT_CCW": {
-        console.log("TL left margin rotating counterclockwise");
-        let co = obj.left - leftMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = 2 * Math.PI - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BL.x < leftMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BL_LEFT_CW";
-        }
-        break;
-      }
-
-      case "BL_LEFT_CW": {
-        console.log("BL left margin rotating clockwise");
-        let co = obj.left - leftMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TL.x < leftMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "TL_LEFT_CCW";
-        }
-        break;
-      }
-
-      case "BL_LEFT_CCW": {
-        console.log("BL left margin rotating counterclockwise");
-        let co = obj.left - leftMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = Math.PI / 2 - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BR.x < leftMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BR_LEFT_CW";
-        }
-        break;
-      }
-
-      case "BR_LEFT_CW": {
-        console.log("BR left margin rotating clockwise");
-        let co = obj.left - leftMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = Math.PI / 2 + innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BL.x < leftMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BL_LEFT_CCW";
-        }
-        break;
-      }
-
-      case "BR_LEFT_CCW": {
-        console.log("BR left margin rotating counterclockwise");
-        let co = obj.left - leftMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = Math.PI - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TR.x < leftMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "TR_LEFT_CW";
-        }
-        break;
-      }
-
-      case "TR_LEFT_CW": {
-        console.log("TR left margin rotating clockwise");
-        let co = obj.left - leftMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = Math.PI + innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BR.x < leftMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BR_LEFT_CCW";
-        }
-        break;
-      }
-
-      case "TR_LEFT_CCW": {
-        console.log("TR left margin rotating counterclockwise");
-        let co = obj.left - leftMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = (3 * Math.PI) / 2 - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TL.x < leftMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "TL_LEFT_CW";
-        }
-        break;
-      }
-
-      case "TL_LEFT_CW": {
-        console.log("TL left margin rotating clockwise");
-        let co = obj.left - leftMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = (3 * Math.PI) / 2 + innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TR.x < leftMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "TR_LEFT_CCW";
-        }
-        break;
-      }
-
-      case "TL_TOP_CW": {
-        console.log("TL top margin rotating clockwise");
-        let co = obj.top - topMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TR.y < topMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "TR_TOP_CCW";
-        }
-        break;
-      }
-
-      case "TR_TOP_CCW": {
-        console.log("TR top margin rotating counterclockwise");
-        let co = obj.top - topMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = 2 * Math.PI - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TL.y < topMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "TL_TOP_CW";
-        }
-        break;
-      }
-
-      case "BL_TOP_CW": {
-        console.log("BL top margin rotating clockwise");
-        let co = obj.top - topMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = Math.PI / 2 + innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TL.y < topMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "TL_TOP_CCW";
-        }
-        break;
-      }
-
-      case "TL_TOP_CCW": {
-        console.log("TL top margin rotating counterclockwise");
-        let co = obj.top - topMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, TL.x, TL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = Math.PI / 2 - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BL.y < topMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BL_TOP_CW";
-        }
-        break;
-      }
-
-      case "BR_TOP_CW": {
-        console.log("BR top margin rotating clockwise");
-        let co = obj.top - topMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = Math.PI + innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BL.y < topMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BL_TOP_CCW";
-        }
-        break;
-      }
-
-      case "BL_TOP_CCW": {
-        console.log("BL top margin rotating counterclockwise");
-        let co = obj.top - topMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, BL.x, BL.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - diagAngle;
-        let restrictedAngle = Math.PI - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BR.y < topMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BR_TOP_CW";
-        }
-        break;
-      }
-
-      case "TR_TOP_CW": {
-        console.log("TR top margin rotating clockwise");
-        let co = obj.top - topMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, TR.x, TR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = (3 * Math.PI) / 2 + innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle >= 360) {
-          accumulatedRestrictedAngle -= 360;
-        }
-
-        if (accumulatedRestrictedAngle > 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (BR.y < topMargin && !clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "BR_TOP_CCW";
-        }
-        break;
-      }
-
-      case "BR_TOP_CCW": {
-        console.log("BR top margin rotating counterclockwise");
-        let co = obj.top - topMargin;
-        let hypotenuse = calculateDistance(LEFT, TOP, BR.x, BR.y);
-        let marginAngle = Math.asin(co / hypotenuse);
-        let innerAngle = marginAngle - complementDiagAngle;
-        let restrictedAngle = (3 * Math.PI) / 2 - innerAngle;
-
-        accumulatedRestrictedAngle += angleDiff;
-
-        // Update full rotations
-        while (accumulatedRestrictedAngle <= -360) {
-          accumulatedRestrictedAngle += 360;
-        }
-
-        if (accumulatedRestrictedAngle < 0) {
-          obj.angle = radToDeg(restrictedAngle);
-        } else if (TR.y < topMargin && clockwise) {
-          accumulatedRestrictedAngle = 0;
-          activeRestriction = "TR_TOP_CW";
-        }
-        break;
-      }
-
-      default:
-        // Handle default case
-        break;
-    }
-  }
-
-  checkRotating();
-
-  obj.setCoords();
-  canvas.renderAll();
-});
-
 canvas.on("object:modified", function (e) {
   // Reset restrictions
   activeRestriction = null;
   arrangementStatus = "none";
-});
-
-canvas.on("object:scaling", function (e) {
-  let obj = e.target;
-  obj.setCoords();
-
-  const marginRight = marginRect.left + marginRect.width;
-  const marginBottom = marginRect.top + marginRect.height;
-
-  // Function to check if the object's bounding rect is within margins.
-  function isValidState() {
-    let br = obj.getBoundingRect(true);
-    return (
-      br.left >= marginRect.left &&
-      br.top >= marginRect.top &&
-      br.left + br.width <= marginRight &&
-      br.top + br.height <= marginBottom
-    );
-  }
-
-  // Save the proposed (current) state.
-  const proposedScaleX = obj.scaleX;
-  const proposedScaleY = obj.scaleY;
-  const proposedLeft = obj.left;
-  const proposedTop = obj.top;
-
-  // If no last valid state exists, initialize it with the current state.
-  if (typeof obj._lastScaleX === "undefined") {
-    obj._lastScaleX = proposedScaleX;
-    obj._lastScaleY = proposedScaleY;
-    obj._lastLeft = proposedLeft;
-    obj._lastTop = proposedTop;
-  }
-
-  const lastValidScaleX = obj._lastScaleX;
-  const lastValidScaleY = obj._lastScaleY;
-  const lastValidLeft = obj._lastLeft;
-  const lastValidTop = obj._lastTop;
-
-  // If the current state is valid, simply update the last valid state.
-  if (isValidState()) {
-    obj._lastScaleX = proposedScaleX;
-    obj._lastScaleY = proposedScaleY;
-    obj._lastLeft = proposedLeft;
-    obj._lastTop = proposedTop;
-  } else {
-    // The state is invalid. Use binary search to find the largest valid interpolation factor (t)
-    // between the last valid state (t = 0) and the current state (t = 1).
-    let low = 0,
-      high = 1;
-    const tolerance = 0.005;
-    let finalScaleX = lastValidScaleX,
-      finalScaleY = lastValidScaleY,
-      finalLeft = lastValidLeft,
-      finalTop = lastValidTop;
-
-    while (high - low > tolerance) {
-      let mid = (low + high) / 2;
-      // Interpolate state between last valid and proposed.
-      let testScaleX =
-        lastValidScaleX + mid * (proposedScaleX - lastValidScaleX);
-      let testScaleY =
-        lastValidScaleY + mid * (proposedScaleY - lastValidScaleY);
-      let testLeft = lastValidLeft + mid * (proposedLeft - lastValidLeft);
-      let testTop = lastValidTop + mid * (proposedTop - lastValidTop);
-
-      // Apply the test state temporarily.
-      obj.scaleX = testScaleX;
-      obj.scaleY = testScaleY;
-      obj.left = testLeft;
-      obj.top = testTop;
-      obj.setCoords();
-
-      if (isValidState()) {
-        // The candidate state is valid, so move the lower bound closer to the proposed state.
-        low = mid;
-        finalScaleX = testScaleX;
-        finalScaleY = testScaleY;
-        finalLeft = testLeft;
-        finalTop = testTop;
-      } else {
-        // The candidate state is invalid; reduce the upper bound.
-        high = mid;
-      }
-    }
-
-    // Set the object to the best valid state determined.
-    obj.scaleX = finalScaleX;
-    obj.scaleY = finalScaleY;
-    obj.left = finalLeft;
-    obj.top = finalTop;
-    obj.setCoords();
-  }
-
-  canvas.renderAll();
 });
 
 resizeCanvas("carta");
