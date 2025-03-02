@@ -62,8 +62,9 @@ const centerHorizontallyButton = document.getElementById(
   "centerHorizontallyButton"
 );
 const setSizeButton = document.getElementById("setSizeButton");
-const ColumnsCollageButton = document.getElementById("ColumnsCollageButton");
-const RowsCollageButton = document.getElementById("RowsCollageButton");
+const columnsCollageButton = document.getElementById("columnsCollageButton");
+const rowsCollageButton = document.getElementById("rowsCollageButton");
+const binPackButton = document.getElementById("binPackButton");
 const widthInput = document.getElementById("widthInput");
 const heightInput = document.getElementById("heightInput");
 
@@ -283,6 +284,136 @@ function createMasonryRowsCollage() {
   canvas.renderAll();
   // Set flag to indicate collage arrangement
   arrangementStatus = "rows-collage";
+}
+
+function binPackArrange() {
+  const images = canvas.getObjects("image");
+  if (images.length === 0) {
+    Swal.fire({
+      text: "Debe haber al menos una imagen en el canvas.",
+      icon: "warning",
+    });
+    return;
+  }
+
+  // Sort images by original area (width * height) in descending order
+  const sortedImages = images.slice().sort((a, b) => {
+    const areaA = a.width * a.height;
+    const areaB = b.width * b.height;
+    return areaB - areaA;
+  });
+
+  // Define the margin area
+  const marginArea = {
+    x: marginRect.left,
+    y: marginRect.top,
+    width: marginRect.width,
+    height: marginRect.height,
+  };
+
+  // Initialize free spaces with the margin area
+  let freeSpaces = [marginArea];
+
+  sortedImages.forEach((img) => {
+    let bestFit = null;
+
+    const imgWidth = img.width;
+    const imgHeight = img.height;
+
+    // Check each free space to find the best fit
+    for (let i = 0; i < freeSpaces.length; i++) {
+      const space = freeSpaces[i];
+
+      // Calculate scale for original orientation
+      const scaleOriginal = Math.min(
+        space.width / imgWidth,
+        space.height / imgHeight
+      );
+      const wOriginal = imgWidth * scaleOriginal;
+      const hOriginal = imgHeight * scaleOriginal;
+      const areaOriginal = wOriginal * hOriginal;
+
+      // Calculate scale for rotated orientation
+      const scaleRotated = Math.min(
+        space.width / imgHeight,
+        space.height / imgWidth
+      );
+      const wRotated = imgHeight * scaleRotated;
+      const hRotated = imgWidth * scaleRotated;
+      const areaRotated = wRotated * hRotated;
+
+      // Determine the best fit for this space
+      if (Math.max(areaOriginal, areaRotated) > 0) {
+        const useRotated = areaRotated > areaOriginal;
+        const scale = useRotated ? scaleRotated : scaleOriginal;
+        const width = useRotated ? wRotated : wOriginal;
+        const height = useRotated ? hRotated : hOriginal;
+
+        // Update bestFit if this is a better option
+        if (
+          !bestFit ||
+          (useRotated ? areaRotated : areaOriginal) > bestFit.area
+        ) {
+          bestFit = {
+            spaceIndex: i,
+            space: space,
+            scale: scale,
+            rotated: useRotated,
+            width: width,
+            height: height,
+            area: useRotated ? areaRotated : areaOriginal,
+          };
+        }
+      }
+    }
+
+    if (bestFit) {
+      const space = bestFit.space;
+      const rotated = bestFit.rotated;
+      const scale = bestFit.scale;
+
+      // Set image properties
+      img.set({
+        scaleX: scale,
+        scaleY: scale,
+        angle: rotated ? 90 : 0,
+        left: space.x + bestFit.width / 2,
+        top: space.y + bestFit.height / 2,
+        originX: "center",
+        originY: "center",
+      });
+      img.setCoords();
+
+      // Remove the used space from freeSpaces
+      freeSpaces.splice(bestFit.spaceIndex, 1);
+
+      // Split the remaining area into new free spaces
+      // Right segment
+      if (space.width - bestFit.width > 0) {
+        freeSpaces.push({
+          x: space.x + bestFit.width,
+          y: space.y,
+          width: space.width - bestFit.width,
+          height: bestFit.height,
+        });
+      }
+      // Top segment
+      if (space.height - bestFit.height > 0) {
+        freeSpaces.push({
+          x: space.x,
+          y: space.y + bestFit.height,
+          width: space.width,
+          height: space.height - bestFit.height,
+        });
+      }
+    } else {
+      // If no space found, scale down to fit the largest possible area (optional)
+      console.warn("No space found for image, consider scaling down further");
+    }
+  });
+
+  canvas.renderAll();
+  arrangementStatus = "bin-packed";
 }
 
 function setImageSizeInCm() {
@@ -1368,8 +1499,9 @@ scaleUpButton.addEventListener("click", scaleUp);
 scaleDownButton.addEventListener("click", scaleDown);
 arrangeButton.addEventListener("click", selectArrangeImageLayout);
 setSizeButton.addEventListener("click", setImageSizeInCm);
-ColumnsCollageButton.addEventListener("click", createMasonryColumnsCollage);
-RowsCollageButton.addEventListener("click", createMasonryRowsCollage);
+columnsCollageButton.addEventListener("click", createMasonryColumnsCollage);
+rowsCollageButton.addEventListener("click", createMasonryRowsCollage);
+binPackButton.addEventListener("click", binPackArrange);
 rotateCheckbox.addEventListener("change", function (e) {
   canvas.getObjects().forEach((obj) => {
     if (obj.type === "image") {
@@ -2534,8 +2666,9 @@ function setupAccessibility() {
     centerVerticallyButton,
     centerHorizontallyButton,
     setSizeButton,
-    ColumnsCollageButton,
-    RowsCollageButton,
+    columnsCollageButton,
+    rowsCollageButton,
+    binPackButton
   ];
   elements.forEach((el) => {
     if (el) {
