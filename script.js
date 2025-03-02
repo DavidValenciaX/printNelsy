@@ -182,7 +182,7 @@ function createMasonryColumnsCollage() {
   // Step 6: Render the updated canvas
   canvas.renderAll();
   // Set flag to indicate collage arrangement
-  arrangementStatus = "collage";
+  arrangementStatus = "columns-collage";
 }
 
 function createMasonryRowsCollage() {
@@ -282,7 +282,7 @@ function createMasonryRowsCollage() {
   // Step 6: Render the updated canvas
   canvas.renderAll();
   // Set flag to indicate collage arrangement
-  arrangementStatus = "collage";
+  arrangementStatus = "rows-collage";
 }
 
 function setImageSizeInCm() {
@@ -815,11 +815,16 @@ function resizeCanvas(size, orientation = isVertical) {
     if (arrangementStatus === "grid") {
       // Arrange images in grid layout
       arrangeImages(images, currentLayout, currentDirection);
-    } else if (arrangementStatus === "collage") {
+    } else if (arrangementStatus === "columns-collage") {
       // Re-add images and create collage
       images.forEach((img) => canvas.add(img));
       createMasonryColumnsCollage();
-    } else if (arrangementStatus === "none") {
+    } else if (arrangementStatus === "rows-collage") {
+      // Re-add images and create collage
+      images.forEach((img) => canvas.add(img));
+      createMasonryRowsCollage();
+    }
+    else if (arrangementStatus === "none") {
       // Re-add images and keep their positions.
       images.forEach((img) => {
         canvas.add(img);
