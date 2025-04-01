@@ -64,7 +64,7 @@ const centerHorizontallyButton = document.getElementById(
 const setSizeButton = document.getElementById("setSizeButton");
 const columnsCollageButton = document.getElementById("columnsCollageButton");
 const rowsCollageButton = document.getElementById("rowsCollageButton");
-const binPackButton = document.getElementById("binPackButton");
+const collageButton = document.getElementById("collageButton");
 const widthInput = document.getElementById("widthInput");
 const heightInput = document.getElementById("heightInput");
 
@@ -286,7 +286,7 @@ function createMasonryRowsCollage() {
   arrangementStatus = "rows-collage";
 }
 
-function binPackArrange() {
+function collageArrange() {
   const images = canvas.getObjects("image");
   if (images.length === 0) {
     Swal.fire({
@@ -296,124 +296,506 @@ function binPackArrange() {
     return;
   }
 
-  // Calculate target area per image for more uniform sizing
-  const marginArea = marginRect.width * marginRect.height;
-  const targetArea = marginArea / images.length;
-
-  // Sort images by aspect ratio variability to improve uniformity
-  const sortedImages = images.slice().sort((a, b) => {
-    // Prefer images closer to average aspect ratio
-    const avgAspect = marginRect.width / marginRect.height;
-    const aspectDiffA = Math.abs((a.width/a.height) - avgAspect);
-    const aspectDiffB = Math.abs((b.width/b.height) - avgAspect);
-    return aspectDiffA - aspectDiffB;
-  });
-
-  // Define the margin area
-  const marginSpace = {
-    x: marginRect.left,
-    y: marginRect.top,
-    width: marginRect.width,
-    height: marginRect.height,
-  };
-
-  // Initialize free spaces with the margin area
-  let freeSpaces = [marginSpace];
-
-  sortedImages.forEach((img) => {
-    let bestFit = null;
-    const imgWidth = img.width;
-    const imgHeight = img.height;
-
-    // Check each free space to find the best fit
-    freeSpaces.forEach((space, i) => {
-      // Calculate possible scaling options
-      const scaleOriginal = Math.min(
-        space.width / imgWidth,
-        space.height / imgHeight
-      );
-      const areaOriginal = (imgWidth * scaleOriginal) * (imgHeight * scaleOriginal);
-
-      const scaleRotated = Math.min(
-        space.width / imgHeight,
-        space.height / imgWidth
-      );
-      const areaRotated = (imgHeight * scaleRotated) * (imgWidth * scaleRotated);
-
-      // Calculate deviation from target area
-      const originalDiff = Math.abs(areaOriginal - targetArea);
-      const rotatedDiff = Math.abs(areaRotated - targetArea);
-
-      // Select orientation with smallest deviation
-      const useRotated = rotatedDiff < originalDiff;
-      const currentDiff = useRotated ? rotatedDiff : originalDiff;
-      const scale = useRotated ? scaleRotated : scaleOriginal;
-
-      // Update best fit if this is a better match
-      if (!bestFit || currentDiff < bestFit.diff) {
-        bestFit = {
-          spaceIndex: i,
-          space: space,
-          scale: scale,
-          rotated: useRotated,
-          width: useRotated ? imgHeight * scale : imgWidth * scale,
-          height: useRotated ? imgWidth * scale : imgHeight * scale,
-          diff: currentDiff
-        };
-      }
-    });
-
-    if (bestFit) {
-      const space = bestFit.space;
-      
-      // Apply calculated scaling and rotation
-      img.set({
-        scaleX: bestFit.scale,
-        scaleY: bestFit.scale,
-        angle: bestFit.rotated ? 90 : 0,
-        left: space.x + bestFit.width / 2,
-        top: space.y + bestFit.height / 2,
-        originX: "center",
-        originY: "center",
-      });
-      img.setCoords();
-
-      // Remove used space and split remaining area
-      freeSpaces.splice(bestFit.spaceIndex, 1);
-      
-      // Split remaining horizontal space
-      if (space.width - bestFit.width > 0) {
-        freeSpaces.push({
-          x: space.x + bestFit.width,
-          y: space.y,
-          width: space.width - bestFit.width,
-          height: bestFit.height
-        });
-      }
-      
-      // Split remaining vertical space
-      if (space.height - bestFit.height > 0) {
-        freeSpaces.push({
-          x: space.x,
-          y: space.y + bestFit.height,
-          width: space.width,
-          height: space.height - bestFit.height
-        });
-      }
-    } else {
-      // Fallback: Uniform scaling for problematic images
-      const fallbackScale = Math.min(
-        marginRect.width / img.width,
-        marginRect.height / img.height
-      );
-      img.scaleX = fallbackScale;
-      img.scaleY = fallbackScale;
-      img.setCoords();
+  // Class definitions for collage layout
+  class Photo {
+    constructor(fabricImage, w, h, orientation = 0) {
+      this.fabricImage = fabricImage;
+      this.w = w;
+      this.h = h;
+      this.orientation = orientation;
+      this.offset_w = 0.5;
+      this.offset_h = 0.5;
     }
-  });
+    
+    get ratio() {
+      return this.h / this.w;
+    }
+  }
 
+  class Cell {
+    constructor(parents, photo) {
+      this.parents = parents;
+      this.photo = photo;
+      this.extent = null;
+      this.h = this.w * this.wantedRatio;
+    }
+    
+    get x() {
+      return this.parents[0].x;
+    }
+    
+    get y() {
+      let prev = null;
+      for (const c of this.parents[0].cells) {
+        if (this === c) {
+          if (prev) {
+            return prev.y + prev.h;
+          }
+          return 0;
+        }
+        prev = c;
+      }
+      return 0;
+    }
+    
+    get w() {
+      return this.parents.reduce((sum, c) => sum + c.w, 0);
+    }
+    
+    get ratio() {
+      return this.h / this.w;
+    }
+    
+    get wantedRatio() {
+      return this.photo.ratio;
+    }
+    
+    scale(alpha) {
+      this.h *= alpha;
+    }
+    
+    isExtended() {
+      return this.extent !== null;
+    }
+    
+    isExtension() {
+      return false;
+    }
+    
+    contentCoords() {
+      let x, y, w, h;
+      
+      // If the contained image is too thick to fit
+      if (this.wantedRatio < this.ratio) {
+        h = this.h;
+        w = this.h / this.wantedRatio;
+        y = this.y;
+        x = this.x - (w - this.w) / 2.0;
+      } 
+      // If the contained image is too tall to fit
+      else if (this.wantedRatio > this.ratio) {
+        w = this.w;
+        h = this.w * this.wantedRatio;
+        x = this.x;
+        y = this.y - (h - this.h) / 2.0;
+      } else {
+        w = this.w;
+        h = this.h;
+        x = this.x;
+        y = this.y;
+      }
+      
+      return [x, y, w, h];
+    }
+    
+    topNeighbor() {
+      let prev = null;
+      for (const c of this.parents[0].cells) {
+        if (this === c) {
+          return prev;
+        }
+        prev = c;
+      }
+      return null;
+    }
+    
+    bottomNeighbor() {
+      let prev = null;
+      for (let i = this.parents[0].cells.length - 1; i >= 0; i--) {
+        const c = this.parents[0].cells[i];
+        if (this === c) {
+          return prev;
+        }
+        prev = c;
+      }
+      return null;
+    }
+  }
+
+  class CellExtent {
+    constructor(cell) {
+      this.origin = cell;
+      this.origin.extent = this;
+    }
+    
+    get parents() {
+      return [this.origin.parents[1]];
+    }
+    
+    get photo() {
+      return this.origin.photo;
+    }
+    
+    get y() {
+      return this.origin.y;
+    }
+    
+    get h() {
+      return this.origin.h;
+    }
+    
+    get x() {
+      return this.parents[0].x;
+    }
+    
+    get w() {
+      return this.parents[0].w;
+    }
+    
+    scale(alpha) {
+      // No scaling needed for extents
+    }
+    
+    isExtended() {
+      return false;
+    }
+    
+    isExtension() {
+      return true;
+    }
+    
+    topNeighbor() {
+      let prev = null;
+      for (const c of this.parents[0].cells) {
+        if (this === c) {
+          return prev;
+        }
+        prev = c;
+      }
+      return null;
+    }
+    
+    bottomNeighbor() {
+      let prev = null;
+      for (let i = this.parents[0].cells.length - 1; i >= 0; i--) {
+        const c = this.parents[0].cells[i];
+        if (this === c) {
+          return prev;
+        }
+        prev = c;
+      }
+      return null;
+    }
+  }
+
+  class Column {
+    constructor(parent, w) {
+      this.parent = parent;
+      this.cells = [];
+      this.w = w;
+    }
+    
+    get h() {
+      if (this.cells.length === 0) {
+        return 0;
+      }
+      return this.cells[this.cells.length - 1].y + this.cells[this.cells.length - 1].h;
+    }
+    
+    get x() {
+      let x = 0;
+      for (const c of this.parent.cols) {
+        if (this === c) {
+          break;
+        }
+        x += c.w;
+      }
+      return x;
+    }
+    
+    scale(alpha) {
+      this.w *= alpha;
+      for (const c of this.cells) {
+        c.scale(alpha);
+      }
+    }
+    
+    leftNeighbor() {
+      let prev = null;
+      for (const c of this.parent.cols) {
+        if (this === c) {
+          return prev;
+        }
+        prev = c;
+      }
+      return null;
+    }
+    
+    rightNeighbor() {
+      let prev = null;
+      for (let i = this.parent.cols.length - 1; i >= 0; i--) {
+        const c = this.parent.cols[i];
+        if (this === c) {
+          return prev;
+        }
+        prev = c;
+      }
+      return null;
+    }
+    
+    adjustHeight(targetH) {
+      // Group class for handling cell groups
+      class Group {
+        constructor(y) {
+          this.y = y;
+          this.h = 0;
+          this.cells = [];
+        }
+      }
+      
+      const groups = [new Group(0)];
+      for (const c of this.cells) {
+        // While a cell extent is not reached, keep adding cells to the group
+        if (!c.isExtension()) {
+          groups[groups.length - 1].cells.push(c);
+        } else {
+          // Close current group and create a new one
+          groups[groups.length - 1].h = c.y - groups[groups.length - 1].y;
+          groups.push(new Group(c.y + c.h));
+        }
+      }
+      groups[groups.length - 1].h = targetH - groups[groups.length - 1].y;
+      
+      // Adjust height for each group independently
+      for (const group of groups) {
+        if (group.cells.length === 0) continue;
+        
+        const totalHeight = group.cells.reduce((sum, c) => sum + c.h, 0);
+        if (totalHeight === 0) continue;
+        
+        const alpha = group.h / totalHeight;
+        for (const c of group.cells) {
+          c.h = c.h * alpha;
+        }
+      }
+    }
+  }
+
+  class Page {
+    constructor(w, targetRatio, noCols) {
+      this.targetRatio = targetRatio;
+      const colW = w / noCols;
+      this.cols = [];
+      for (let i = 0; i < noCols; i++) {
+        this.cols.push(new Column(this, colW));
+      }
+    }
+    
+    get w() {
+      return this.cols.reduce((sum, c) => sum + c.w, 0);
+    }
+    
+    get h() {
+      return Math.max(...this.cols.map(c => c.h), 0);
+    }
+    
+    get ratio() {
+      return this.h / this.w;
+    }
+    
+    scale(alpha) {
+      for (const c of this.cols) {
+        c.scale(alpha);
+      }
+    }
+    
+    scaleToFit(maxW, maxH = null) {
+      if (maxH === null || this.w * maxH > this.h * maxW) {
+        this.scale(maxW / this.w);
+      } else {
+        this.scale(maxH / this.h);
+      }
+    }
+    
+    nextFreeCol() {
+      const heights = this.cols.map(c => c.h);
+      const minimum = Math.min(...heights);
+      const candidates = this.cols.filter(c => c.h === minimum);
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+    
+    addCellSingleCol(col, photo) {
+      col.cells.push(new Cell([col], photo));
+    }
+    
+    addCellMultiCol(col1, col2, photo) {
+      const cell = new Cell([col1, col2], photo);
+      const extent = new CellExtent(cell);
+      col1.cells.push(cell);
+      col2.cells.push(extent);
+    }
+    
+    addCell(photo) {
+      const col = this.nextFreeCol();
+      const left = col.leftNeighbor();
+      const right = col.rightNeighbor();
+      
+      if (2 * Math.random() > photo.ratio) {
+        if (left && Math.abs(col.h - left.h) < 0.5 * col.w) {
+          return this.addCellMultiCol(left, col, photo);
+        } else if (right && Math.abs(col.h - right.h) < 0.5 * col.w) {
+          return this.addCellMultiCol(col, right, photo);
+        }
+      }
+      
+      this.addCellSingleCol(col, photo);
+    }
+    
+    removeEmptyCols() {
+      let i = 0;
+      while (i < this.cols.length) {
+        if (this.cols[i].cells.length === 0) {
+          this.cols.splice(i, 1);
+        } else {
+          i++;
+        }
+      }
+    }
+    
+    removeBottomHoles() {
+      for (const col of this.cols) {
+        if (col.cells.length <= 1) continue;
+        
+        const cell = col.cells[col.cells.length - 1];
+        
+        // Case A: If cell is not extended/extension
+        if (!cell.isExtended() && !cell.isExtension()) {
+          const topNeighbor = cell.topNeighbor();
+          // Case A1: top neighbor is extended to right
+          if (topNeighbor && topNeighbor.isExtended() && 
+              topNeighbor.extent && 
+              !topNeighbor.extent.bottomNeighbor()) {
+            // Extend cell to right
+            if (col.rightNeighbor()) {
+              const extent = new CellExtent(cell);
+              col.rightNeighbor().cells.push(extent);
+              cell.parents = [col, col.rightNeighbor()];
+            }
+          }
+          // Case A2: top neighbor is extension from left
+          else if (topNeighbor && topNeighbor.isExtension() && 
+                  topNeighbor.origin && 
+                  !topNeighbor.origin.bottomNeighbor()) {
+            // Extend cell to left
+            if (col.leftNeighbor()) {
+              col.cells.splice(col.cells.indexOf(cell), 1);
+              col.leftNeighbor().cells.push(cell);
+              const extent = new CellExtent(cell);
+              col.cells.push(extent);
+              cell.parents = [col.leftNeighbor(), col];
+            }
+          }
+        }
+        // Case B: If cell is extended
+        else if (cell.isExtended() && !cell.extent.bottomNeighbor()) {
+          const extentTopNeighbor = cell.extent.topNeighbor();
+          // Case B1: extent's top neighbor is extended to right
+          if (extentTopNeighbor && extentTopNeighbor.isExtended() && 
+              extentTopNeighbor.extent && 
+              !extentTopNeighbor.extent.bottomNeighbor()) {
+            // Move cell to right
+            const rightCol = col.rightNeighbor();
+            const rightRightCol = rightCol?.rightNeighbor();
+            if (rightCol && rightRightCol) {
+              col.cells.splice(col.cells.indexOf(cell), 1);
+              rightCol.cells.splice(rightCol.cells.indexOf(cell.extent), 1);
+              rightCol.cells.push(cell);
+              rightRightCol.cells.push(cell.extent);
+              cell.parents = [rightCol, rightRightCol];
+            }
+          }
+          // Case B2: cell's top neighbor is extension from left
+          else if (cell.topNeighbor() && cell.topNeighbor().isExtension() &&
+                  cell.topNeighbor().origin && 
+                  !cell.topNeighbor().origin.bottomNeighbor()) {
+            // Move cell to left
+            const rightCol = col.rightNeighbor();
+            const leftCol = col.leftNeighbor();
+            if (rightCol && leftCol) {
+              col.cells.splice(col.cells.indexOf(cell), 1);
+              rightCol.cells.splice(rightCol.cells.indexOf(cell.extent), 1);
+              leftCol.cells.push(cell);
+              col.cells.push(cell.extent);
+              cell.parents = [leftCol, col];
+            }
+          }
+        }
+      }
+    }
+    
+    adjustColsHeights() {
+      const targetH = this.w * this.targetRatio;
+      for (const c of this.cols) {
+        c.adjustHeight(targetH);
+      }
+    }
+    
+    adjust() {
+      this.removeEmptyCols();
+      this.removeBottomHoles();
+      this.adjustColsHeights();
+    }
+  }
+
+  // Calculate target aspect ratio based on canvas dimensions
+  const targetRatio = marginRect.height / marginRect.width;
+  
+  // Calculate number of columns based on number of images
+  const noCols = Math.max(2, Math.min(4, Math.floor(Math.sqrt(images.length))));
+  
+  // Create page for collage
+  const page = new Page(marginRect.width, targetRatio, noCols);
+  
+  // Create Photo objects
+  const photos = images.map(img => {
+    // Use actual dimensions and account for scaling
+    const w = img.width * img.scaleX;
+    const h = img.height * img.scaleY;
+    return new Photo(img, w, h, img.angle);
+  });
+  
+  // Add photos to page
+  photos.forEach(photo => {
+    page.addCell(photo);
+  });
+  
+  // Adjust page layout
+  page.adjust();
+  
+  // Scale page to fit within margins
+  page.scaleToFit(marginRect.width, marginRect.height);
+  
+  // Apply calculated positions to fabric.js canvas objects
+  const scale = 0.3; // Canvas scale factor
+  for (const col of page.cols) {
+    for (const cell of col.cells) {
+      // Skip extension cells - they're just placeholders
+      if (cell.isExtension()) continue;
+      
+      const [x, y, w, h] = cell.contentCoords();
+      const fabricImage = cell.photo.fabricImage;
+      
+      // Scale image to fit cell
+      const scaleX = w / fabricImage.width;
+      const scaleY = h / fabricImage.height;
+      
+      // Position image accounting for canvas scale
+      fabricImage.set({
+        left: marginRect.left + x * scale,
+        top: marginRect.top + y * scale,
+        scaleX: scaleX * scale,
+        scaleY: scaleY * scale,
+        originX: 'left',
+        originY: 'top',
+        angle: 0, // Reset rotation
+      });
+      
+      fabricImage.setCoords();
+    }
+  }
+  
   canvas.renderAll();
-  arrangementStatus = "bin-packed";
+  arrangementStatus = "collage";
 }
 
 function setImageSizeInCm() {
@@ -1501,7 +1883,7 @@ arrangeButton.addEventListener("click", selectArrangeImageLayout);
 setSizeButton.addEventListener("click", setImageSizeInCm);
 columnsCollageButton.addEventListener("click", createMasonryColumnsCollage);
 rowsCollageButton.addEventListener("click", createMasonryRowsCollage);
-binPackButton.addEventListener("click", binPackArrange);
+collageButton.addEventListener("click", collageArrange);
 rotateCheckbox.addEventListener("change", function (e) {
   canvas.getObjects().forEach((obj) => {
     if (obj.type === "image") {
@@ -1642,7 +2024,7 @@ function setupAccessibility() {
     setSizeButton,
     columnsCollageButton,
     rowsCollageButton,
-    binPackButton
+    collageButton
   ];
   elements.forEach((el) => {
     if (el) {
