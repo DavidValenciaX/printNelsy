@@ -766,7 +766,6 @@ function collageArrange() {
   page.scaleToFit(marginRect.width, marginRect.height);
   
   // Apply calculated positions to fabric.js canvas objects
-  const scale = 0.3; // Canvas scale factor
   for (const col of page.cols) {
     for (const cell of col.cells) {
       // Skip extension cells - they're just placeholders
@@ -781,10 +780,10 @@ function collageArrange() {
       
       // Position image accounting for canvas scale
       fabricImage.set({
-        left: marginRect.left + x * scale,
-        top: marginRect.top + y * scale,
-        scaleX: scaleX * scale,
-        scaleY: scaleY * scale,
+        left: marginRect.left + x,
+        top: marginRect.top + y,
+        scaleX: scaleX,
+        scaleY: scaleY,
         originX: 'left',
         originY: 'top',
         angle: 0, // Reset rotation
