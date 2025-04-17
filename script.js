@@ -287,108 +287,139 @@ function createMasonryRowsCollage() {
 }
 
 /**
- * Random‑look collage
- * ------------------------------------------------------------
- *  • uses the whole marginRect area
- *  • never overlaps images        (simple bounding‑box test)
- *  • sizes depend on how many images are on the canvas
- *  • keeps each image’s origin in the centre (like the rest
- *    of your code‑base)
+ * Random collage WITHOUT OVERLAPS
+ * ----------------------------------------------------------
+ *  • fills the marginRect area with pictures of random sizes
+ *  • uses rejection‑sampling + progressive shrinking
+ *  • guarantees that no two bounding boxes intersect
+ *  • keeps originX / originY at centre (as the rest of the UI does)
+ *
+ *  Drop‑in replacement for the previous collageArrange()
  */
 function collageArrange() {
-  const imgs = canvas.getObjects('image');
-  if (imgs.length === 0) {
+  const images = canvas.getObjects('image');
+  if (images.length === 0) {
     Swal.fire({ text: 'Debe haber al menos una imagen en el canvas.', icon: 'warning' });
     return;
   }
 
-  // ---------- 1.  decide a size range ---------------------------------------
-  // total free area inside the grey margin rectangle
+  // -------------------------------------------------------------------------
+  // 1.  constants & helpers
+  // -------------------------------------------------------------------------
+  const PADDING   = 2;      // extra safety gap between bounding boxes   (px)
+  const MAX_TRIES = 150;    // random positions *per size* before shrinking
+  const SHRINK    = 0.92;   // factor applied when we give up at that size
+  const MIN_SIZE  = 20;     // if either side gets below this → start all over
+
   const availW = marginRect.width;
   const availH = marginRect.height;
-  const availArea = availW * availH;
 
-  // leave ±15 % empty so the collage can breathe
-  const usableArea = availArea * 0.85;
-  const targetAreaPerImg = usableArea / imgs.length;
-
-  // Min/max factors so the pictures are neither tiny nor gigantic
-  const MIN_FACTOR = 0.5;   // 50 % of the “ideal” target area
-  const MAX_FACTOR = 1.8;   // 180 %
-
-  // ---------- 2.  helper: try to place one image ----------------------------
-  const placedRects = [];     // bounding rects we have already accepted
-  const MAX_TRIES   = 120;    // attempts per picture before we shrink it
-
-  /**
-   * Put a single fabric image somewhere random where it does not overlap
-   * any rect in `placedRects`.  Returns its bounding rect (with .left/.top
-   * measured **inside** marginRect) or null if we could not fit it.
-   */
-  function placeOne(img) {
-    // >>> 2 a. choose a reasonable scale for this picture <<<
-    //   width = sqrt(area / ratio) ,  height = width * ratio
-    const imgRatio = img.height / img.width;
-
-    // pick a random area factor in [MIN_FACTOR … MAX_FACTOR]
-    const areaFactor = MIN_FACTOR + (MAX_FACTOR - MIN_FACTOR) * Math.random();
-    const chosenArea = targetAreaPerImg * areaFactor;
-    const chosenW = Math.sqrt(chosenArea / imgRatio);
-    const chosenH = chosenW * imgRatio;
-    const scaleX = chosenW / img.width;
-    const scaleY = chosenH / img.height;
-
-    img.set({ scaleX, scaleY, originX: 'center', originY: 'center', angle: 0 });
-    img.setCoords();
-    const brW = img.width * scaleX;
-    const brH = img.height * scaleY;
-
-    // >>> 2 b. try random positions <<<
-    for (let t = 0; t < MAX_TRIES; t++) {
-      const x = marginRect.left + (Math.random() * (availW - brW)) + brW / 2;
-      const y = marginRect.top  + (Math.random() * (availH - brH)) + brH / 2;
-
-      const testRect = { left: x - brW / 2, top: y - brH / 2, width: brW, height: brH };
-
-      // overlap test (axis‑aligned bounding boxes)
-      const overlaps = placedRects.some(r =>
-        !(testRect.left + testRect.width  <= r.left ||
-          r.left  + r.width  <= testRect.left ||
-          testRect.top  + testRect.height <= r.top  ||
-          r.top   + r.height <= testRect.top));
-
-      if (!overlaps) {
-        // success!
-        img.set({ left: x, top: y });
-        placedRects.push(testRect);
-        return testRect;
-      }
-    }
-    // could not fit → return null so caller can react (e.g. shrink later)
-    return null;
+  /** quick AABB overlap test with padding */
+  function overlaps(a, b) {
+    return !(a.left + a.width  + PADDING <= b.left ||
+             b.left + b.width  + PADDING <= a.left ||
+             a.top  + a.height + PADDING <= b.top  ||
+             b.top  + b.height + PADDING <= a.top);
   }
 
-  // ---------- 3.  do the work ------------------------------------------------
-  // make sure the canvas is empty except the marginRect before we start
-  imgs.forEach(i => canvas.remove(i));
-  placedRects.length = 0;
+  /** bounding rect for a fabric image given its *centre* position */
+  function makeRect(img, cx, cy) {
+    const w = img.width  * img.scaleX;
+    const h = img.height * img.scaleY;
+    return { left: cx - w / 2, top: cy - h / 2, width: w, height: h };
+  }
 
-  // Shuffle images so the user cannot predict which one lands where
-  const shuffled = imgs.sort(() => 0.5 - Math.random());
+  // -------------------------------------------------------------------------
+  // 2.  repeat‑until‑success loop (rarely needed but makes the guarantee firm)
+  // -------------------------------------------------------------------------
+  let success = false;
+  let globalTargetArea = availW * availH * 0.80;   // 20 % breathing space
 
-  const SHRINK_FACTOR = 0.9;     // if a picture cannot be placed we shrink it
+  while (!success) {
+    const placedRects = [];
+    let failedHard    = false;          // set to true if any picture too small
 
-  shuffled.forEach(img => {
-    let tries = 0;
-    // repeat until the image fits (or we give up at a teeny tiny size)
-    while (!placeOne(img) && tries < 10) {
-      img.scaleX *= SHRINK_FACTOR;
-      img.scaleY *= SHRINK_FACTOR;
-      img.setCoords();
-      tries++;
+    // clear canvas first time round (images[] is still valid)
+    canvas.remove(...images);
+
+    // polite shuffle so the same picture is not always first
+    const shuffled = images.slice().sort(() => 0.5 - Math.random());
+
+    // the mean area we would *like* every picture to occupy
+    const idealArea = globalTargetArea / shuffled.length;
+
+    for (const img of shuffled) {
+      // ------------------- choose a random size around the ideal ------------
+      let area   = idealArea * (0.55 + 1.1 * Math.random()); // 55 %‑165 %
+      const ar   = img.height / img.width;                   // aspect ratio
+      let w      = Math.sqrt(area / ar);
+      let h      = w * ar;
+
+      // guarantee we do not create something gigantic
+      const maxSide = Math.min(availW, availH) * 0.70;
+      if (w > maxSide) { const f = maxSide / w;  w *= f; h *= f; }
+      if (h > maxSide) { const f = maxSide / h;  w *= f; h *= f; }
+
+      img.set({ scaleX: w / img.width, scaleY: h / img.height, angle: 0,
+                originX: 'center', originY: 'center' });
+
+      // ------------------- rejection sampling until no overlap -------------
+      let placed = false, tries = 0;
+
+      while (!placed && tries < MAX_TRIES) {
+        const cx = marginRect.left + w / 2 + (Math.random() * (availW - w));
+        const cy = marginRect.top  + h / 2 + (Math.random() * (availH - h));
+        const r  = makeRect(img, cx, cy);
+
+        const bad = placedRects.some(pr => overlaps(pr, r));
+        if (!bad) {
+          // ✓ good spot
+          img.set({ left: cx, top: cy });
+          placedRects.push(r);
+          placed   = true;
+        }
+        tries++;
+      }
+
+      if (!placed) {
+        // could not fit at this size → shrink & try again …
+        let fitted = false;
+        while (!fitted) {
+          img.scaleX *= SHRINK;
+          img.scaleY *= SHRINK;
+          w = img.width * img.scaleX;
+          h = img.height * img.scaleY;
+
+          // abandon the whole collage if one picture goes microscopic
+          if (w < MIN_SIZE || h < MIN_SIZE) { failedHard = true; break; }
+
+          let attempt = 0;
+          while (attempt < MAX_TRIES) {
+            const cx = marginRect.left + w / 2 + (Math.random() * (availW - w));
+            const cy = marginRect.top  + h / 2 + (Math.random() * (availH - h));
+            const r  = makeRect(img, cx, cy);
+
+            if (!placedRects.some(pr => overlaps(pr, r))) {
+              img.set({ left: cx, top: cy });
+              placedRects.push(r);
+              fitted = true;
+              break;
+            }
+            attempt++;
+          }
+        }
+      }
+
+      canvas.add(img);
+      if (failedHard) break;
     }
-    canvas.add(img);   // add even if really small; worst case the user resizes
-  });
+
+    success = !failedHard;        // if any picture got too small we retry
+    if (!success) {
+      // make room by lowering the global target area slightly and start over
+      globalTargetArea *= 0.92;
+    }
+  }
 
   canvas.renderAll();
   arrangementStatus = 'collage';
