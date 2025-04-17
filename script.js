@@ -286,545 +286,112 @@ function createMasonryRowsCollage() {
   arrangementStatus = "rows-collage";
 }
 
+/**
+ * Random‑look collage
+ * ------------------------------------------------------------
+ *  • uses the whole marginRect area
+ *  • never overlaps images        (simple bounding‑box test)
+ *  • sizes depend on how many images are on the canvas
+ *  • keeps each image’s origin in the centre (like the rest
+ *    of your code‑base)
+ */
 function collageArrange() {
-  const images = canvas.getObjects("image");
-  
-  // Define gaps between cells
-  const horizontalGap = 10;
-  const verticalGap = 10;
-  if (images.length === 0) {
-    Swal.fire({
-      text: "Debe haber al menos una imagen en el canvas.",
-      icon: "warning",
-    });
+  const imgs = canvas.getObjects('image');
+  if (imgs.length === 0) {
+    Swal.fire({ text: 'Debe haber al menos una imagen en el canvas.', icon: 'warning' });
     return;
   }
 
-  // Class definitions for collage layout
-  class Photo {
-    constructor(fabricImage, w, h, orientation = 0) {
-      this.fabricImage = fabricImage;
-      this.w = w;
-      this.h = h;
-      this.orientation = orientation;
-      this.offset_w = 0.5;
-      this.offset_h = 0.5;
+  // ---------- 1.  decide a size range ---------------------------------------
+  // total free area inside the grey margin rectangle
+  const availW = marginRect.width;
+  const availH = marginRect.height;
+  const availArea = availW * availH;
+
+  // leave ±15 % empty so the collage can breathe
+  const usableArea = availArea * 0.85;
+  const targetAreaPerImg = usableArea / imgs.length;
+
+  // Min/max factors so the pictures are neither tiny nor gigantic
+  const MIN_FACTOR = 0.5;   // 50 % of the “ideal” target area
+  const MAX_FACTOR = 1.8;   // 180 %
+
+  // ---------- 2.  helper: try to place one image ----------------------------
+  const placedRects = [];     // bounding rects we have already accepted
+  const MAX_TRIES   = 120;    // attempts per picture before we shrink it
+
+  /**
+   * Put a single fabric image somewhere random where it does not overlap
+   * any rect in `placedRects`.  Returns its bounding rect (with .left/.top
+   * measured **inside** marginRect) or null if we could not fit it.
+   */
+  function placeOne(img) {
+    // >>> 2 a. choose a reasonable scale for this picture <<<
+    //   width = sqrt(area / ratio) ,  height = width * ratio
+    const imgRatio = img.height / img.width;
+
+    // pick a random area factor in [MIN_FACTOR … MAX_FACTOR]
+    const areaFactor = MIN_FACTOR + (MAX_FACTOR - MIN_FACTOR) * Math.random();
+    const chosenArea = targetAreaPerImg * areaFactor;
+    const chosenW = Math.sqrt(chosenArea / imgRatio);
+    const chosenH = chosenW * imgRatio;
+    const scaleX = chosenW / img.width;
+    const scaleY = chosenH / img.height;
+
+    img.set({ scaleX, scaleY, originX: 'center', originY: 'center', angle: 0 });
+    img.setCoords();
+    const brW = img.width * scaleX;
+    const brH = img.height * scaleY;
+
+    // >>> 2 b. try random positions <<<
+    for (let t = 0; t < MAX_TRIES; t++) {
+      const x = marginRect.left + (Math.random() * (availW - brW)) + brW / 2;
+      const y = marginRect.top  + (Math.random() * (availH - brH)) + brH / 2;
+
+      const testRect = { left: x - brW / 2, top: y - brH / 2, width: brW, height: brH };
+
+      // overlap test (axis‑aligned bounding boxes)
+      const overlaps = placedRects.some(r =>
+        !(testRect.left + testRect.width  <= r.left ||
+          r.left  + r.width  <= testRect.left ||
+          testRect.top  + testRect.height <= r.top  ||
+          r.top   + r.height <= testRect.top));
+
+      if (!overlaps) {
+        // success!
+        img.set({ left: x, top: y });
+        placedRects.push(testRect);
+        return testRect;
+      }
     }
-    
-    get ratio() {
-      return this.h / this.w;
-    }
+    // could not fit → return null so caller can react (e.g. shrink later)
+    return null;
   }
 
-  class Cell {
-    constructor(parents, photo) {
-      this.parents = parents;
-      this.photo = photo;
-      this.extent = null;
-      this.h = this.w * this.wantedRatio;
-    }
-    
-    get x() {
-      return this.parents[0].x;
-    }
-    
-    get y() {
-      let prev = null;
-      for (const c of this.parents[0].cells) {
-        if (this === c) {
-          if (prev) {
-            return prev.y + prev.h + verticalGap;
-          }
-          return 0;
-        }
-        prev = c;
-      }
-      return 0;
-    }
-    
-    get w() {
-      let totalWidth = this.parents.reduce((sum, c) => sum + c.w, 0);
-      if (this.parents.length > 1) {
-        totalWidth += (this.parents.length - 1) * horizontalGap;
-      }
-      return totalWidth;
-    }
-    
-    get ratio() {
-      return this.h / this.w;
-    }
-    
-    get wantedRatio() {
-      return this.photo.ratio;
-    }
-    
-    scale(alpha) {
-      this.h *= alpha;
-    }
-    
-    isExtended() {
-      return this.extent !== null;
-    }
-    
-    isExtension() {
-      return false;
-    }
-    
-    contentCoords() {
-      let x, y, w, h;
-      
-      // If the contained image is too thick to fit
-      if (this.wantedRatio < this.ratio) {
-        h = this.h;
-        w = this.h / this.wantedRatio;
-        y = this.y;
-        x = this.x - (w - this.w) / 2.0;
-      } 
-      // If the contained image is too tall to fit
-      else if (this.wantedRatio > this.ratio) {
-        w = this.w;
-        h = this.w * this.wantedRatio;
-        x = this.x;
-        y = this.y - (h - this.h) / 2.0;
-      } else {
-        w = this.w;
-        h = this.h;
-        x = this.x;
-        y = this.y;
-      }
-      
-      return [x, y, w, h];
-    }
-    
-    topNeighbor() {
-      let prev = null;
-      for (const c of this.parents[0].cells) {
-        if (this === c) {
-          return prev;
-        }
-        prev = c;
-      }
-      return null;
-    }
-    
-    bottomNeighbor() {
-      let prev = null;
-      for (let i = this.parents[0].cells.length - 1; i >= 0; i--) {
-        const c = this.parents[0].cells[i];
-        if (this === c) {
-          return prev;
-        }
-        prev = c;
-      }
-      return null;
-    }
-  }
+  // ---------- 3.  do the work ------------------------------------------------
+  // make sure the canvas is empty except the marginRect before we start
+  imgs.forEach(i => canvas.remove(i));
+  placedRects.length = 0;
 
-  class CellExtent {
-    constructor(cell) {
-      this.origin = cell;
-      this.origin.extent = this;
-    }
-    
-    get parents() {
-      return [this.origin.parents[1]];
-    }
-    
-    get photo() {
-      return this.origin.photo;
-    }
-    
-    get y() {
-      return this.origin.y;
-    }
-    
-    get h() {
-      return this.origin.h;
-    }
-    
-    get x() {
-      return this.parents[0].x;
-    }
-    
-    get w() {
-      return this.parents[0].w;
-    }
-    
-    scale(alpha) {
-      // No scaling needed for extents
-    }
-    
-    isExtended() {
-      return false;
-    }
-    
-    isExtension() {
-      return true;
-    }
-    
-    topNeighbor() {
-      let prev = null;
-      for (const c of this.parents[0].cells) {
-        if (this === c) {
-          return prev;
-        }
-        prev = c;
-      }
-      return null;
-    }
-    
-    bottomNeighbor() {
-      let prev = null;
-      for (let i = this.parents[0].cells.length - 1; i >= 0; i--) {
-        const c = this.parents[0].cells[i];
-        if (this === c) {
-          return prev;
-        }
-        prev = c;
-      }
-      return null;
-    }
-  }
+  // Shuffle images so the user cannot predict which one lands where
+  const shuffled = imgs.sort(() => 0.5 - Math.random());
 
-  class Column {
-    constructor(parent, w) {
-      this.parent = parent;
-      this.cells = [];
-      this.w = w;
-    }
-    
-    get h() {
-      if (this.cells.length === 0) {
-        return 0;
-      }
-      return this.cells[this.cells.length - 1].y + this.cells[this.cells.length - 1].h;
-    }
-    
-    get x() {
-      let x = 0;
-      for (const c of this.parent.cols) {
-        if (this === c) {
-          break;
-        }
-        x += c.w + horizontalGap;
-      }
-      return x;
-    }
-    
-    scale(alpha) {
-      this.w *= alpha;
-      for (const c of this.cells) {
-        c.scale(alpha);
-      }
-    }
-    
-    leftNeighbor() {
-      let prev = null;
-      for (const c of this.parent.cols) {
-        if (this === c) {
-          return prev;
-        }
-        prev = c;
-      }
-      return null;
-    }
-    
-    rightNeighbor() {
-      let prev = null;
-      for (let i = this.parent.cols.length - 1; i >= 0; i--) {
-        const c = this.parent.cols[i];
-        if (this === c) {
-          return prev;
-        }
-        prev = c;
-      }
-      return null;
-    }
-    
-    adjustHeight(targetH) {
-      // Group class for handling cell groups
-      class Group {
-        constructor(y) {
-          this.y = y;
-          this.h = 0;
-          this.cells = [];
-          this.initialTotalHeight = 0;
-        }
-      }
-      
-      const groups = [new Group(0)];
-      for (const c of this.cells) {
-        // While a cell extent is not reached, keep adding cells to the group
-        if (!c.isExtension()) {
-          groups[groups.length - 1].cells.push(c);
-        } else {
-          // Close current group and create a new one
-          groups[groups.length - 1].h = c.y - groups[groups.length - 1].y;
-          groups.push(new Group(c.y + c.h));
-        }
-      }
-      groups[groups.length - 1].h = targetH - groups[groups.length - 1].y;
-      
-      // Adjust height for each group independently
-      for (const group of groups) {
-        if (group.cells.length === 0) continue;
+  const SHRINK_FACTOR = 0.9;     // if a picture cannot be placed we shrink it
 
-        // Calculate total vertical gaps within the group
-        const totalInternalGaps = (group.cells.length - 1) * verticalGap;
-        // Available height for images within the group
-        const availableHeightForImages = group.h - totalInternalGaps;
-
-        if (availableHeightForImages <= 0) {
-          // Handle case where gaps exceed available height
-          group.cells.forEach(c => c.h = 1); // Assign a minimal height
-          continue;
-        }
-
-        const totalHeight = group.cells.reduce((sum, c) => sum + c.h, 0);
-        if (totalHeight === 0) continue;
-        
-        const alpha = availableHeightForImages / totalHeight;
-        for (const c of group.cells) {
-          c.h = c.h * alpha;
-        }
-      }
+  shuffled.forEach(img => {
+    let tries = 0;
+    // repeat until the image fits (or we give up at a teeny tiny size)
+    while (!placeOne(img) && tries < 10) {
+      img.scaleX *= SHRINK_FACTOR;
+      img.scaleY *= SHRINK_FACTOR;
+      img.setCoords();
+      tries++;
     }
-  }
-
-  class Page {
-    constructor(w, targetRatio, noCols) {
-      this.targetRatio = targetRatio;
-      // Calculate the total width needed for gaps between columns
-      const totalGapWidth = (noCols - 1) * horizontalGap;
-      // Calculate the width available for the columns themselves
-      const availableWidthForColumns = w - totalGapWidth;
-      // Calculate the width for each individual column
-      const colW = availableWidthForColumns / noCols;
-      this.cols = [];
-      for (let i = 0; i < noCols; i++) {
-        // Ensure colW is not negative if gaps exceed total width (edge case)
-        this.cols.push(new Column(this, Math.max(0, colW)));
-      }
-    }
-    
-    get w() {
-      return this.cols.reduce((sum, c) => sum + c.w, 0);
-    }
-    
-    get h() {
-      return Math.max(...this.cols.map(c => c.h), 0);
-    }
-    
-    get ratio() {
-      return this.h / this.w;
-    }
-    
-    scale(alpha) {
-      for (const c of this.cols) {
-        c.scale(alpha);
-      }
-    }
-    
-    scaleToFit(maxW, maxH = null) {
-      if (maxH === null || this.w * maxH > this.h * maxW) {
-        this.scale(maxW / this.w);
-      } else {
-        this.scale(maxH / this.h);
-      }
-    }
-    
-    nextFreeCol() {
-      const heights = this.cols.map(c => c.h);
-      const minimum = Math.min(...heights);
-      const candidates = this.cols.filter(c => c.h === minimum);
-      return candidates[Math.floor(Math.random() * candidates.length)];
-    }
-    
-    addCellSingleCol(col, photo) {
-      col.cells.push(new Cell([col], photo));
-    }
-    
-    addCellMultiCol(col1, col2, photo) {
-      const cell = new Cell([col1, col2], photo);
-      const extent = new CellExtent(cell);
-      col1.cells.push(cell);
-      col2.cells.push(extent);
-    }
-    
-    addCell(photo) {
-      const col = this.nextFreeCol();
-      const left = col.leftNeighbor();
-      const right = col.rightNeighbor();
-      
-      if (2 * Math.random() > photo.ratio) {
-        if (left && Math.abs(col.h - left.h) < 0.5 * col.w) {
-          return this.addCellMultiCol(left, col, photo);
-        } else if (right && Math.abs(col.h - right.h) < 0.5 * col.w) {
-          return this.addCellMultiCol(col, right, photo);
-        }
-      }
-      
-      this.addCellSingleCol(col, photo);
-    }
-    
-    removeEmptyCols() {
-      let i = 0;
-      while (i < this.cols.length) {
-        if (this.cols[i].cells.length === 0) {
-          this.cols.splice(i, 1);
-        } else {
-          i++;
-        }
-      }
-    }
-    
-    removeBottomHoles() {
-      for (const col of this.cols) {
-        if (col.cells.length <= 1) continue;
-        
-        const cell = col.cells[col.cells.length - 1];
-        
-        // Case A: If cell is not extended/extension
-        if (!cell.isExtended() && !cell.isExtension()) {
-          const topNeighbor = cell.topNeighbor();
-          // Case A1: top neighbor is extended to right
-          if (topNeighbor && topNeighbor.isExtended() && 
-              topNeighbor.extent && 
-              !topNeighbor.extent.bottomNeighbor()) {
-            // Extend cell to right
-            if (col.rightNeighbor()) {
-              const extent = new CellExtent(cell);
-              col.rightNeighbor().cells.push(extent);
-              cell.parents = [col, col.rightNeighbor()];
-            }
-          }
-          // Case A2: top neighbor is extension from left
-          else if (topNeighbor && topNeighbor.isExtension() && 
-                  topNeighbor.origin && 
-                  !topNeighbor.origin.bottomNeighbor()) {
-            // Extend cell to left
-            if (col.leftNeighbor()) {
-              col.cells.splice(col.cells.indexOf(cell), 1);
-              col.leftNeighbor().cells.push(cell);
-              const extent = new CellExtent(cell);
-              col.cells.push(extent);
-              cell.parents = [col.leftNeighbor(), col];
-            }
-          }
-        }
-        // Case B: If cell is extended
-        else if (cell.isExtended() && !cell.extent.bottomNeighbor()) {
-          const extentTopNeighbor = cell.extent.topNeighbor();
-          // Case B1: extent's top neighbor is extended to right
-          if (extentTopNeighbor && extentTopNeighbor.isExtended() && 
-              extentTopNeighbor.extent && 
-              !extentTopNeighbor.extent.bottomNeighbor()) {
-            // Move cell to right
-            const rightCol = col.rightNeighbor();
-            const rightRightCol = rightCol?.rightNeighbor();
-            if (rightCol && rightRightCol) {
-              col.cells.splice(col.cells.indexOf(cell), 1);
-              rightCol.cells.splice(rightCol.cells.indexOf(cell.extent), 1);
-              rightCol.cells.push(cell);
-              rightRightCol.cells.push(cell.extent);
-              cell.parents = [rightCol, rightRightCol];
-            }
-          }
-          // Case B2: cell's top neighbor is extension from left
-          else if (cell.topNeighbor() && cell.topNeighbor().isExtension() &&
-                  cell.topNeighbor().origin && 
-                  !cell.topNeighbor().origin.bottomNeighbor()) {
-            // Move cell to left
-            const rightCol = col.rightNeighbor();
-            const leftCol = col.leftNeighbor();
-            if (rightCol && leftCol) {
-              col.cells.splice(col.cells.indexOf(cell), 1);
-              rightCol.cells.splice(rightCol.cells.indexOf(cell.extent), 1);
-              leftCol.cells.push(cell);
-              col.cells.push(cell.extent);
-              cell.parents = [leftCol, col];
-            }
-          }
-        }
-      }
-    }
-    
-    adjustColsHeights() {
-      const targetH = this.w * this.targetRatio;
-      for (const c of this.cols) {
-        c.adjustHeight(targetH);
-      }
-    }
-    
-    adjust() {
-      this.removeEmptyCols();
-      this.removeBottomHoles();
-      this.adjustColsHeights();
-    }
-  }
-
-  // Calculate target aspect ratio based on canvas dimensions
-  const targetRatio = marginRect.height / marginRect.width;
-  
-  // Calculate number of columns based on number of images
-  const noCols = Math.max(2, Math.min(4, Math.floor(Math.sqrt(images.length))));
-  
-  // Create page for collage
-  const page = new Page(marginRect.width, targetRatio, noCols);
-  
-  // Create Photo objects
-  const photos = images.map(img => {
-    // Use actual dimensions and account for scaling
-    const w = img.width * img.scaleX;
-    const h = img.height * img.scaleY;
-    return new Photo(img, w, h, img.angle);
+    canvas.add(img);   // add even if really small; worst case the user resizes
   });
-  
-  // Add photos to page
-  photos.forEach(photo => {
-    page.addCell(photo);
-  });
-  
-  // Adjust page layout
-  page.adjust();
-  
-  // Scale page to fit within margins
-  page.scaleToFit(marginRect.width, marginRect.height);
-  
-  // Apply calculated positions to fabric.js canvas objects
-  for (const col of page.cols) {
-    for (const cell of col.cells) {
-      // Skip extension cells - they're just placeholders
-      if (cell.isExtension()) continue;
-      
-      // Get the target coordinates and dimensions for the image within the page layout area
-      // [x, y] is top-left relative to page layout, [w, h] are target dimensions for the image
-      const [x, y, w, h] = cell.contentCoords(); 
-      const fabricImage = cell.photo.fabricImage;
-      
-      // Calculate the necessary scale factors to fit the image into the target w and h
-      const scaleX = w / fabricImage.width;
-      const scaleY = h / fabricImage.height;
-      
-      // Position the image using its center origin
-      // The target center X is marginRect.left + x + w / 2
-      // The target center Y is marginRect.top + y + h / 2
-      fabricImage.set({
-        left: marginRect.left + x + w / 2, // Calculate center X
-        top: marginRect.top + y + h / 2,   // Calculate center Y
-        scaleX: scaleX, // Apply calculated scale X
-        scaleY: scaleY, // Apply calculated scale Y
-        originX: 'center', // Keep origin as center
-        originY: 'center', // Keep origin as center
-        angle: 0, // Reset rotation
-      });
-      
-      fabricImage.setCoords();
-    }
-  }
-  
+
   canvas.renderAll();
-  arrangementStatus = "collage";
+  arrangementStatus = 'collage';
 }
 
 function setImageSizeInCm() {
