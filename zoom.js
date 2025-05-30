@@ -1,18 +1,20 @@
-export let currentZoom = 1;
+let currentZoom = 1;
+export const getZoom = () => currentZoom;
+export const setZoom = (value) => { currentZoom = value; };
 export const zoomFactor = 0.1;
 export const maxZoom = 2;
 export const minZoom = 0.5;
 
 export function zoomIn() {
   if (currentZoom < maxZoom) {
-    currentZoom += zoomFactor;
+    setZoom(currentZoom + zoomFactor);
     applyZoom();
   }
 }
 
 export function zoomOut() {
   if (currentZoom > minZoom) {
-    currentZoom -= zoomFactor;
+    setZoom(currentZoom - zoomFactor);
     applyZoom();
   }
 }
