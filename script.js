@@ -333,7 +333,7 @@ function collageArrange() {
   // 2.  repeat‑until‑success loop (rarely needed but makes the guarantee firm)
   // -------------------------------------------------------------------------
   let success = false;
-  let globalTargetArea = availW * availH * 0.80;   // 20 % breathing space
+  let globalTargetArea = availW * availH * 0.80;   // 20 % breathing space
 
   while (!success) {
     const placedRects = [];
@@ -350,7 +350,7 @@ function collageArrange() {
 
     for (const img of shuffled) {
       // ------------------- choose a random size around the ideal ------------
-      let area   = idealArea * (0.55 + 1.1 * Math.random()); // 55 %‑165 %
+      let area   = idealArea * (0.55 + 1.1 * Math.random()); // 55 %‑165 %
       const ar   = img.height / img.width;                   // aspect ratio
       let w      = Math.sqrt(area / ar);
       let h      = w * ar;
@@ -423,6 +423,119 @@ function collageArrange() {
 
   canvas.renderAll();
   arrangementStatus = 'collage';
+  
+  // Optimize sizes after initial placement
+  optimizeCollageSize();
+}
+
+/**
+ * Optimizes the size of images in a collage arrangement to maximize space usage
+ * while maintaining no overlaps and staying within margins
+ */
+function optimizeCollageSize() {
+  const images = canvas.getObjects('image');
+  if (images.length === 0) return;
+
+  const GROWTH_FACTOR = 0.02;  // Smaller factor for more precise optimization
+  const MAX_ITERATIONS = 50;   // Prevent infinite loops
+  const PADDING = 2;           // Same padding as collageArrange
+
+  /** Check if image overlaps with any other image */
+  function checkOverlapWithOthers(targetImg) {
+    const targetRect = makeRectFromImage(targetImg);
+    
+    return images.some(img => {
+      if (img === targetImg) return false;
+      const imgRect = makeRectFromImage(img);
+      return overlapsWithPadding(targetRect, imgRect);
+    });
+  }
+
+  /** Check if image exceeds margin boundaries */
+  function exceedsMargin(img) {
+    const rect = makeRectFromImage(img);
+    return (
+      rect.left < marginRect.left ||
+      rect.top < marginRect.top ||
+      rect.left + rect.width > marginRect.left + marginRect.width ||
+      rect.top + rect.height > marginRect.top + marginRect.height
+    );
+  }
+
+  /** Create bounding rect from fabric image */
+  function makeRectFromImage(img) {
+    const w = img.width * img.scaleX;
+    const h = img.height * img.scaleY;
+    return { 
+      left: img.left - w / 2, 
+      top: img.top - h / 2, 
+      width: w, 
+      height: h 
+    };
+  }
+
+  /** AABB overlap test with padding */
+  function overlapsWithPadding(a, b) {
+    return !(
+      a.left + a.width + PADDING <= b.left ||
+      b.left + b.width + PADDING <= a.left ||
+      a.top + a.height + PADDING <= b.top ||
+      b.top + b.height + PADDING <= a.top
+    );
+  }
+
+  // Multiple optimization passes for better results
+  let globalImprovement = true;
+  let passCount = 0;
+
+  while (globalImprovement && passCount < 3) {
+    globalImprovement = false;
+    
+    // Sort images by current size (smaller first for better optimization)
+    const sortedImages = images.slice().sort((a, b) => {
+      const areaA = (a.width * a.scaleX) * (a.height * a.scaleY);
+      const areaB = (b.width * b.scaleX) * (b.height * b.scaleY);
+      return areaA - areaB;
+    });
+
+    // Try to grow each image
+    for (const img of sortedImages) {
+      let canGrow = true;
+      let iterations = 0;
+      let lastValidScale = { scaleX: img.scaleX, scaleY: img.scaleY };
+
+      while (canGrow && iterations < MAX_ITERATIONS) {
+        // Try growing the image
+        const newScaleX = img.scaleX * (1 + GROWTH_FACTOR);
+        const newScaleY = img.scaleY * (1 + GROWTH_FACTOR);
+        
+        // Temporarily apply new scale
+        img.set({ scaleX: newScaleX, scaleY: newScaleY });
+        img.setCoords();
+
+        // Check if it still fits and doesn't overlap
+        if (exceedsMargin(img) || checkOverlapWithOthers(img)) {
+          // Revert to last valid scale
+          img.set({ 
+            scaleX: lastValidScale.scaleX, 
+            scaleY: lastValidScale.scaleY 
+          });
+          img.setCoords();
+          canGrow = false;
+        } else {
+          // Update last valid scale and continue
+          lastValidScale = { scaleX: newScaleX, scaleY: newScaleY };
+          globalImprovement = true;
+        }
+        
+        iterations++;
+      }
+    }
+    
+    passCount++;
+  }
+
+  canvas.renderAll();
 }
 
 function setImageSizeInCm() {
