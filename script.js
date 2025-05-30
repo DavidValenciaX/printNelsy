@@ -421,6 +421,126 @@ function collageArrange() {
 }
 
 /**
+ * Check if image overlaps with any other image
+ */
+function checkOverlapWithOthers(targetImg, images, marginRect) {
+  const targetRect = makeRectFromImage(targetImg);
+  
+  return images.some(img => {
+    if (img === targetImg) return false;
+    const imgRect = makeRectFromImage(img);
+    return checkOverlap(targetRect, imgRect, 2);
+  });
+}
+
+/**
+ * Check if image exceeds margin boundaries
+ */
+function exceedsMargin(img, marginRect) {
+  const rect = makeRectFromImage(img);
+  return (
+    rect.left < marginRect.left ||
+    rect.top < marginRect.top ||
+    rect.left + rect.width > marginRect.left + marginRect.width ||
+    rect.top + rect.height > marginRect.top + marginRect.height
+  );
+}
+
+/**
+ * Create bounding rect from fabric image
+ */
+function makeRectFromImage(img) {
+  const w = img.width * img.scaleX;
+  const h = img.height * img.scaleY;
+  return { 
+    left: img.left - w / 2, 
+    top: img.top - h / 2, 
+    width: w, 
+    height: h 
+  };
+}
+
+/**
+ * Try to scale image from a specific corner direction
+ */
+function tryDirectionalScaling(img, direction, growthFactor, images, marginRect) {
+  const currentState = {
+    scaleX: img.scaleX,
+    scaleY: img.scaleY,
+    left: img.left,
+    top: img.top
+  };
+
+  const currentW = img.width * img.scaleX;
+  const currentH = img.height * img.scaleY;
+  
+  const newScaleX = img.scaleX * (1 + growthFactor);
+  const newScaleY = img.scaleY * (1 + growthFactor);
+  const newW = img.width * newScaleX;
+  const newH = img.height * newScaleY;
+  
+  const deltaW = newW - currentW;
+  const deltaH = newH - currentH;
+  
+  let newLeft = img.left;
+  let newTop = img.top;
+  
+  // Adjust position based on corner direction
+  switch (direction) {
+    case 1: // Top-left: grow right and down
+      newLeft += deltaW / 2;
+      newTop += deltaH / 2;
+      break;
+    case 2: // Top-right: grow left and down
+      newLeft -= deltaW / 2;
+      newTop += deltaH / 2;
+      break;
+    case 3: // Bottom-right: grow left and up
+      newLeft -= deltaW / 2;
+      newTop -= deltaH / 2;
+      break;
+    case 4: // Bottom-left: grow right and up
+      newLeft += deltaW / 2;
+      newTop -= deltaH / 2;
+      break;
+  }
+
+  img.set({ scaleX: newScaleX, scaleY: newScaleY, left: newLeft, top: newTop });
+  img.setCoords();
+
+  if (exceedsMargin(img, marginRect) || checkOverlapWithOthers(img, images, marginRect)) {
+    img.set(currentState);
+    img.setCoords();
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Attempt to grow an image in all directions
+ */
+function attemptImageGrowth(img, images, marginRect) {
+  const MAX_ITERATIONS = 100;
+  const GROWTH_FACTOR = 0.02;
+  let hasImprovement = false;
+
+  for (let direction = 1; direction <= 4; direction++) {
+    let canGrow = true;
+    let iterations = 0;
+
+    while (canGrow && iterations < MAX_ITERATIONS) {
+      if (tryDirectionalScaling(img, direction, GROWTH_FACTOR, images, marginRect)) {
+        hasImprovement = true;
+      } else {
+        canGrow = false;
+      }
+      iterations++;
+    }
+  }
+  return hasImprovement;
+}
+
+/**
  * Optimizes the size of images in a collage arrangement to maximize space usage
  * while maintaining no overlaps and staying within margins.
  * Uses directional scaling from each corner for more precise space utilization.
@@ -429,118 +549,6 @@ function optimizeCollageSize() {
   const images = canvas.getObjects('image');
   if (images.length === 0) return;
 
-  const GROWTH_FACTOR = 0.02;  // Smaller factor for more precise optimization
-  const MAX_ITERATIONS = 100;   // Prevent infinite loops per direction
-  const PADDING = 2;           // Same padding as collageArrange
-
-  /** Check if image overlaps with any other image */
-  function checkOverlapWithOthers(targetImg) {
-    const targetRect = makeRectFromImage(targetImg);
-    
-    return images.some(img => {
-      if (img === targetImg) return false;
-      const imgRect = makeRectFromImage(img);
-      return checkOverlap(targetRect, imgRect, PADDING);
-    });
-  }
-
-  /** Check if image exceeds margin boundaries */
-  function exceedsMargin(img) {
-    const rect = makeRectFromImage(img);
-    return (
-      rect.left < marginRect.left ||
-      rect.top < marginRect.top ||
-      rect.left + rect.width > marginRect.left + marginRect.width ||
-      rect.top + rect.height > marginRect.top + marginRect.height
-    );
-  }
-
-  /** Create bounding rect from fabric image */
-  function makeRectFromImage(img) {
-    const w = img.width * img.scaleX;
-    const h = img.height * img.scaleY;
-    return { 
-      left: img.left - w / 2, 
-      top: img.top - h / 2, 
-      width: w, 
-      height: h 
-    };
-  }
-
-  /**
-   * Try to scale image from a specific corner direction
-   * @param {fabric.Image} img - The image to scale
-   * @param {number} direction - 1: top-left, 2: top-right, 3: bottom-right, 4: bottom-left
-   * @param {number} growthFactor - Factor to grow the image
-   * @returns {boolean} - Whether the scaling was successful
-   */
-  function tryDirectionalScaling(img, direction, growthFactor) {
-    // Store current state
-    const currentState = {
-      scaleX: img.scaleX,
-      scaleY: img.scaleY,
-      left: img.left,
-      top: img.top
-    };
-
-    // Calculate current dimensions and position
-    const currentW = img.width * img.scaleX;
-    const currentH = img.height * img.scaleY;
-    
-    // Calculate new scale
-    const newScaleX = img.scaleX * (1 + growthFactor);
-    const newScaleY = img.scaleY * (1 + growthFactor);
-    const newW = img.width * newScaleX;
-    const newH = img.height * newScaleY;
-    
-    // Calculate growth in each direction
-    const deltaW = newW - currentW;
-    const deltaH = newH - currentH;
-    
-    let newLeft = img.left;
-    let newTop = img.top;
-    
-    // Adjust position based on corner direction
-    switch (direction) {
-      case 1: // Top-left: grow right and down (anchor top-left corner)
-        newLeft += deltaW / 2;
-        newTop += deltaH / 2;
-        break;
-      case 2: // Top-right: grow left and down (anchor top-right corner)
-        newLeft -= deltaW / 2;
-        newTop += deltaH / 2;
-        break;
-      case 3: // Bottom-right: grow left and up (anchor bottom-right corner)
-        newLeft -= deltaW / 2;
-        newTop -= deltaH / 2;
-        break;
-      case 4: // Bottom-left: grow right and up (anchor bottom-left corner)
-        newLeft += deltaW / 2;
-        newTop -= deltaH / 2;
-        break;
-    }
-
-    // Apply new scale and position
-    img.set({
-      scaleX: newScaleX,
-      scaleY: newScaleY,
-      left: newLeft,
-      top: newTop
-    });
-    img.setCoords();
-
-    // Check if the new state is valid
-    if (exceedsMargin(img) || checkOverlapWithOthers(img)) {
-      // Revert to previous state
-      img.set(currentState);
-      img.setCoords();
-      return false;
-    }
-
-    return true;
-  }
-
-  // Multiple optimization passes for better results
   let globalImprovement = true;
   let passCount = 0;
 
@@ -554,21 +562,10 @@ function optimizeCollageSize() {
       return areaA - areaB;
     });
 
-    // Try to grow each image in all 4 directions
+    // Try to grow each image in all directions
     for (const img of sortedImages) {
-      // Try each direction (1: top-left, 2: top-right, 3: bottom-right, 4: bottom-left)
-      for (let direction = 1; direction <= 4; direction++) {
-        let canGrow = true;
-        let iterations = 0;
-
-        while (canGrow && iterations < MAX_ITERATIONS) {
-          if (tryDirectionalScaling(img, direction, GROWTH_FACTOR)) {
-            globalImprovement = true;
-          } else {
-            canGrow = false;
-          }
-          iterations++;
-        }
+      if (attemptImageGrowth(img, images, marginRect)) {
+        globalImprovement = true;
       }
     }
     
