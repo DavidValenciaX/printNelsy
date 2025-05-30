@@ -441,6 +441,16 @@ function optimizeCollageSize() {
   const MAX_ITERATIONS = 100;   // Prevent infinite loops per direction
   const PADDING = 2;           // Same padding as collageArrange
 
+  /** AABB overlap test with padding */
+  function overlaps(a, b) {
+    return !(
+      a.left + a.width + PADDING <= b.left ||
+      b.left + b.width + PADDING <= a.left ||
+      a.top + a.height + PADDING <= b.top ||
+      b.top + b.height + PADDING <= a.top
+    );
+  }
+
   /** Check if image overlaps with any other image */
   function checkOverlapWithOthers(targetImg) {
     const targetRect = makeRectFromImage(targetImg);
@@ -448,7 +458,7 @@ function optimizeCollageSize() {
     return images.some(img => {
       if (img === targetImg) return false;
       const imgRect = makeRectFromImage(img);
-      return overlapsWithPadding(targetRect, imgRect);
+      return overlaps(targetRect, imgRect);
     });
   }
 
@@ -473,16 +483,6 @@ function optimizeCollageSize() {
       width: w, 
       height: h 
     };
-  }
-
-  /** AABB overlap test with padding */
-  function overlapsWithPadding(a, b) {
-    return !(
-      a.left + a.width + PADDING <= b.left ||
-      b.left + b.width + PADDING <= a.left ||
-      a.top + a.height + PADDING <= b.top ||
-      b.top + b.height + PADDING <= a.top
-    );
   }
 
   /**
