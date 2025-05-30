@@ -1,4 +1,5 @@
 import { zoomIn, zoomOut, applyZoom } from './zoom.js';
+import { centerVertically, centerHorizontally } from './center.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -721,68 +722,6 @@ function setImageSizeInCm() {
 
   widthInput.value = "";
   heightInput.value = "";
-}
-
-function centerVertically() {
-  const activeObjects = canvas.getActiveObjects();
-  const selectedImages = activeObjects.filter((obj) => obj.type === "image");
-
-  if (selectedImages.length === 0) {
-    Swal.fire({
-      text: "Seleccione primero una o más imágenes.",
-      icon: "warning",
-    });
-    return;
-  }
-
-  // Si se han seleccionado varias imágenes, se descarta el objeto activo para tratar cada una individualmente
-  if (selectedImages.length > 1) {
-    canvas.discardActiveObject();
-  }
-
-  const canvasHeight = canvas.getHeight();
-  const centerY = canvasHeight / 2;
-
-  selectedImages.forEach((image) => {
-    image.set({
-      top: centerY,
-      originY: "center",
-    });
-    image.setCoords();
-  });
-
-  canvas.renderAll();
-}
-
-function centerHorizontally() {
-  const activeObjects = canvas.getActiveObjects();
-  const selectedImages = activeObjects.filter((obj) => obj.type === "image");
-
-  if (selectedImages.length === 0) {
-    Swal.fire({
-      text: "Seleccione primero una o más imágenes.",
-      icon: "warning",
-    });
-    return;
-  }
-
-  // Si se han seleccionado varias imágenes, se descarta el objeto activo para tratar cada una individualmente
-  if (selectedImages.length > 1) {
-    canvas.discardActiveObject();
-  }
-
-  const canvasWidth = canvas.getWidth();
-  const centerX = canvasWidth / 2;
-
-  selectedImages.forEach((image) => {
-    image.set({
-      left: centerX,
-      originX: "center",
-    });
-    image.setCoords();
-  });
-
-  canvas.renderAll();
 }
 
 const SCALE_FACTOR = 0.01;
@@ -1621,8 +1560,8 @@ printButton.addEventListener("click", printCanvas);
 grayScaleButton.addEventListener("click", convertToGrayscale);
 rotateButton_p90.addEventListener("click", () => rotateImage(90));
 rotateButton_n90.addEventListener("click", () => rotateImage(270));
-centerVerticallyButton.addEventListener("click", centerVertically);
-centerHorizontallyButton.addEventListener("click", centerHorizontally);
+centerVerticallyButton.addEventListener("click", () => centerVertically(canvas));
+centerHorizontallyButton.addEventListener("click", () => centerHorizontally(canvas));
 deleteButton.addEventListener("click", deleteActiveObject);
 confirmCropButton.addEventListener("click", confirmCrop);
 cancelCropButton.addEventListener("click", exitCropMode);
