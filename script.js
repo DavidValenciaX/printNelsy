@@ -314,14 +314,6 @@ function collageArrange() {
   const availW = marginRect.width;
   const availH = marginRect.height;
 
-  /** quick AABB overlap test with padding */
-  function overlaps(a, b) {
-    return !(a.left + a.width  + PADDING <= b.left ||
-             b.left + b.width  + PADDING <= a.left ||
-             a.top  + a.height + PADDING <= b.top  ||
-             b.top  + b.height + PADDING <= a.top);
-  }
-
   /** bounding rect for a fabric image given its *centre* position */
   function makeRect(img, cx, cy) {
     const w = img.width  * img.scaleX;
@@ -371,7 +363,7 @@ function collageArrange() {
         const cy = marginRect.top  + h / 2 + (Math.random() * (availH - h));
         const r  = makeRect(img, cx, cy);
 
-        const bad = placedRects.some(pr => overlaps(pr, r));
+        const bad = placedRects.some(pr => checkOverlap(pr, r, PADDING));
         if (!bad) {
           // ✓ good spot
           img.set({ left: cx, top: cy });
@@ -399,7 +391,7 @@ function collageArrange() {
             const cy = marginRect.top  + h / 2 + (Math.random() * (availH - h));
             const r  = makeRect(img, cx, cy);
 
-            if (!placedRects.some(pr => overlaps(pr, r))) {
+            if (!placedRects.some(pr => checkOverlap(pr, r, PADDING))) {
               img.set({ left: cx, top: cy });
               placedRects.push(r);
               fitted = true;
@@ -441,16 +433,6 @@ function optimizeCollageSize() {
   const MAX_ITERATIONS = 100;   // Prevent infinite loops per direction
   const PADDING = 2;           // Same padding as collageArrange
 
-  /** AABB overlap test with padding */
-  function overlaps(a, b) {
-    return !(
-      a.left + a.width + PADDING <= b.left ||
-      b.left + b.width + PADDING <= a.left ||
-      a.top + a.height + PADDING <= b.top ||
-      b.top + b.height + PADDING <= a.top
-    );
-  }
-
   /** Check if image overlaps with any other image */
   function checkOverlapWithOthers(targetImg) {
     const targetRect = makeRectFromImage(targetImg);
@@ -458,7 +440,7 @@ function optimizeCollageSize() {
     return images.some(img => {
       if (img === targetImg) return false;
       const imgRect = makeRectFromImage(img);
-      return overlaps(targetRect, imgRect);
+      return checkOverlap(targetRect, imgRect, PADDING);
     });
   }
 
@@ -2867,3 +2849,19 @@ function setupAccessibility() {
   });
 }
 setupAccessibility();
+
+/**
+ * AABB overlap test with padding
+ * @param {Object} a - First bounding rectangle
+ * @param {Object} b - Second bounding rectangle  
+ * @param {number} padding - Safety gap between bounding boxes
+ * @returns {boolean} - True if rectangles overlap
+ */
+function checkOverlap(a, b, padding = 2) {
+  return !(
+    a.left + a.width + padding <= b.left ||
+    b.left + b.width + padding <= a.left ||
+    a.top + a.height + padding <= b.top ||
+    b.top + b.height + padding <= a.top
+  );
+}
