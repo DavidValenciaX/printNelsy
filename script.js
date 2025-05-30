@@ -1143,8 +1143,20 @@ let arrangementStatus = "none";
 
 function handleImageUpload(e) {
   const files = e.target.files;
+
+  // Es una buena práctica verificar si se seleccionaron archivos.
+  if (!files || files.length === 0) {
+    // Resetea el valor del input incluso si no se seleccionaron archivos (ej. el usuario canceló el diálogo).
+    // Esto asegura que una futura selección del mismo archivo (después de una cancelación) funcione.
+    if (e.target) {
+      e.target.value = null;
+    }
+    return;
+  }
+
   const loadedImages = [];
   let processedCount = 0;
+  const numFilesToProcess = files.length; // Guardar la cantidad original de archivos a procesar.
 
   for (const element of files) {
     const file = element;
@@ -1168,9 +1180,9 @@ function handleImageUpload(e) {
         loadedImages.push(img);
         processedCount++;
 
-        if (processedCount === files.length) {
+        if (processedCount === numFilesToProcess) {
           // Primero, se organiza el layout de las imágenes
-          if (files.length <= 2) {
+          if (numFilesToProcess <= 2) {
             arrangeImages(loadedImages, "cols", "forward");
             lastLayout = "cols";
             lastDirection = "forward";
@@ -1181,29 +1193,36 @@ function handleImageUpload(e) {
           }
 
           // Luego, se guardan los datos originales ya con sus valores de top, left, scaleX y scaleY actualizados
-          loadedImages.forEach((img) => {
-            originalImages[img.id] = {
-              url: img.originalUrl,
-              width: img.width,
-              height: img.height,
-              scaleX: img.scaleX,
-              scaleY: img.scaleY,
-              angle: img.angle,
-              left: img.left,
-              top: img.top,
+          loadedImages.forEach((loadedImgInstance) => { // Renombrado img a loadedImgInstance para evitar confusión de scope
+            originalImages[loadedImgInstance.id] = {
+              url: loadedImgInstance.originalUrl,
+              width: loadedImgInstance.width,
+              height: loadedImgInstance.height,
+              scaleX: loadedImgInstance.scaleX,
+              scaleY: loadedImgInstance.scaleY,
+              angle: loadedImgInstance.angle,
+              left: loadedImgInstance.left,
+              top: loadedImgInstance.top,
             };
           });
 
           // Seleccionar automáticamente si solo hay una imagen
-          if (files.length === 1) {
+          if (numFilesToProcess === 1 && loadedImages.length === 1) { // Asegurarse que loadedImages[0] existe
             canvas.discardActiveObject();
             canvas.setActiveObject(loadedImages[0]);
-            canvas.renderAll();
+            canvas.renderAll(); // Asegurar renderizado después de seleccionar
           }
         }
       });
     };
     reader.readAsDataURL(file);
+  }
+
+  // **LA CORRECCIÓN PRINCIPAL ESTÁ AQUÍ**
+  // Resetea el valor del input de archivo.
+  // Esto permite que el evento 'change' se dispare de nuevo si el usuario selecciona el mismo archivo.
+  if (e.target) {
+    e.target.value = null;
   }
 }
 
