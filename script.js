@@ -1414,9 +1414,7 @@ function printCanvas() {
         </html>`;
 
   const printWin = window.open("", "", "width=800,height=600");
-  printWin.document.open();
-  printWin.document.write(windowContent);
-  printWin.document.close();
+  printWin.document.documentElement.innerHTML = windowContent;
   printWin.setTimeout(function () {
     printWin.focus();
     printWin.print();
