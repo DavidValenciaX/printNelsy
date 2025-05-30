@@ -430,14 +430,15 @@ function collageArrange() {
 
 /**
  * Optimizes the size of images in a collage arrangement to maximize space usage
- * while maintaining no overlaps and staying within margins
+ * while maintaining no overlaps and staying within margins.
+ * Uses directional scaling from each corner for more precise space utilization.
  */
 function optimizeCollageSize() {
   const images = canvas.getObjects('image');
   if (images.length === 0) return;
 
   const GROWTH_FACTOR = 0.02;  // Smaller factor for more precise optimization
-  const MAX_ITERATIONS = 50;   // Prevent infinite loops
+  const MAX_ITERATIONS = 100;   // Prevent infinite loops per direction
   const PADDING = 2;           // Same padding as collageArrange
 
   /** Check if image overlaps with any other image */
@@ -484,6 +485,79 @@ function optimizeCollageSize() {
     );
   }
 
+  /**
+   * Try to scale image from a specific corner direction
+   * @param {fabric.Image} img - The image to scale
+   * @param {number} direction - 1: top-left, 2: top-right, 3: bottom-right, 4: bottom-left
+   * @param {number} growthFactor - Factor to grow the image
+   * @returns {boolean} - Whether the scaling was successful
+   */
+  function tryDirectionalScaling(img, direction, growthFactor) {
+    // Store current state
+    const currentState = {
+      scaleX: img.scaleX,
+      scaleY: img.scaleY,
+      left: img.left,
+      top: img.top
+    };
+
+    // Calculate current dimensions and position
+    const currentW = img.width * img.scaleX;
+    const currentH = img.height * img.scaleY;
+    
+    // Calculate new scale
+    const newScaleX = img.scaleX * (1 + growthFactor);
+    const newScaleY = img.scaleY * (1 + growthFactor);
+    const newW = img.width * newScaleX;
+    const newH = img.height * newScaleY;
+    
+    // Calculate growth in each direction
+    const deltaW = newW - currentW;
+    const deltaH = newH - currentH;
+    
+    let newLeft = img.left;
+    let newTop = img.top;
+    
+    // Adjust position based on corner direction
+    switch (direction) {
+      case 1: // Top-left: grow right and down (anchor top-left corner)
+        newLeft += deltaW / 2;
+        newTop += deltaH / 2;
+        break;
+      case 2: // Top-right: grow left and down (anchor top-right corner)
+        newLeft -= deltaW / 2;
+        newTop += deltaH / 2;
+        break;
+      case 3: // Bottom-right: grow left and up (anchor bottom-right corner)
+        newLeft -= deltaW / 2;
+        newTop -= deltaH / 2;
+        break;
+      case 4: // Bottom-left: grow right and up (anchor bottom-left corner)
+        newLeft += deltaW / 2;
+        newTop -= deltaH / 2;
+        break;
+    }
+
+    // Apply new scale and position
+    img.set({
+      scaleX: newScaleX,
+      scaleY: newScaleY,
+      left: newLeft,
+      top: newTop
+    });
+    img.setCoords();
+
+    // Check if the new state is valid
+    if (exceedsMargin(img) || checkOverlapWithOthers(img)) {
+      // Revert to previous state
+      img.set(currentState);
+      img.setCoords();
+      return false;
+    }
+
+    return true;
+  }
+
   // Multiple optimization passes for better results
   let globalImprovement = true;
   let passCount = 0;
@@ -498,37 +572,21 @@ function optimizeCollageSize() {
       return areaA - areaB;
     });
 
-    // Try to grow each image
+    // Try to grow each image in all 4 directions
     for (const img of sortedImages) {
-      let canGrow = true;
-      let iterations = 0;
-      let lastValidScale = { scaleX: img.scaleX, scaleY: img.scaleY };
+      // Try each direction (1: top-left, 2: top-right, 3: bottom-right, 4: bottom-left)
+      for (let direction = 1; direction <= 4; direction++) {
+        let canGrow = true;
+        let iterations = 0;
 
-      while (canGrow && iterations < MAX_ITERATIONS) {
-        // Try growing the image
-        const newScaleX = img.scaleX * (1 + GROWTH_FACTOR);
-        const newScaleY = img.scaleY * (1 + GROWTH_FACTOR);
-        
-        // Temporarily apply new scale
-        img.set({ scaleX: newScaleX, scaleY: newScaleY });
-        img.setCoords();
-
-        // Check if it still fits and doesn't overlap
-        if (exceedsMargin(img) || checkOverlapWithOthers(img)) {
-          // Revert to last valid scale
-          img.set({ 
-            scaleX: lastValidScale.scaleX, 
-            scaleY: lastValidScale.scaleY 
-          });
-          img.setCoords();
-          canGrow = false;
-        } else {
-          // Update last valid scale and continue
-          lastValidScale = { scaleX: newScaleX, scaleY: newScaleY };
-          globalImprovement = true;
+        while (canGrow && iterations < MAX_ITERATIONS) {
+          if (tryDirectionalScaling(img, direction, GROWTH_FACTOR)) {
+            globalImprovement = true;
+          } else {
+            canGrow = false;
+          }
+          iterations++;
         }
-        
-        iterations++;
       }
     }
     
