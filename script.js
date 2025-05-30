@@ -1600,40 +1600,24 @@ function selectArrangeImageLayout() {
   // 2. Remove existing images from canvas
   images.forEach((img) => canvas.remove(img));
 
-  // 3. Determine next arrangement state
-  if (lastLayout === "rows" && lastDirection === "forward") {
-    arrangeImages(images, "rows", "reverse");
-    lastLayout = "rows";
-    lastDirection = "reverse";
-  } else if (lastLayout === "rows" && lastDirection === "reverse") {
-    arrangeImages(images, "cols", "forward");
-    lastLayout = "cols";
-    lastDirection = "forward";
-  } else if (lastLayout === "cols" && lastDirection === "forward") {
-    arrangeImages(images, "cols", "reverse");
-    lastLayout = "cols";
-    lastDirection = "reverse";
-  } else if (lastLayout === "cols" && lastDirection === "reverse") {
-    arrangeImages(images, "single-column", "forward");
-    lastLayout = "single-column";
-    lastDirection = "forward";
-  } else if (lastLayout === "single-column" && lastDirection === "forward") {
-    arrangeImages(images, "single-column", "reverse");
-    lastLayout = "single-column";
-    lastDirection = "reverse";
-  } else if (lastLayout === "single-column" && lastDirection === "reverse") {
-    arrangeImages(images, "single-row", "forward");
-    lastLayout = "single-row";
-    lastDirection = "forward";
-  } else if (lastLayout === "single-row" && lastDirection === "forward") {
-    arrangeImages(images, "single-row", "reverse");
-    lastLayout = "single-row";
-    lastDirection = "reverse";
-  } else {
-    arrangeImages(images, "rows", "forward");
-    lastLayout = "rows";
-    lastDirection = "forward";
-  }
+  // 3. Define state transitions
+  const stateTransitions = {
+    "rows-forward": { layout: "rows", direction: "reverse" },
+    "rows-reverse": { layout: "cols", direction: "forward" },
+    "cols-forward": { layout: "cols", direction: "reverse" },
+    "cols-reverse": { layout: "single-column", direction: "forward" },
+    "single-column-forward": { layout: "single-column", direction: "reverse" },
+    "single-column-reverse": { layout: "single-row", direction: "forward" },
+    "single-row-forward": { layout: "single-row", direction: "reverse" },
+    "single-row-reverse": { layout: "rows", direction: "forward" }
+  };
+
+  const currentState = `${lastLayout}-${lastDirection}`;
+  const nextState = stateTransitions[currentState] || { layout: "rows", direction: "forward" };
+
+  arrangeImages(images, nextState.layout, nextState.direction);
+  lastLayout = nextState.layout;
+  lastDirection = nextState.direction;
 
   canvas.renderAll();
 }
