@@ -576,7 +576,9 @@ function optimizeCollageSize() {
 }
 
 function validateSizeInput(value, dimension) {
-  if (!value) return null;
+  if (!value) {
+    return { isValid: true, value: null, isEmpty: true };
+  }
   
   const parsed = parseFloat(value);
   if (isNaN(parsed) || parsed <= 0) {
@@ -584,9 +586,9 @@ function validateSizeInput(value, dimension) {
       text: `Introduzca una ${dimension} válida en centímetros.`,
       icon: "warning",
     });
-    return false;
+    return { isValid: false, value: null, isEmpty: false };
   }
-  return parsed;
+  return { isValid: true, value: parsed, isEmpty: false };
 }
 
 function calculateNewScales(selectedImage, widthCm, heightCm, maintainAspect, canvasScaleX, canvasScaleY) {
@@ -666,14 +668,17 @@ function setSingleImageSizeInCm(selectedImage) {
   const maintainAspect = document.getElementById("maintainAspectCheckbox").checked;
 
   // Validate inputs
-  const widthCm = validateSizeInput(widthInputValue, "anchura");
-  const heightCm = validateSizeInput(heightInputValue, "altura");
+  const widthResult = validateSizeInput(widthInputValue, "anchura");
+  const heightResult = validateSizeInput(heightInputValue, "altura");
   
-  if (widthCm === false || heightCm === false) {
+  if (!widthResult.isValid || !heightResult.isValid) {
     widthInput.value = "";
     heightInput.value = "";
     return;
   }
+
+  const widthCm = widthResult.value;
+  const heightCm = heightResult.value;
 
   if (!widthCm && !heightCm) {
     Swal.fire({
