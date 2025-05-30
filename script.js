@@ -575,6 +575,144 @@ function optimizeCollageSize() {
   canvas.renderAll();
 }
 
+function validateSizeInput(value, dimension) {
+  if (!value) return null;
+  
+  const parsed = parseFloat(value);
+  if (isNaN(parsed) || parsed <= 0) {
+    Swal.fire({
+      text: `Introduzca una ${dimension} válida en centímetros.`,
+      icon: "warning",
+    });
+    return false;
+  }
+  return parsed;
+}
+
+function calculateNewScales(selectedImage, widthCm, heightCm, maintainAspect, canvasScaleX, canvasScaleY) {
+  const originalScaleX = selectedImage.scaleX;
+  const originalScaleY = selectedImage.scaleY;
+  let newScaleX = originalScaleX;
+  let newScaleY = originalScaleY;
+
+  if (maintainAspect) {
+    if (widthCm) {
+      const targetWidthPixels = (widthCm / 2.54) * dpi;
+      const uniformScale = (targetWidthPixels * canvasScaleX) / selectedImage.width;
+      newScaleX = uniformScale;
+      newScaleY = uniformScale;
+    } else if (heightCm) {
+      const targetHeightPixels = (heightCm / 2.54) * dpi;
+      const uniformScale = (targetHeightPixels * canvasScaleY) / selectedImage.height;
+      newScaleX = uniformScale;
+      newScaleY = uniformScale;
+    }
+  } else {
+    if (widthCm) {
+      const targetWidthPixels = (widthCm / 2.54) * dpi;
+      newScaleX = (targetWidthPixels * canvasScaleX) / selectedImage.width;
+    }
+    if (heightCm) {
+      const targetHeightPixels = (heightCm / 2.54) * dpi;
+      newScaleY = (targetHeightPixels * canvasScaleY) / selectedImage.height;
+    }
+  }
+
+  return { newScaleX, newScaleY };
+}
+
+function applyScalesWithConstraints(selectedImage, newScaleX, newScaleY, originalState) {
+  selectedImage.scaleX = newScaleX;
+  selectedImage.scaleY = newScaleY;
+  selectedImage.setCoords();
+
+  let br = selectedImage.getBoundingRect();
+  if (
+    br.left < marginRect.left ||
+    br.top < marginRect.top ||
+    br.left + br.width > marginRect.left + marginRect.width ||
+    br.top + br.height > marginRect.top + marginRect.height
+  ) {
+    constrainObjectToMargin(selectedImage, marginRect);
+    br = selectedImage.getBoundingRect();
+  }
+
+  // Check if still exceeds margins after constraint
+  if (
+    br.left < marginRect.left ||
+    br.top < marginRect.top ||
+    br.left + br.width > marginRect.left + marginRect.width ||
+    br.top + br.height > marginRect.top + marginRect.height
+  ) {
+    // Revert to original state
+    selectedImage.top = originalState.top;
+    selectedImage.left = originalState.left;
+    selectedImage.scaleX = originalState.scaleX;
+    selectedImage.scaleY = originalState.scaleY;
+    selectedImage.setCoords();
+    
+    Swal.fire({
+      text: "El tamaño deseado excede el límite de los márgenes.",
+      icon: "warning",
+    });
+    return false;
+  }
+  return true;
+}
+
+function setSingleImageSizeInCm(selectedImage) {
+  const widthInputValue = widthInput.value;
+  const heightInputValue = heightInput.value;
+  const maintainAspect = document.getElementById("maintainAspectCheckbox").checked;
+
+  // Validate inputs
+  const widthCm = validateSizeInput(widthInputValue, "anchura");
+  const heightCm = validateSizeInput(heightInputValue, "altura");
+  
+  if (widthCm === false || heightCm === false) {
+    widthInput.value = "";
+    heightInput.value = "";
+    return;
+  }
+
+  if (!widthCm && !heightCm) {
+    Swal.fire({
+      text: "Introduzca al menos una medida válida.",
+      icon: "warning",
+    });
+    return;
+  }
+
+  // Calculate canvas scales
+  let paperWidth = paperSizes[currentSize].width;
+  let paperHeight = paperSizes[currentSize].height;
+  if (!isVertical) {
+    [paperWidth, paperHeight] = [paperHeight, paperWidth];
+  }
+  const canvasScaleX = canvas.getWidth() / paperWidth;
+  const canvasScaleY = canvas.getHeight() / paperHeight;
+
+  // Store original state
+  const originalState = {
+    top: selectedImage.top,
+    left: selectedImage.left,
+    scaleX: selectedImage.scaleX,
+    scaleY: selectedImage.scaleY
+  };
+
+  // Calculate new scales
+  const { newScaleX, newScaleY } = calculateNewScales(
+    selectedImage, widthCm, heightCm, maintainAspect, canvasScaleX, canvasScaleY
+  );
+
+  // Apply scales with constraint checking
+  const success = applyScalesWithConstraints(selectedImage, newScaleX, newScaleY, originalState);
+  
+  if (success) {
+    canvas.renderAll();
+  }
+}
+
 function setImageSizeInCm() {
   const activeObjects = canvas.getActiveObjects();
   const selectedImages = activeObjects.filter((obj) => obj.type === "image");
@@ -605,151 +743,6 @@ function setImageSizeInCm() {
 
   widthInput.value = "";
   heightInput.value = "";
-}
-
-function setSingleImageSizeInCm(selectedImage) {
-  // Obtener los valores de ancho y alto ingresados
-  const widthInputValue = widthInput.value;
-  const heightInputValue = heightInput.value;
-  const maintainAspect = document.getElementById(
-    "maintainAspectCheckbox"
-  ).checked;
-
-  // Ajustar dimensiones del papel según orientación
-  let paperWidth = paperSizes[currentSize].width;
-  let paperHeight = paperSizes[currentSize].height;
-  if (!isVertical) {
-    [paperWidth, paperHeight] = [paperHeight, paperWidth];
-  }
-  // Se utilizan escalas separadas para ancho y alto
-  const canvasScaleX = canvas.getWidth() / paperWidth;
-  const canvasScaleY = canvas.getHeight() / paperHeight;
-
-  const originalTop = selectedImage.top;
-  const originalLeft = selectedImage.left;
-  const originalScaleX = selectedImage.scaleX;
-  const originalScaleY = selectedImage.scaleY;
-
-  let newScaleX = originalScaleX;
-  let newScaleY = originalScaleY;
-  let updated = false;
-
-  // Si se debe mantener la relación de aspecto,
-  // se utiliza la medida ingresada (si está) para calcular un factor uniforme.
-  if (maintainAspect) {
-    if (widthInputValue) {
-      const cmWidth = parseFloat(widthInputValue);
-      if (isNaN(cmWidth) || cmWidth <= 0) {
-        Swal.fire({
-          text: "Introduzca una anchura válida en centímetros.",
-          icon: "warning",
-        });
-        widthInput.value = "";
-        return;
-      }
-      const targetWidthPixels = (cmWidth / 2.54) * dpi;
-      const uniformScale =
-        (targetWidthPixels * canvasScaleX) / selectedImage.width;
-      newScaleX = uniformScale;
-      newScaleY = uniformScale;
-      updated = true;
-    } else if (heightInputValue) {
-      const cmHeight = parseFloat(heightInputValue);
-      if (isNaN(cmHeight) || cmHeight <= 0) {
-        Swal.fire({
-          text: "Introduzca una altura válida en centímetros.",
-          icon: "warning",
-        });
-        heightInput.value = "";
-        return;
-      }
-      const targetHeightPixels = (cmHeight / 2.54) * dpi;
-      const uniformScale =
-        (targetHeightPixels * canvasScaleY) / selectedImage.height;
-      newScaleX = uniformScale;
-      newScaleY = uniformScale;
-      updated = true;
-    }
-  } else {
-    if (widthInputValue) {
-      const cmWidth = parseFloat(widthInputValue);
-      if (isNaN(cmWidth) || cmWidth <= 0) {
-        Swal.fire({
-          text: "Introduzca una anchura válida en centímetros.",
-          icon: "warning",
-        });
-        widthInput.value = "";
-        return;
-      }
-      const targetWidthPixels = (cmWidth / 2.54) * dpi;
-      newScaleX = (targetWidthPixels * canvasScaleX) / selectedImage.width;
-      updated = true;
-    }
-    if (heightInputValue) {
-      const cmHeight = parseFloat(heightInputValue);
-      if (isNaN(cmHeight) || cmHeight <= 0) {
-        Swal.fire({
-          text: "Introduzca una altura válida en centímetros.",
-          icon: "warning",
-        });
-        heightInput.value = "";
-        return;
-      }
-      const targetHeightPixels = (cmHeight / 2.54) * dpi;
-      newScaleY = (targetHeightPixels * canvasScaleY) / selectedImage.height;
-      updated = true;
-    }
-  }
-
-  if (!updated) {
-    Swal.fire({
-      text: "Introduzca al menos una medida válida.",
-      icon: "warning",
-    });
-    widthInput.value = "";
-    heightInput.value = "";
-    return;
-  }
-
-  // Aplica las nuevas escalas
-  selectedImage.scaleX = newScaleX;
-  selectedImage.scaleY = newScaleY;
-  selectedImage.setCoords();
-
-  // Se recalcula primero el bounding rect y se intenta ajustar
-  let br = selectedImage.getBoundingRect();
-  if (
-    br.left < marginRect.left ||
-    br.top < marginRect.top ||
-    br.left + br.width > marginRect.left + marginRect.width ||
-    br.top + br.height > marginRect.top + marginRect.height
-  ) {
-    constrainObjectToMargin(selectedImage, marginRect);
-    // Recalcula el bounding rect luego de ajustar la posición
-    br = selectedImage.getBoundingRect();
-  }
-
-  // Si tras el ajuste la imagen sigue saliéndose, se revierte al estado original
-  if (
-    br.left < marginRect.left ||
-    br.top < marginRect.top ||
-    br.left + br.width > marginRect.left + marginRect.width ||
-    br.top + br.height > marginRect.top + marginRect.height
-  ) {
-    selectedImage.top = originalTop;
-    selectedImage.left = originalLeft;
-    selectedImage.scaleX = originalScaleX;
-    selectedImage.scaleY = originalScaleY;
-    selectedImage.setCoords();
-    Swal.fire({
-      text: "El tamaño deseado excede el límite de los márgenes.",
-      icon: "warning",
-    });
-    canvas.renderAll();
-    return;
-  }
-
-  canvas.renderAll();
 }
 
 function centerVertically() {
