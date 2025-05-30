@@ -62,8 +62,8 @@ const centerHorizontallyButton = document.getElementById(
   "centerHorizontallyButton"
 );
 const setSizeButton = document.getElementById("setSizeButton");
-const ColumnsCollageButton = document.getElementById("ColumnsCollageButton");
-const RowsCollageButton = document.getElementById("RowsCollageButton");
+const columnsCollageButton = document.getElementById("columnsCollageButton");
+const rowsCollageButton = document.getElementById("rowsCollageButton");
 const widthInput = document.getElementById("widthInput");
 const heightInput = document.getElementById("heightInput");
 
@@ -1368,8 +1368,8 @@ scaleUpButton.addEventListener("click", scaleUp);
 scaleDownButton.addEventListener("click", scaleDown);
 arrangeButton.addEventListener("click", selectArrangeImageLayout);
 setSizeButton.addEventListener("click", setImageSizeInCm);
-ColumnsCollageButton.addEventListener("click", createMasonryColumnsCollage);
-RowsCollageButton.addEventListener("click", createMasonryRowsCollage);
+columnsCollageButton.addEventListener("click", createMasonryColumnsCollage);
+rowsCollageButton.addEventListener("click", createMasonryRowsCollage);
 rotateCheckbox.addEventListener("change", function (e) {
   canvas.getObjects().forEach((obj) => {
     if (obj.type === "image") {
@@ -2534,8 +2534,8 @@ function setupAccessibility() {
     centerVerticallyButton,
     centerHorizontallyButton,
     setSizeButton,
-    ColumnsCollageButton,
-    RowsCollageButton,
+    columnsCollageButton,
+    rowsCollageButton,
   ];
   elements.forEach((el) => {
     if (el) {
