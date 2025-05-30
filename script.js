@@ -2,6 +2,7 @@ let currentZoom = 1;
 const zoomFactor = 0.1;
 const maxZoom = 2;
 const minZoom = 0.5;
+let activeRestriction = null;
 
 function zoomIn() {
   if (currentZoom < maxZoom) {
