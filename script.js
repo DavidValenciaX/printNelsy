@@ -1,5 +1,11 @@
 import { zoomIn, zoomOut, applyZoom } from './zoom.js';
 import { centerVertically, centerHorizontally } from './center.js';
+import { 
+  degToRad, 
+  radToDeg, 
+  roundToDecimals, 
+  calculateDistance 
+} from './mathUtils.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -959,14 +965,6 @@ function deactivateObjects(event) {
   }
 }
 
-function degToRad(degrees) {
-  return degrees * (Math.PI / 180);
-}
-
-function radToDeg(radians) {
-  return radians * (180 / Math.PI);
-}
-
 function resizeCanvas(size, orientation = isVertical) {
   // Store current canvas state
   const images = canvas.getObjects().filter((obj) => obj.type === "image");
@@ -1129,11 +1127,6 @@ function handleImageUpload(e) {
   if (e.target) {
     e.target.value = null;
   }
-}
-
-// Función para redondear a un número específico de decimales
-function roundToDecimals(value, decimals) {
-  return Number(value.toFixed(decimals));
 }
 
 function arrangeImages(images, orientation, order = "forward") {
@@ -1410,15 +1403,6 @@ function convertToGrayscale() {
     obj.applyFilters();
   });
   canvas.renderAll();
-}
-
-function calculateDistance(x1, y1, x2, y2) {
-  // Calculate the difference in x and y coordinates
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-
-  // Use Pythagorean theorem to calculate distance
-  return Math.sqrt(dx * dx + dy * dy);
 }
 
 function scaleUp() {
