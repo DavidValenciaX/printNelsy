@@ -16,7 +16,7 @@ import { rotateImage } from './rotateUtils.js';
 import { resetActiveImage } from './resetUtils.js';
 import { deleteActiveObject } from './deleteUtils.js';
 import { scaleUp, scaleDown } from './scaleUtils.js';
-import { convertToGrayscale } from './grayScaleUtils.js';
+import { convertToGrayscale } from './imageEffects.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
