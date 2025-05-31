@@ -6,6 +6,10 @@ import {
   calculateDistance
 } from './mathUtils.js';
 import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from './collageUtils.js';
+import { 
+  setImageSizeInCm
+} from './imageSize.js';
+import { constrainObjectToMargin } from './constraintUtils.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -50,189 +54,10 @@ const paperSizes = {
   a4: { width: 8.27 * dpi, height: 11.69 * dpi },
 };
 
-/**
- * Function to validate size input
- */
-
-function validateSizeInput(value, dimension) {
-  if (!value) {
-    return { isValid: true, value: null, isEmpty: true };
-  }
-  
-  const parsed = parseFloat(value);
-  if (isNaN(parsed) || parsed <= 0) {
-    Swal.fire({
-      text: `Introduzca una ${dimension} válida en centímetros.`,
-      icon: "warning",
-    });
-    return { isValid: false, value: null, isEmpty: false };
-  }
-  return { isValid: true, value: parsed, isEmpty: false };
-}
-
-function calculateNewScales(selectedImage, widthCm, heightCm, maintainAspect, canvasScaleX, canvasScaleY) {
-  const originalScaleX = selectedImage.scaleX;
-  const originalScaleY = selectedImage.scaleY;
-  let newScaleX = originalScaleX;
-  let newScaleY = originalScaleY;
-
-  if (maintainAspect) {
-    if (widthCm) {
-      const targetWidthPixels = (widthCm / 2.54) * dpi;
-      const uniformScale = (targetWidthPixels * canvasScaleX) / selectedImage.width;
-      newScaleX = uniformScale;
-      newScaleY = uniformScale;
-    } else if (heightCm) {
-      const targetHeightPixels = (heightCm / 2.54) * dpi;
-      const uniformScale = (targetHeightPixels * canvasScaleY) / selectedImage.height;
-      newScaleX = uniformScale;
-      newScaleY = uniformScale;
-    }
-  } else {
-    if (widthCm) {
-      const targetWidthPixels = (widthCm / 2.54) * dpi;
-      newScaleX = (targetWidthPixels * canvasScaleX) / selectedImage.width;
-    }
-    if (heightCm) {
-      const targetHeightPixels = (heightCm / 2.54) * dpi;
-      newScaleY = (targetHeightPixels * canvasScaleY) / selectedImage.height;
-    }
-  }
-
-  return { newScaleX, newScaleY };
-}
-
 let marginRect;
-
-function applyScalesWithConstraints(selectedImage, newScaleX, newScaleY, originalState) {
-  selectedImage.scaleX = newScaleX;
-  selectedImage.scaleY = newScaleY;
-  selectedImage.setCoords();
-
-  let br = selectedImage.getBoundingRect();
-  if (
-    br.left < marginRect.left ||
-    br.top < marginRect.top ||
-    br.left + br.width > marginRect.left + marginRect.width ||
-    br.top + br.height > marginRect.top + marginRect.height
-  ) {
-    constrainObjectToMargin(selectedImage, marginRect);
-    br = selectedImage.getBoundingRect();
-  }
-
-  // Check if still exceeds margins after constraint
-  if (
-    br.left < marginRect.left ||
-    br.top < marginRect.top ||
-    br.left + br.width > marginRect.left + marginRect.width ||
-    br.top + br.height > marginRect.top + marginRect.height
-  ) {
-    // Revert to original state
-    selectedImage.top = originalState.top;
-    selectedImage.left = originalState.left;
-    selectedImage.scaleX = originalState.scaleX;
-    selectedImage.scaleY = originalState.scaleY;
-    selectedImage.setCoords();
-    
-    Swal.fire({
-      text: "El tamaño deseado excede el límite de los márgenes.",
-      icon: "warning",
-    });
-    return false;
-  }
-  return true;
-}
 
 let currentSize = "carta";
 let isVertical = true;
-
-function setSingleImageSizeInCm(selectedImage) {
-  const widthInputValue = widthInput.value;
-  const heightInputValue = heightInput.value;
-  const maintainAspect = document.getElementById("maintainAspectCheckbox").checked;
-
-  // Validate inputs
-  const widthResult = validateSizeInput(widthInputValue, "anchura");
-  const heightResult = validateSizeInput(heightInputValue, "altura");
-  
-  if (!widthResult.isValid || !heightResult.isValid) {
-    widthInput.value = "";
-    heightInput.value = "";
-    return;
-  }
-
-  const widthCm = widthResult.value;
-  const heightCm = heightResult.value;
-
-  if (!widthCm && !heightCm) {
-    Swal.fire({
-      text: "Introduzca al menos una medida válida.",
-      icon: "warning",
-    });
-    return;
-  }
-
-  // Calculate canvas scales
-  let paperWidth = paperSizes[currentSize].width;
-  let paperHeight = paperSizes[currentSize].height;
-  if (!isVertical) {
-    [paperWidth, paperHeight] = [paperHeight, paperWidth];
-  }
-  const canvasScaleX = canvas.getWidth() / paperWidth;
-  const canvasScaleY = canvas.getHeight() / paperHeight;
-
-  // Store original state
-  const originalState = {
-    top: selectedImage.top,
-    left: selectedImage.left,
-    scaleX: selectedImage.scaleX,
-    scaleY: selectedImage.scaleY
-  };
-
-  // Calculate new scales
-  const { newScaleX, newScaleY } = calculateNewScales(
-    selectedImage, widthCm, heightCm, maintainAspect, canvasScaleX, canvasScaleY
-  );
-
-  // Apply scales with constraint checking
-  const success = applyScalesWithConstraints(selectedImage, newScaleX, newScaleY, originalState);
-  
-  if (success) {
-    canvas.renderAll();
-  }
-}
-
-function setImageSizeInCm() {
-  const activeObjects = canvas.getActiveObjects();
-  const selectedImages = activeObjects.filter((obj) => obj.type === "image");
-
-  if (selectedImages.length === 0) {
-    Swal.fire({
-      text: "Seleccione primero una o más imágenes.",
-      icon: "warning",
-    });
-    return;
-  }
-
-  // Sólo se descarta la selección si son varias imágenes
-  if (selectedImages.length > 1) {
-    canvas.discardActiveObject();
-  }
-
-  selectedImages.forEach((obj) => {
-    if (obj.type === "image") {
-      // Ensure origin is set to center for individual scaling
-      obj.set({
-        originX: "center",
-        originY: "center",
-      });
-      setSingleImageSizeInCm(obj);
-    }
-  });
-
-  widthInput.value = "";
-  heightInput.value = "";
-}
 
 let cropRect = null;
 let activeImage = null;
@@ -1064,7 +889,7 @@ cancelCropButton.addEventListener("click", exitCropMode);
 scaleUpButton.addEventListener("click", scaleUp);
 scaleDownButton.addEventListener("click", scaleDown);
 arrangeButton.addEventListener("click", selectArrangeImageLayout);
-setSizeButton.addEventListener("click", setImageSizeInCm);
+setSizeButton.addEventListener("click", () => setImageSizeInCm(canvas, widthInput, heightInput, marginRect, currentSize, isVertical, paperSizes, dpi));
 columnsCollageButton.addEventListener("click", () => {
   const newStatus = createMasonryColumnsCollage(canvas, marginRect, Swal);
   if (newStatus) arrangementStatus = newStatus;
@@ -1135,45 +960,6 @@ fabric.Object.prototype.cornerSize = 12;
 const controls = fabric.Object.prototype.controls;
 const rotateControls = controls.mtr;
 rotateControls.visible = false;
-
-function constrainObjectToMargin(obj, marginRect) {
-  obj.setCoords();
-
-  let objPoints = [
-    obj.aCoords.tl,
-    obj.aCoords.tr,
-    obj.aCoords.br,
-    obj.aCoords.bl,
-  ];
-  let marginRight = marginRect.left + marginRect.width;
-  let marginBottom = marginRect.top + marginRect.height;
-
-  let offsetX = 0,
-    offsetY = 0;
-
-  objPoints.forEach(function (point) {
-    if (point.x < marginRect.left) {
-      offsetX = Math.max(offsetX, marginRect.left - point.x);
-    }
-    if (point.x > marginRight) {
-      offsetX = Math.min(offsetX, marginRight - point.x);
-    }
-    if (point.y < marginRect.top) {
-      offsetY = Math.max(offsetY, marginRect.top - point.y);
-    }
-    if (point.y > marginBottom) {
-      offsetY = Math.min(offsetY, marginBottom - point.y);
-    }
-  });
-
-  if (offsetX !== 0 || offsetY !== 0) {
-    obj.left += offsetX;
-    obj.top += offsetY;
-    obj.setCoords();
-  }
-
-  return obj;
-}
 
 canvas.on("object:moving", function (e) {
   constrainObjectToMargin(e.target, marginRect);
