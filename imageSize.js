@@ -147,7 +147,8 @@ function setSingleImageSizeInCm(selectedImage, inputElements, maintainAspect, pa
   }
 }
 
-function setImageSizeInCm(canvas, widthInput, heightInput, marginRect, currentSize, isVertical, paperSizes, dpi) {
+function setImageSizeInCm({ canvas, widthInput, heightInput, marginRect, paperConfig }) {
+  const { currentSize, isVertical, paperSizes, dpi } = paperConfig;
   const activeObjects = canvas.getActiveObjects();
   const selectedImages = activeObjects.filter((obj) => obj.type === "image");
 

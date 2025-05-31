@@ -889,7 +889,13 @@ cancelCropButton.addEventListener("click", exitCropMode);
 scaleUpButton.addEventListener("click", scaleUp);
 scaleDownButton.addEventListener("click", scaleDown);
 arrangeButton.addEventListener("click", selectArrangeImageLayout);
-setSizeButton.addEventListener("click", () => setImageSizeInCm(canvas, widthInput, heightInput, marginRect, currentSize, isVertical, paperSizes, dpi));
+setSizeButton.addEventListener("click", () => setImageSizeInCm({
+  canvas,
+  widthInput,
+  heightInput,
+  marginRect,
+  paperConfig: { currentSize, isVertical, paperSizes, dpi }
+}));
 columnsCollageButton.addEventListener("click", () => {
   const newStatus = createMasonryColumnsCollage(canvas, marginRect, Swal);
   if (newStatus) arrangementStatus = newStatus;
