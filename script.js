@@ -16,6 +16,7 @@ import { rotateImage } from './rotateUtils.js';
 import { resetActiveImage } from './resetUtils.js';
 import { deleteActiveObject } from './deleteUtils.js';
 import { scaleUp, scaleDown } from './scaleUtils.js';
+import { convertToGrayscale } from './grayScaleUtils.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -522,22 +523,6 @@ function arrangeImages(images, orientation, order = "forward") {
   // Set flag to indicate grid arrangement
   arrangementStatus = "grid";
 }
-function convertToGrayscale() {
-  const activeObjects = canvas
-    .getActiveObjects()
-    .filter((obj) => obj.type === "image");
-  if (activeObjects.length === 0) {
-    Swal.fire({ text: "Seleccione primero una imagen.", icon: "warning" });
-    return;
-  }
-  activeObjects.forEach((obj) => {
-    // Ensure filters property is initialized
-    obj.filters = obj.filters || [];
-    obj.filters.push(new fabric.Image.filters.Grayscale());
-    obj.applyFilters();
-  });
-  canvas.renderAll();
-}
 
 scaleUpButton.addEventListener("click", () => scaleUp(canvas, marginRect));
 scaleDownButton.addEventListener("click", () => scaleDown(canvas, marginRect));
@@ -591,7 +576,7 @@ horizontalButton.addEventListener("click", () => changeOrientation(false));
 imageLoader.addEventListener("change", handleImageUpload);
 resetImageButton.addEventListener("click", () => resetActiveImage(canvas, marginRect, originalImages));
 printButton.addEventListener("click", () => printCanvas(canvas, marginRect));
-grayScaleButton.addEventListener("click", convertToGrayscale);
+grayScaleButton.addEventListener("click", () => convertToGrayscale(canvas));
 rotateButton_p90.addEventListener("click", () => rotateImage(canvas, 90, marginRect));
 rotateButton_n90.addEventListener("click", () => rotateImage(canvas, 270, marginRect));
 centerVerticallyButton.addEventListener("click", () => centerVertically(canvas));
