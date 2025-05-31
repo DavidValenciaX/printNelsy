@@ -88,7 +88,11 @@ function applyScalesWithConstraints(selectedImage, newScaleX, newScaleY, origina
   return true;
 }
 
-function setSingleImageSizeInCm(selectedImage, widthInput, heightInput, maintainAspect, currentSize, isVertical, paperSizes, canvas, marginRect, dpi) {
+function setSingleImageSizeInCm(selectedImage, inputElements, maintainAspect, paperOptions, canvasDetails) {
+  const { widthInput, heightInput } = inputElements;
+  const { currentSize, isVertical, paperSizes } = paperOptions;
+  const { canvas, marginRect, dpi } = canvasDetails;
+
   const widthInputValue = widthInput.value;
   const heightInputValue = heightInput.value;
 
@@ -169,7 +173,13 @@ function setImageSizeInCm(canvas, widthInput, heightInput, marginRect, currentSi
         originX: "center",
         originY: "center",
       });
-      setSingleImageSizeInCm(obj, widthInput, heightInput, maintainAspect, currentSize, isVertical, paperSizes, canvas, marginRect, dpi);
+      setSingleImageSizeInCm(
+        obj, 
+        { widthInput, heightInput }, 
+        maintainAspect, 
+        { currentSize, isVertical, paperSizes }, 
+        { canvas, marginRect, dpi }
+      );
     }
   });
 
