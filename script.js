@@ -3,7 +3,8 @@ import { centerVertically, centerHorizontally } from './center.js';
 import { 
   radToDeg, 
   roundToDecimals, 
-  calculateDistance 
+  calculateDistance, 
+  checkOverlap 
 } from './mathUtils.js';
 import { createMasonryColumnsCollage, createMasonryRowsCollage } from './collageUtils.js';
 
@@ -2553,24 +2554,6 @@ function setupAccessibility() {
 }
 setupAccessibility();
 
-/**
- * AABB overlap test with padding
- * @param {Object} a - First bounding rectangle
- * @param {Object} b - Second bounding rectangle  
- * @param {number} padding - Safety gap between bounding boxes
- * @returns {boolean} - True if rectangles overlap
- */
-function checkOverlap(a, b, padding = 2) {
-  return !(
-    a.left + a.width + padding <= b.left ||
-    b.left + b.width + padding <= a.left ||
-    a.top + a.height + padding <= b.top ||
-    b.top + b.height + padding <= a.top
-  );
-}
-
-// ... existing code ...
 window.zoomIn = zoomIn;
 window.zoomOut = zoomOut;
 window.applyZoom = applyZoom;
-// ... existing code ...
