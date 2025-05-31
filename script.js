@@ -9,9 +9,10 @@ import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange }
 import { 
   setImageSizeInCm
 } from './imageSize.js';
-import { constrainObjectToMargin, scaleToFitWithinMargin } from './constraintUtils.js';
+import { constrainObjectToMargin } from './constraintUtils.js';
 import { printCanvas } from './printUtils.js';
 import { deactivateObjects } from './deactivateObjects.js';
+import { rotateImage } from './rotateUtils.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -567,24 +568,6 @@ function resetActiveImage() {
   canvas.discardActiveObject();
 }
 
-function rotateImage(deg) {
-  const activeObject = canvas.getActiveObject();
-  if (!activeObject) {
-    Swal.fire({ text: "Seleccione primero una imagen.", icon: "warning" });
-    return;
-  }
-
-  activeObject.rotate((activeObject.angle + deg) % 360);
-  activeObject.setCoords();
-
-  // Primero se reubica dentro del margen.
-  constrainObjectToMargin(activeObject, marginRect);
-  // Si el objeto sigue excediendo, se reduce su escala.
-  scaleToFitWithinMargin(activeObject, marginRect);
-
-  canvas.renderAll();
-}
-
 function deleteActiveObject() {
   const activeObjects = canvas.getActiveObjects();
   if (activeObjects.length === 0) {
@@ -766,8 +749,8 @@ imageLoader.addEventListener("change", handleImageUpload);
 resetImageButton.addEventListener("click", resetActiveImage);
 printButton.addEventListener("click", () => printCanvas(canvas, marginRect));
 grayScaleButton.addEventListener("click", convertToGrayscale);
-rotateButton_p90.addEventListener("click", () => rotateImage(90));
-rotateButton_n90.addEventListener("click", () => rotateImage(270));
+rotateButton_p90.addEventListener("click", () => rotateImage(canvas, 90, marginRect));
+rotateButton_n90.addEventListener("click", () => rotateImage(canvas, 270, marginRect));
 centerVerticallyButton.addEventListener("click", () => centerVertically(canvas));
 centerHorizontallyButton.addEventListener("click", () => centerHorizontally(canvas));
 deleteButton.addEventListener("click", deleteActiveObject);
