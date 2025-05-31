@@ -2,7 +2,6 @@ import { zoomIn, zoomOut, applyZoom } from './zoom.js';
 import { centerVertically, centerHorizontally } from './center.js';
 import { 
   radToDeg, 
-  roundToDecimals, 
   calculateDistance
 } from './mathUtils.js';
 import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from './collageUtils.js';
@@ -17,6 +16,7 @@ import { resetActiveImage } from './resetUtils.js';
 import { deleteActiveObject } from './deleteUtils.js';
 import { scaleUp, scaleDown } from './scaleUtils.js';
 import { convertToGrayscale } from './imageEffects.js';
+import { arrangeImages } from './arrangeUtils.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -311,7 +311,7 @@ function resizeCanvas(size, orientation = isVertical) {
   if (images.length > 0) {
     if (arrangementStatus === "grid") {
       // Arrange images in grid layout
-      arrangeImages(images, currentLayout, currentDirection);
+      arrangementStatus = arrangeImages(canvas, images, currentLayout, marginWidth, currentDirection);
     } else if (arrangementStatus === "columns-collage") {
       // Re-add images and create collage
       images.forEach((img) => canvas.add(img));
@@ -387,11 +387,11 @@ function handleImageUpload(e) {
         if (processedCount === numFilesToProcess) {
           // Primero, se organiza el layout de las imágenes
           if (numFilesToProcess <= 2) {
-            arrangeImages(loadedImages, "cols", "forward");
+            arrangementStatus = arrangeImages(canvas, loadedImages, "cols", marginWidth, "forward");
             lastLayout = "cols";
             lastDirection = "forward";
           } else {
-            arrangeImages(loadedImages, "rows", "forward");
+            arrangementStatus = arrangeImages(canvas, loadedImages, "rows", marginWidth, "forward");
             lastLayout = "rows";
             lastDirection = "forward";
           }
@@ -427,101 +427,6 @@ function handleImageUpload(e) {
   if (e.target) {
     e.target.value = null;
   }
-}
-
-function arrangeImages(images, orientation, order = "forward") {
-  const count = images.length;
-  let marginAdjustment = count <= 2 ? 100 : 20;
-  const margin = marginWidth + marginAdjustment;
-
-  // Create copy and sort according to order
-  const sortedImages = [...images];
-  if (order === "reverse") {
-    sortedImages.reverse();
-  }
-
-  let cols, rows;
-  // Add single-column and single-row layout options
-  if (orientation === "single-column") {
-    cols = 1;
-    rows = count;
-  } else if (orientation === "single-row") {
-    cols = count;
-    rows = 1;
-  } else if (orientation === "rows") {
-    cols = Math.ceil(Math.sqrt(count));
-    rows = Math.ceil(count / cols);
-  } else if (orientation === "cols") {
-    rows = Math.ceil(Math.sqrt(count));
-    cols = Math.ceil(count / rows);
-  }
-
-  // Adjust cell dimensions based on orientation
-  const cellWidth =
-    orientation === "single-row"
-      ? (canvas.width - margin * 2) / count
-      : (canvas.width - margin * 2) / cols;
-
-  const cellHeight =
-    orientation === "single-column"
-      ? (canvas.height - margin * 2) / count
-      : (canvas.height - margin * 2) / rows;
-
-  sortedImages.forEach((img, index) => {
-    // Determine row and column without altering permanent id
-    let row, col;
-    if (orientation === "rows") {
-      row = Math.floor(index / cols);
-      col = index % cols;
-    } else if (orientation === "cols") {
-      col = Math.floor(index / rows);
-      row = index % rows;
-    } else if (orientation === "single-column") {
-      col = 0;
-      row = index;
-    } else if (orientation === "single-row") {
-      col = index;
-      row = 0;
-    }
-
-    let realImageWidth = img.width * img.scaleX;
-    let realImageHeight = img.height * img.scaleY;
-    let bounds = img.getBoundingRect();
-
-    let roundedBoundsWidth = roundToDecimals(bounds.width, 2);
-    let roundedImageWidth = roundToDecimals(realImageWidth, 2);
-    const offsetWidthImageBound = roundToDecimals(
-      roundedBoundsWidth - roundedImageWidth,
-      2
-    );
-
-    let roundedBoundsHeight = roundToDecimals(bounds.height, 2);
-    let roundedImageHeight = roundToDecimals(realImageHeight, 2);
-    const offsetHeightImageBound = roundToDecimals(
-      roundedBoundsHeight - roundedImageHeight,
-      2
-    );
-
-    const scaleFactor = Math.min(
-      (cellWidth - margin - offsetWidthImageBound) / img.width,
-      (cellHeight - margin - offsetHeightImageBound) / img.height
-    );
-
-    img.scale(scaleFactor);
-    img.set({
-      left: margin + col * cellWidth + cellWidth / 2,
-      top: margin + row * cellHeight + cellHeight / 2,
-      originX: "center",
-      originY: "center",
-    });
-
-    // originalImages is kept intact with the original information
-    canvas.add(img);
-  });
-
-  canvas.renderAll();
-  // Set flag to indicate grid arrangement
-  arrangementStatus = "grid";
 }
 
 scaleUpButton.addEventListener("click", () => scaleUp(canvas, marginRect));
@@ -560,7 +465,7 @@ function selectArrangeImageLayout() {
   const currentState = `${lastLayout}-${lastDirection}`;
   const nextState = stateTransitions[currentState] || { layout: "rows", direction: "forward" };
 
-  arrangeImages(images, nextState.layout, nextState.direction);
+  arrangementStatus = arrangeImages(canvas, images, nextState.layout, marginWidth, nextState.direction);
   lastLayout = nextState.layout;
   lastDirection = nextState.direction;
 
