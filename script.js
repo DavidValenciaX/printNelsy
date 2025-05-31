@@ -264,6 +264,33 @@ function exitCropMode() {
   cropButton.style.display = "inline";
 }
 
+function reAddAndArrangeImages(images, currentLayout, currentDirection) {
+  if (images.length > 0) {
+    if (arrangementStatus === "grid") {
+      // Arrange images in grid layout
+      arrangementStatus = arrangeImages(canvas, images, currentLayout, marginWidth, currentDirection);
+    } else if (arrangementStatus === "columns-collage") {
+      // Re-add images and create collage
+      images.forEach((img) => canvas.add(img));
+      const newStatus = createMasonryColumnsCollage(canvas, marginRect, Swal);
+      if (newStatus) arrangementStatus = newStatus;
+    } else if (arrangementStatus === "rows-collage") {
+      // Re-add images and create collage
+      images.forEach((img) => canvas.add(img));
+      const newStatus = createMasonryRowsCollage(canvas, marginRect, Swal);
+      if (newStatus) arrangementStatus = newStatus;
+    }
+    else if (arrangementStatus === "none") {
+      // Re-add images and keep their positions.
+      images.forEach((img) => {
+        canvas.add(img);
+        // Constrain image position within the new margin
+        constrainObjectToMargin(img, marginRect);
+      });
+    }
+  }
+}
+
 function resizeCanvas(size, orientation = isVertical) {
   // Store current canvas state
   const images = canvas.getObjects().filter((obj) => obj.type === "image");
@@ -307,31 +334,8 @@ function resizeCanvas(size, orientation = isVertical) {
 
   canvas.add(marginRect);
 
-  // Re-add and re-arrange images based on the current arrangement status
-  if (images.length > 0) {
-    if (arrangementStatus === "grid") {
-      // Arrange images in grid layout
-      arrangementStatus = arrangeImages(canvas, images, currentLayout, marginWidth, currentDirection);
-    } else if (arrangementStatus === "columns-collage") {
-      // Re-add images and create collage
-      images.forEach((img) => canvas.add(img));
-      const newStatus = createMasonryColumnsCollage(canvas, marginRect, Swal);
-      if (newStatus) arrangementStatus = newStatus;
-    } else if (arrangementStatus === "rows-collage") {
-      // Re-add images and create collage
-      images.forEach((img) => canvas.add(img));
-      const newStatus = createMasonryRowsCollage(canvas, marginRect, Swal);
-      if (newStatus) arrangementStatus = newStatus;
-    }
-    else if (arrangementStatus === "none") {
-      // Re-add images and keep their positions.
-      images.forEach((img) => {
-        canvas.add(img);
-        // Constrain image position within the new margin
-        constrainObjectToMargin(img, marginRect);
-      });
-    }
-  }
+  // Re-add and re-arrange images using the new function
+  reAddAndArrangeImages(images, currentLayout, currentDirection);
 
   canvas.renderAll();
 }
