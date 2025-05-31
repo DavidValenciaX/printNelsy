@@ -13,6 +13,7 @@ import { constrainObjectToMargin } from './constraintUtils.js';
 import { printCanvas } from './printUtils.js';
 import { deactivateObjects } from './deactivateObjects.js';
 import { rotateImage } from './rotateUtils.js';
+import { resetActiveImage } from './resetUtils.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -520,54 +521,6 @@ function arrangeImages(images, orientation, order = "forward") {
   arrangementStatus = "grid";
 }
 
-// Reset active image to its original state
-function resetActiveImage() {
-  const activeObjects = canvas.getActiveObjects();
-  if (activeObjects.length === 0) {
-    Swal.fire({ text: "Seleccione primero una imagen.", icon: "warning" });
-    return;
-  }
-
-  // Iterate over each selected image
-  activeObjects.forEach((activeObject) => {
-    if (!originalImages[activeObject?.id]) {
-      Swal.fire({
-        text: `No se pudo restablecer la imagen con id ${
-          activeObject.id || "n/a"
-        }.`,
-        icon: "warning",
-      });
-      return;
-    }
-
-    const original = originalImages[activeObject.id];
-
-    fabric.Image.fromURL(original.url, function (img) {
-      // Apply original properties to the new image
-      img.set({
-        id: activeObject.id,
-        scaleX: original.scaleX,
-        scaleY: original.scaleY,
-        angle: 0,
-        left: original.left,
-        top: original.top,
-        originX: "center",
-        originY: "center",
-      });
-
-      // Si la imagen queda fuera del canvas, se reubica dentro de los márgenes.
-      img = constrainObjectToMargin(img, marginRect);
-
-      // Replace old image with the new one
-      canvas.remove(activeObject);
-      canvas.add(img);
-      canvas.renderAll();
-    });
-  });
-  // Clear active selection once reset is complete
-  canvas.discardActiveObject();
-}
-
 function deleteActiveObject() {
   const activeObjects = canvas.getActiveObjects();
   if (activeObjects.length === 0) {
@@ -746,7 +699,7 @@ verticalButton.addEventListener("click", () => changeOrientation(true));
 horizontalButton.addEventListener("click", () => changeOrientation(false));
 
 imageLoader.addEventListener("change", handleImageUpload);
-resetImageButton.addEventListener("click", resetActiveImage);
+resetImageButton.addEventListener("click", () => resetActiveImage(canvas, marginRect, originalImages));
 printButton.addEventListener("click", () => printCanvas(canvas, marginRect));
 grayScaleButton.addEventListener("click", convertToGrayscale);
 rotateButton_p90.addEventListener("click", () => rotateImage(canvas, 90, marginRect));
