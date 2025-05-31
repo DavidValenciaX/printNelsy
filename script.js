@@ -14,6 +14,7 @@ import { printCanvas } from './printUtils.js';
 import { deactivateObjects } from './deactivateObjects.js';
 import { rotateImage } from './rotateUtils.js';
 import { resetActiveImage } from './resetUtils.js';
+import { deleteActiveObject } from './deleteUtils.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -520,32 +521,6 @@ function arrangeImages(images, orientation, order = "forward") {
   // Set flag to indicate grid arrangement
   arrangementStatus = "grid";
 }
-
-function deleteActiveObject() {
-  const activeObjects = canvas.getActiveObjects();
-  if (activeObjects.length === 0) {
-    Swal.fire({ text: "Seleccione primero una imagen.", icon: "warning" });
-    return;
-  }
-
-  Swal.fire({
-    title: "Confirmación",
-    text: "¿Está seguro de eliminar las imágenes?",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Eliminar",
-    cancelButtonText: "Cancelar",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      activeObjects.forEach((obj) => {
-        canvas.remove(obj);
-      });
-      canvas.discardActiveObject();
-      canvas.renderAll();
-    }
-  });
-}
-
 function convertToGrayscale() {
   const activeObjects = canvas
     .getActiveObjects()
@@ -706,7 +681,7 @@ rotateButton_p90.addEventListener("click", () => rotateImage(canvas, 90, marginR
 rotateButton_n90.addEventListener("click", () => rotateImage(canvas, 270, marginRect));
 centerVerticallyButton.addEventListener("click", () => centerVertically(canvas));
 centerHorizontallyButton.addEventListener("click", () => centerHorizontally(canvas));
-deleteButton.addEventListener("click", deleteActiveObject);
+deleteButton.addEventListener("click", () => deleteActiveObject(canvas));
 confirmCropButton.addEventListener("click", confirmCrop);
 cancelCropButton.addEventListener("click", exitCropMode);
 scaleUpButton.addEventListener("click", scaleUp);
@@ -775,7 +750,7 @@ cropButton.addEventListener("click", function () {
 // Add keyboard delete support
 document.addEventListener("keydown", function (event) {
   if (event.key === "Delete") {
-    deleteActiveObject();
+    deleteActiveObject(canvas);
   }
 });
 
