@@ -1,7 +1,6 @@
 import { zoomIn, zoomOut, applyZoom } from './zoom.js';
 import { centerVertically, centerHorizontally } from './center.js';
 import { 
-  degToRad, 
   radToDeg, 
   roundToDecimals, 
   calculateDistance 
