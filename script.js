@@ -5,8 +5,7 @@ import {
   roundToDecimals, 
   calculateDistance
 } from './mathUtils.js';
-import { createMasonryColumnsCollage, createMasonryRowsCollage } from './collageUtils.js';
-import { collageArrange } from './collageArrange.js';
+import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from './collageUtils.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
