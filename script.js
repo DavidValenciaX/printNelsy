@@ -50,15 +50,6 @@ const paperSizes = {
   a4: { width: 8.27 * dpi, height: 11.69 * dpi },
 };
 
-let currentSize = "carta";
-let isVertical = true;
-let marginRect;
-
-let cropRect = null;
-let activeImage = null;
-let isCropping = false;
-let inactivatedObjects = [];
-
 /**
  * Function to validate size input
  */
@@ -111,6 +102,8 @@ function calculateNewScales(selectedImage, widthCm, heightCm, maintainAspect, ca
   return { newScaleX, newScaleY };
 }
 
+let marginRect;
+
 function applyScalesWithConstraints(selectedImage, newScaleX, newScaleY, originalState) {
   selectedImage.scaleX = newScaleX;
   selectedImage.scaleY = newScaleY;
@@ -149,6 +142,9 @@ function applyScalesWithConstraints(selectedImage, newScaleX, newScaleY, origina
   }
   return true;
 }
+
+let currentSize = "carta";
+let isVertical = true;
 
 function setSingleImageSizeInCm(selectedImage) {
   const widthInputValue = widthInput.value;
@@ -238,7 +234,9 @@ function setImageSizeInCm() {
   heightInput.value = "";
 }
 
-const SCALE_FACTOR = 0.01;
+let cropRect = null;
+let activeImage = null;
+let inactivatedObjects = [];
 
 function disableOtherObjects() {
   canvas.getObjects().forEach((obj) => {
@@ -277,6 +275,8 @@ function restoreOtherObjects() {
   inactivatedObjects = [];
   canvas.requestRenderAll();
 }
+
+let isCropping = false;
 
 function enterCropMode(imgObject) {
   activeImage = imgObject;
@@ -914,6 +914,8 @@ function convertToGrayscale() {
   });
   canvas.renderAll();
 }
+
+const SCALE_FACTOR = 0.01;
 
 function scaleUp() {
   const activeObject = canvas.getActiveObject();
