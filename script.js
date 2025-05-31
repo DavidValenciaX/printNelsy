@@ -10,6 +10,7 @@ import {
   setImageSizeInCm
 } from './imageSize.js';
 import { constrainObjectToMargin } from './constraintUtils.js';
+import { printCanvas } from './printUtils.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -607,59 +608,6 @@ function resetActiveImage() {
   canvas.discardActiveObject();
 }
 
-function printCanvas() {
-  // Store original opacity
-  const originalOpacity = marginRect.opacity;
-
-  // Make margin invisible for printing
-  marginRect.opacity = 0;
-  canvas.renderAll();
-
-  const dataUrl = canvas.toDataURL({
-    format: "png",
-    quality: 1,
-    multiplier: 1 / canvas.getZoom(),
-  });
-
-  const windowContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Imprimir Canvas</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <style>
-                @page {
-                    margin: 0;
-                    size: auto;
-                }
-                body {
-                    margin: 0;
-                    padding: 0;
-                }
-                img {
-                    width: 100%;
-                    height: auto;
-                    display: block;
-                    margin: 0;
-                }
-            </style>
-        </head>
-        <body>
-            <img src="${dataUrl}">
-        </body>
-        </html>`;
-
-  const printWin = window.open("", "", "width=800,height=600");
-  printWin.document.documentElement.innerHTML = windowContent;
-  printWin.setTimeout(function () {
-    printWin.focus();
-    printWin.print();
-    printWin.close();
-    marginRect.opacity = originalOpacity;
-    canvas.renderAll();
-  }, 250);
-}
-
 function scaleToFitWithinMargin(obj, marginRect) {
   obj.setCoords();
   const br = obj.getBoundingRect();
@@ -877,7 +825,7 @@ horizontalButton.addEventListener("click", () => changeOrientation(false));
 
 imageLoader.addEventListener("change", handleImageUpload);
 resetImageButton.addEventListener("click", resetActiveImage);
-printButton.addEventListener("click", printCanvas);
+printButton.addEventListener("click", () => printCanvas(canvas, marginRect));
 grayScaleButton.addEventListener("click", convertToGrayscale);
 rotateButton_p90.addEventListener("click", () => rotateImage(90));
 rotateButton_n90.addEventListener("click", () => rotateImage(270));
