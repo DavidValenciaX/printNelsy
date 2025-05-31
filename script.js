@@ -9,7 +9,7 @@ import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange }
 import { 
   setImageSizeInCm
 } from './imageSize.js';
-import { constrainObjectToMargin } from './constraintUtils.js';
+import { constrainObjectToMargin, scaleToFitWithinMargin } from './constraintUtils.js';
 import { printCanvas } from './printUtils.js';
 import { deactivateObjects } from './deactivateObjects.js';
 
@@ -417,7 +417,6 @@ function handleImageUpload(e) {
     reader.readAsDataURL(file);
   }
 
-  // **LA CORRECCIÓN PRINCIPAL ESTÁ AQUÍ**
   // Resetea el valor del input de archivo.
   // Esto permite que el evento 'change' se dispare de nuevo si el usuario selecciona el mismo archivo.
   if (e.target) {
@@ -566,26 +565,6 @@ function resetActiveImage() {
   });
   // Clear active selection once reset is complete
   canvas.discardActiveObject();
-}
-
-function scaleToFitWithinMargin(obj, marginRect) {
-  obj.setCoords();
-  const br = obj.getBoundingRect();
-  // Si el objeto ya cabe completamente en el margen, no se hace nada.
-  if (br.width <= marginRect.width && br.height <= marginRect.height) {
-    return;
-  }
-  // Calcula el factor de escala mínimo necesario para que br quepa en marginRect.
-  const scaleFactor = Math.min(
-    marginRect.width / br.width,
-    marginRect.height / br.height
-  );
-  // Aplica el factor a la escala actual.
-  obj.scaleX *= scaleFactor;
-  obj.scaleY *= scaleFactor;
-  // Reposiciona para que quede dentro del margen.
-  constrainObjectToMargin(obj, marginRect);
-  obj.setCoords();
 }
 
 function rotateImage(deg) {

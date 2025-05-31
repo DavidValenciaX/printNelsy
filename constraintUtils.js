@@ -38,4 +38,27 @@ export function constrainObjectToMargin(obj, marginRect) {
   }
 
   return obj;
+}
+
+/**
+ * Scales an object to fit within margin boundaries if it exceeds them
+ */
+export function scaleToFitWithinMargin(obj, marginRect) {
+  obj.setCoords();
+  const br = obj.getBoundingRect();
+  // Si el objeto ya cabe completamente en el margen, no se hace nada.
+  if (br.width <= marginRect.width && br.height <= marginRect.height) {
+    return;
+  }
+  // Calcula el factor de escala mínimo necesario para que br quepa en marginRect.
+  const scaleFactor = Math.min(
+    marginRect.width / br.width,
+    marginRect.height / br.height
+  );
+  // Aplica el factor a la escala actual.
+  obj.scaleX *= scaleFactor;
+  obj.scaleY *= scaleFactor;
+  // Reposiciona para que quede dentro del margen.
+  constrainObjectToMargin(obj, marginRect);
+  obj.setCoords();
 } 
