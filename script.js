@@ -27,6 +27,11 @@ import {
   setLastLayout,
   setLastDirection
 } from './imageUploadUtils.js';
+import { 
+  initializeCrop, 
+  confirmCrop, 
+  exitCropMode
+} from './cropUtils.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -75,204 +80,6 @@ let marginRect;
 
 let currentSize = "carta";
 let isVertical = true;
-
-let cropRect = null;
-let activeImage = null;
-let inactivatedObjects = [];
-
-function disableOtherObjects() {
-  canvas.getObjects().forEach((obj) => {
-    if (obj !== cropRect && obj !== marginRect) {
-      inactivatedObjects.push({
-        object: obj,
-        originalOpacity: obj.opacity,
-      });
-
-      if (obj !== activeImage) {
-        obj.set({
-          opacity: 0.3,
-        });
-      }
-      obj.set({
-        selectable: false,
-        evented: false,
-      });
-    }
-  });
-  canvas.requestRenderAll();
-}
-
-// Modify the restore function
-function restoreOtherObjects() {
-  inactivatedObjects.forEach((item) => {
-    // Don't restore properties for background
-    if (item.object.name !== "background") {
-      item.object.set({
-        opacity: item.originalOpacity,
-        selectable: true,
-        evented: true,
-      });
-    }
-  });
-  inactivatedObjects = [];
-  canvas.requestRenderAll();
-}
-
-let isCropping = false;
-
-function enterCropMode(imgObject) {
-  activeImage = imgObject;
-  isCropping = true;
-
-  // Get image bounding rect
-  const bounds = imgObject.getBoundingRect();
-
-  // Create crop rect using bounds
-  cropRect = new fabric.Rect({
-    left: bounds.left,
-    top: bounds.top,
-    width: bounds.width,
-    height: bounds.height,
-    fill: "transparent",
-    stroke: "#000",
-    strokeWidth: 1,
-    strokeDashArray: [5, 5],
-    absolutePositioned: true,
-    transparentCorners: false,
-    cornerColor: "DodgerBlue",
-    cornerStyle: "circle",
-    cornerSize: 12,
-    cornerStrokeColor: "Blue",
-  });
-
-  canvas.add(cropRect);
-
-  // Bring both objects to front
-  imgObject.bringToFront();
-  cropRect.bringToFront();
-
-  // Disable other objects
-  disableOtherObjects();
-
-  canvas.setActiveObject(cropRect);
-
-  // Show crop control buttons
-  confirmCropButton.style.display = "inline";
-  cancelCropButton.style.display = "inline";
-  cropButton.style.display = "none";
-}
-
-// Add this global variable at the top of your script
-let canvasBackground = null;
-
-// Modify the background creation function
-function createCanvasBackground() {
-  // Remove existing background if it exists
-  if (canvasBackground) {
-    canvas.remove(canvasBackground);
-  }
-
-  canvasBackground = new fabric.Rect({
-    left: 0,
-    top: 0,
-    width: canvas.width,
-    height: canvas.height,
-    fill: "white",
-    selectable: false,
-    evented: false,
-    name: "background", // Add an identifier
-  });
-
-  canvas.add(canvasBackground);
-  canvas.sendToBack(canvasBackground);
-}
-
-function confirmCrop() {
-  if (!isCropping || !cropRect || !activeImage) {
-    Swal.fire({
-      text: "Seleccione primero una imagen y active el modo de recorte.",
-      icon: "warning",
-    });
-    return;
-  }
-
-  // Get the cropping rect and original image's ID
-  const rect = cropRect;
-  const img = activeImage;
-  const originalId = img.id; // Save original ID
-
-  // Set the crop rect stroke to transparent so that it doesn't bleed into the final image
-  rect.set("stroke", "transparent");
-
-  // Create a background to fill the canvas with white color
-  createCanvasBackground();
-
-  // Hide other objects
-  canvas.getObjects().forEach((obj) => {
-    if (
-      obj !== cropRect &&
-      obj !== marginRect &&
-      obj !== activeImage &&
-      obj !== canvasBackground
-    ) {
-      obj.set({
-        opacity: 0,
-      });
-    }
-  });
-
-  // Create new cropped image
-  const cropped = new Image();
-  cropped.src = canvas.toDataURL({
-    left: rect.left,
-    top: rect.top,
-    width: rect.width * rect.scaleX,
-    height: rect.height * rect.scaleY,
-  });
-
-  cropped.onload = function () {
-    // Remove old image and crop rect
-    canvas.remove(img);
-    canvas.remove(rect);
-
-    // Create and add new cropped image
-    const newImage = new fabric.Image(cropped);
-    newImage.set({
-      id: originalId, // Transfer the original ID
-      left: rect.left,
-      top: rect.top,
-    });
-
-    // Set rotation control visibility based on checkbox state
-    newImage.setControlsVisibility({
-      mtr: rotateCheckbox.checked,
-    });
-
-    newImage.setCoords();
-    canvas.add(newImage);
-    canvas.renderAll();
-  };
-
-  exitCropMode();
-}
-
-function exitCropMode() {
-  if (cropRect) {
-    canvas.remove(cropRect);
-    cropRect = null;
-  }
-
-  isCropping = false;
-  activeImage = null;
-
-  // Restore other objects
-  restoreOtherObjects();
-
-  // Hide crop control buttons
-  confirmCropButton.style.display = "none";
-  cancelCropButton.style.display = "none";
-  cropButton.style.display = "inline";
-}
 
 function reAddAndArrangeImages(images, currentLayout, currentDirection) {
   if (images.length > 0) {
@@ -412,8 +219,8 @@ rotateButton_n90.addEventListener("click", () => rotateImage(canvas, 270, margin
 centerVerticallyButton.addEventListener("click", () => centerVertically(canvas));
 centerHorizontallyButton.addEventListener("click", () => centerHorizontally(canvas));
 deleteButton.addEventListener("click", () => deleteActiveObject(canvas));
-confirmCropButton.addEventListener("click", confirmCrop);
-cancelCropButton.addEventListener("click", exitCropMode);
+confirmCropButton.addEventListener("click", () => confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton, cancelCropButton, cropButton));
+cancelCropButton.addEventListener("click", () => exitCropMode(canvas, confirmCropButton, cancelCropButton, cropButton));
 arrangeButton.addEventListener("click", selectArrangeImageLayout);
 setSizeButton.addEventListener("click", () => setImageSizeInCm({
   canvas,
@@ -446,33 +253,7 @@ rotateCheckbox.addEventListener("change", function (e) {
 });
 
 cropButton.addEventListener("click", function () {
-  const activeObjects = canvas.getActiveObjects();
-
-  console.log(activeObjects);
-
-  if (activeObjects.length === 0) {
-    Swal.fire({ text: "Seleccione primero una imagen.", icon: "warning" });
-    return;
-  }
-
-  if (activeObjects.length !== 1) {
-    Swal.fire({
-      text: "Seleccione solo una imagen para recortar.",
-      icon: "warning",
-    });
-    return;
-  }
-
-  const activeObject = activeObjects[0];
-  if (activeObject.type !== "image") {
-    Swal.fire({
-      text: "La selección debe ser una imagen válida.",
-      icon: "warning",
-    });
-    return;
-  }
-
-  enterCropMode(activeObject);
+  initializeCrop(canvas, Swal, confirmCropButton, cancelCropButton, cropButton, marginRect, rotateCheckbox);
 });
 
 // Add keyboard delete support
