@@ -16,6 +16,16 @@ import { arrangeImages } from './arrangeUtils.js';
 import { setupMovingEvents, updateMarginRect } from './movingEvents.js';
 import { setupScalingEvents, updateMarginRect as updateScalingMarginRect } from './scalingEvents.js';
 import { setupRotatingEvents, updateMarginRect as updateRotatingMarginRect } from './rotatingEvents.js';
+import { 
+  handleImageUpload, 
+  originalImages, 
+  arrangementStatus, 
+  lastLayout, 
+  lastDirection,
+  setArrangementStatus,
+  setLastLayout,
+  setLastDirection
+} from './imageUploadUtils.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -267,17 +277,17 @@ function reAddAndArrangeImages(images, currentLayout, currentDirection) {
   if (images.length > 0) {
     if (arrangementStatus === "grid") {
       // Arrange images in grid layout
-      arrangementStatus = arrangeImages(canvas, images, currentLayout, marginWidth, currentDirection);
+      setArrangementStatus(arrangeImages(canvas, images, currentLayout, marginWidth, currentDirection));
     } else if (arrangementStatus === "columns-collage") {
       // Re-add images and create collage
       images.forEach((img) => canvas.add(img));
       const newStatus = createMasonryColumnsCollage(canvas, marginRect, Swal);
-      if (newStatus) arrangementStatus = newStatus;
+      if (newStatus) setArrangementStatus(newStatus);
     } else if (arrangementStatus === "rows-collage") {
       // Re-add images and create collage
       images.forEach((img) => canvas.add(img));
       const newStatus = createMasonryRowsCollage(canvas, marginRect, Swal);
-      if (newStatus) arrangementStatus = newStatus;
+      if (newStatus) setArrangementStatus(newStatus);
     }
     else if (arrangementStatus === "none") {
       // Re-add images and keep their positions.
@@ -348,100 +358,8 @@ function changeOrientation(vertical) {
   resizeCanvas(currentSize, vertical);
 }
 
-// Add this at the top with other variables
-const originalImages = {};
-// New global flag to track canvas arrangement state: 'none', 'grid', or 'collage'
-let arrangementStatus = "none";
-
-function handleImageUpload(e) {
-  const files = e.target.files;
-
-  // Es una buena práctica verificar si se seleccionaron archivos.
-  if (!files || files.length === 0) {
-    // Resetea el valor del input incluso si no se seleccionaron archivos (ej. el usuario canceló el diálogo).
-    // Esto asegura que una futura selección del mismo archivo (después de una cancelación) funcione.
-    if (e.target) {
-      e.target.value = null;
-    }
-    return;
-  }
-
-  const loadedImages = [];
-  let processedCount = 0;
-  const numFilesToProcess = files.length; // Guardar la cantidad original de archivos a procesar.
-
-  for (const element of files) {
-    const file = element;
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      fabric.Image.fromURL(event.target.result, function (img) {
-        // Asignar un id único permanente si no lo tiene
-        if (!img.id) {
-          const uniqueId = `image-${Date.now()}-${Math.random()
-            .toString(36)
-            .slice(2, 11)}`;
-          img.id = uniqueId;
-        }
-        // Guardar la URL de origen
-        img.originalUrl = event.target.result;
-
-        img.setControlsVisibility({
-          mtr: rotateCheckbox.checked,
-        });
-
-        loadedImages.push(img);
-        processedCount++;
-
-        if (processedCount === numFilesToProcess) {
-          // Primero, se organiza el layout de las imágenes
-          if (numFilesToProcess <= 2) {
-            arrangementStatus = arrangeImages(canvas, loadedImages, "cols", marginWidth, "forward");
-            lastLayout = "cols";
-            lastDirection = "forward";
-          } else {
-            arrangementStatus = arrangeImages(canvas, loadedImages, "rows", marginWidth, "forward");
-            lastLayout = "rows";
-            lastDirection = "forward";
-          }
-
-          // Luego, se guardan los datos originales ya con sus valores de top, left, scaleX y scaleY actualizados
-          loadedImages.forEach((loadedImgInstance) => { // Renombrado img a loadedImgInstance para evitar confusión de scope
-            originalImages[loadedImgInstance.id] = {
-              url: loadedImgInstance.originalUrl,
-              width: loadedImgInstance.width,
-              height: loadedImgInstance.height,
-              scaleX: loadedImgInstance.scaleX,
-              scaleY: loadedImgInstance.scaleY,
-              angle: loadedImgInstance.angle,
-              left: loadedImgInstance.left,
-              top: loadedImgInstance.top,
-            };
-          });
-
-          // Seleccionar automáticamente si solo hay una imagen
-          if (numFilesToProcess === 1 && loadedImages.length === 1) { // Asegurarse que loadedImages[0] existe
-            canvas.discardActiveObject();
-            canvas.setActiveObject(loadedImages[0]);
-            canvas.renderAll(); // Asegurar renderizado después de seleccionar
-          }
-        }
-      });
-    };
-    reader.readAsDataURL(file);
-  }
-
-  // Resetea el valor del input de archivo.
-  // Esto permite que el evento 'change' se dispare de nuevo si el usuario selecciona el mismo archivo.
-  if (e.target) {
-    e.target.value = null;
-  }
-}
-
 scaleUpButton.addEventListener("click", () => scaleUp(canvas, marginRect));
 scaleDownButton.addEventListener("click", () => scaleDown(canvas, marginRect));
-
-let lastLayout = "rows"; // Track layout type (rows/cols)
-let lastDirection = "forward"; // Track direction (forward/reverse)
 
 function selectArrangeImageLayout() {
   // 1. Get all current images
@@ -473,9 +391,9 @@ function selectArrangeImageLayout() {
   const currentState = `${lastLayout}-${lastDirection}`;
   const nextState = stateTransitions[currentState] || { layout: "rows", direction: "forward" };
 
-  arrangementStatus = arrangeImages(canvas, images, nextState.layout, marginWidth, nextState.direction);
-  lastLayout = nextState.layout;
-  lastDirection = nextState.direction;
+  setArrangementStatus(arrangeImages(canvas, images, nextState.layout, marginWidth, nextState.direction));
+  setLastLayout(nextState.layout);
+  setLastDirection(nextState.direction);
 
   canvas.renderAll();
 }
@@ -486,7 +404,7 @@ a4Button.addEventListener("click", () => resizeCanvas("a4"));
 verticalButton.addEventListener("click", () => changeOrientation(true));
 horizontalButton.addEventListener("click", () => changeOrientation(false));
 
-imageLoader.addEventListener("change", handleImageUpload);
+imageLoader.addEventListener("change", (e) => handleImageUpload(e, canvas, marginWidth, rotateCheckbox));
 resetImageButton.addEventListener("click", () => resetActiveImage(canvas, marginRect, originalImages));
 printButton.addEventListener("click", () => printCanvas(canvas, marginRect));
 grayScaleButton.addEventListener("click", () => convertToGrayscale(canvas));
@@ -507,15 +425,15 @@ setSizeButton.addEventListener("click", () => setImageSizeInCm({
 }));
 columnsCollageButton.addEventListener("click", () => {
   const newStatus = createMasonryColumnsCollage(canvas, marginRect, Swal);
-  if (newStatus) arrangementStatus = newStatus;
+  if (newStatus) setArrangementStatus(newStatus);
 });
 rowsCollageButton.addEventListener("click", () => {
   const newStatus = createMasonryRowsCollage(canvas, marginRect, Swal);
-  if (newStatus) arrangementStatus = newStatus;
+  if (newStatus) setArrangementStatus(newStatus);
 });
 collageButton.addEventListener("click", () => {
   const newStatus = collageArrange(canvas, marginRect, Swal);
-  if (newStatus) arrangementStatus = newStatus;
+  if (newStatus) setArrangementStatus(newStatus);
 });
 rotateCheckbox.addEventListener("change", function (e) {
   canvas.getObjects().forEach((obj) => {
@@ -583,7 +501,7 @@ let marginWidth = (canvas.width - marginRect.width) / 2;
 
 setupMovingEvents(canvas, marginRect);
 setupScalingEvents(canvas, marginRect);
-setupRotatingEvents(canvas, marginRect, (status) => { arrangementStatus = status; });
+setupRotatingEvents(canvas, marginRect, setArrangementStatus);
 
 // Add accessibility improvements: set ARIA labels and focus outlines on interactive elements.
 function setupAccessibility() {
