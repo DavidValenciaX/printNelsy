@@ -17,6 +17,7 @@ import { deleteActiveObject } from './deleteUtils.js';
 import { scaleUp, scaleDown } from './scaleUtils.js';
 import { convertToGrayscale } from './imageEffects.js';
 import { arrangeImages } from './arrangeUtils.js';
+import { setupMovingEvents, updateMarginRect } from './movingEvents.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -333,6 +334,9 @@ function resizeCanvas(size, orientation = isVertical) {
   });
 
   canvas.add(marginRect);
+  
+  // Update the marginRect reference in movingEvents
+  updateMarginRect(marginRect);
 
   // Re-add and re-arrange images using the new function
   reAddAndArrangeImages(images, currentLayout, currentDirection);
@@ -571,10 +575,6 @@ fabric.Object.prototype.cornerSize = 12;
 const controls = fabric.Object.prototype.controls;
 const rotateControls = controls.mtr;
 rotateControls.visible = false;
-
-canvas.on("object:moving", function (e) {
-  constrainObjectToMargin(e.target, marginRect);
-});
 
 let isMouseDown = false;
 
@@ -1611,8 +1611,9 @@ canvas.on("object:scaling", function (e) {
 resizeCanvas("carta");
 
 // Calcular el ancho del margen
-
 let marginWidth = (canvas.width - marginRect.width) / 2;
+
+setupMovingEvents(canvas, marginRect);
 
 // Add accessibility improvements: set ARIA labels and focus outlines on interactive elements.
 function setupAccessibility() {
