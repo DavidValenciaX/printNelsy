@@ -33,6 +33,7 @@ import {
   getIsVertical 
 } from './canvasResizeUtils.js';
 import { selectArrangeImageLayout } from './layoutSelector.js';
+import { setupAccessibility } from './accessibilityUtils.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -176,52 +177,6 @@ setupMovingEvents(canvas, marginRect);
 setupScalingEvents(canvas, marginRect);
 setupRotatingEvents(canvas, marginRect, setArrangementStatus);
 
-// Add accessibility improvements: set ARIA labels and focus outlines on interactive elements.
-function setupAccessibility() {
-  // List all interactive elements by id.
-  const elements = [
-    printButton,
-    deleteButton,
-    cropButton,
-    confirmCropButton,
-    cancelCropButton,
-    cartaButton,
-    oficioButton,
-    a4Button,
-    verticalButton,
-    horizontalButton,
-    rotateButton_p90,
-    rotateButton_n90,
-    resetImageButton,
-    arrangeButton,
-    grayScaleButton,
-    scaleUpButton,
-    scaleDownButton,
-    centerVerticallyButton,
-    centerHorizontallyButton,
-    setSizeButton,
-    columnsCollageButton,
-    rowsCollageButton,
-    collageButton
-  ];
-  elements.forEach((el) => {
-    if (el) {
-      // Use innerText or id as descriptive label.
-      el.setAttribute(
-        "aria-label",
-        el.innerText.trim() || el.getAttribute("id")
-      );
-      // Ensure buttons are focusable with a clear outline
-      el.style.outline = "3px solid transparent";
-      el.addEventListener("focus", () => {
-        el.style.outline = "3px solid #ff0";
-      });
-      el.addEventListener("blur", () => {
-        el.style.outline = "3px solid transparent";
-      });
-    }
-  });
-}
 setupAccessibility();
 
 window.zoomIn = zoomIn;
