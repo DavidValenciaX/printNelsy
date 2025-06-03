@@ -69,9 +69,6 @@ const collageButton = document.getElementById("collageButton");
 const widthInput = document.getElementById("widthInput");
 const heightInput = document.getElementById("heightInput");
 
-const marginInches = 0.2;
-const marginPixels = marginInches * dpi;
-
 let marginRect;
 let marginWidth;
 
