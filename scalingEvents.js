@@ -1,13 +1,14 @@
-let currentMarginRect;
+import { getCurrentMarginRect, updateMarginRect } from './marginRectManager.js';
 
 export function setupScalingEvents(canvas, marginRect) {
-  // Store the reference to marginRect
-  currentMarginRect = marginRect;
+  // Store the reference to marginRect in the centralized manager
+  updateMarginRect(marginRect);
 
   canvas.on("object:scaling", function (e) {
     let obj = e.target;
     obj.setCoords();
 
+    const currentMarginRect = getCurrentMarginRect();
     const marginRight = currentMarginRect.left + currentMarginRect.width;
     const marginBottom = currentMarginRect.top + currentMarginRect.height;
 
@@ -100,6 +101,5 @@ export function setupScalingEvents(canvas, marginRect) {
   });
 }
 
-export function updateMarginRect(marginRect) {
-  currentMarginRect = marginRect;
-} 
+// Re-export updateMarginRect for backward compatibility
+export { updateMarginRect }; 

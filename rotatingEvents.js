@@ -1,6 +1,6 @@
 import { radToDeg, calculateDistance } from './mathUtils.js';
+import { getCurrentMarginRect, updateMarginRect } from './marginRectManager.js';
 
-let currentMarginRect;
 let isMouseDown = false;
 let clockwise = false;
 let accumulatedRestrictedAngle = 0;
@@ -8,8 +8,8 @@ let angleDiff = 0;
 let activeRestriction = null;
 
 export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus = null) {
-  // Store the reference to marginRect
-  currentMarginRect = marginRect;
+  // Store the reference to marginRect in the centralized manager
+  updateMarginRect(marginRect);
 
   canvas.on("mouse:down", function () {
     isMouseDown = true;
@@ -60,7 +60,8 @@ export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus 
     let diagAngle = Math.atan(realObjectHeight / realObjectWidth);
     let complementDiagAngle = Math.PI / 2 - diagAngle;
 
-    // Calculate margins from canvas edges
+    // Calculate margins from canvas edges using the centralized manager
+    const currentMarginRect = getCurrentMarginRect();
     const leftMargin = currentMarginRect.left;
     const rightMargin = currentMarginRect.left + currentMarginRect.width;
     const topMargin = currentMarginRect.top;
@@ -932,6 +933,5 @@ export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus 
   });
 }
 
-export function updateMarginRect(marginRect) {
-  currentMarginRect = marginRect;
-} 
+// Re-export updateMarginRect for backward compatibility
+export { updateMarginRect }; 

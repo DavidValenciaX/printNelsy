@@ -13,9 +13,10 @@ import { deleteActiveObject } from './deleteUtils.js';
 import { scaleUp, scaleDown } from './scaleUtils.js';
 import { convertToGrayscale } from './imageEffects.js';
 import { arrangeImages } from './arrangeUtils.js';
-import { setupMovingEvents, updateMarginRect } from './movingEvents.js';
-import { setupScalingEvents, updateMarginRect as updateScalingMarginRect } from './scalingEvents.js';
-import { setupRotatingEvents, updateMarginRect as updateRotatingMarginRect } from './rotatingEvents.js';
+import { setupMovingEvents } from './movingEvents.js';
+import { setupScalingEvents } from './scalingEvents.js';
+import { setupRotatingEvents } from './rotatingEvents.js';
+import { updateMarginRect } from './marginRectManager.js';
 import { 
   handleImageUpload, 
   originalImages, 
@@ -345,8 +346,6 @@ function resizeCanvas(size, orientation = isVertical) {
   
   // Update the marginRect reference in movingEvents and scalingEvents
   updateMarginRect(marginRect);
-  updateScalingMarginRect(marginRect);
-  updateRotatingMarginRect(marginRect);
 
   // Re-add and re-arrange images using the new function
   reAddAndArrangeImages(images, currentLayout, currentDirection);
