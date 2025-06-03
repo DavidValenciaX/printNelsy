@@ -4,7 +4,6 @@ import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange }
 import { 
   setImageSizeInCm
 } from './imageSize.js';
-import { constrainObjectToMargin } from './constraintUtils.js';
 import { printCanvas } from './printUtils.js';
 import { deactivateObjects } from './deactivateObjects.js';
 import { rotateImage } from './rotateUtils.js';
@@ -16,11 +15,9 @@ import { arrangeImages } from './arrangeUtils.js';
 import { setupMovingEvents } from './movingEvents.js';
 import { setupScalingEvents } from './scalingEvents.js';
 import { setupRotatingEvents } from './rotatingEvents.js';
-import { updateMarginRect } from './marginRectManager.js';
 import { 
   handleImageUpload, 
-  originalImages, 
-  arrangementStatus, 
+  originalImages,
   lastLayout, 
   lastDirection,
   setArrangementStatus,
@@ -32,6 +29,14 @@ import {
   confirmCrop, 
   exitCropMode
 } from './cropUtils.js';
+import { 
+  resizeCanvas, 
+  changeOrientation, 
+  paperSizes, 
+  dpi, 
+  getCurrentSize, 
+  getIsVertical 
+} from './canvasResizeUtils.js';
 
 const canvasElement = document.getElementById("canvas");
 let canvas = new fabric.Canvas("canvas");
@@ -67,102 +72,11 @@ const collageButton = document.getElementById("collageButton");
 const widthInput = document.getElementById("widthInput");
 const heightInput = document.getElementById("heightInput");
 
-const dpi = 300;
 const marginInches = 0.2;
 const marginPixels = marginInches * dpi;
-const paperSizes = {
-  carta: { width: 8.5 * dpi, height: 11 * dpi },
-  oficio: { width: 8.5 * dpi, height: 13 * dpi },
-  a4: { width: 8.27 * dpi, height: 11.69 * dpi },
-};
 
 let marginRect;
-
-let currentSize = "carta";
-let isVertical = true;
-
-function reAddAndArrangeImages(images, currentLayout, currentDirection) {
-  if (images.length > 0) {
-    if (arrangementStatus === "grid") {
-      // Arrange images in grid layout
-      setArrangementStatus(arrangeImages(canvas, images, currentLayout, marginWidth, currentDirection));
-    } else if (arrangementStatus === "columns-collage") {
-      // Re-add images and create collage
-      images.forEach((img) => canvas.add(img));
-      const newStatus = createMasonryColumnsCollage(canvas, marginRect, Swal);
-      if (newStatus) setArrangementStatus(newStatus);
-    } else if (arrangementStatus === "rows-collage") {
-      // Re-add images and create collage
-      images.forEach((img) => canvas.add(img));
-      const newStatus = createMasonryRowsCollage(canvas, marginRect, Swal);
-      if (newStatus) setArrangementStatus(newStatus);
-    }
-    else if (arrangementStatus === "none") {
-      // Re-add images and keep their positions.
-      images.forEach((img) => {
-        canvas.add(img);
-        // Constrain image position within the new margin
-        constrainObjectToMargin(img, marginRect);
-      });
-    }
-  }
-}
-
-function resizeCanvas(size, orientation = isVertical) {
-  // Store current canvas state
-  const images = canvas.getObjects().filter((obj) => obj.type === "image");
-  const currentLayout = lastLayout || (images.length <= 2 ? "cols" : "rows");
-  const currentDirection = "forward";
-
-  // Remove all images from canvas
-  images.forEach((img) => canvas.remove(img));
-
-  // Update canvas dimensions
-  currentSize = size;
-  isVertical = orientation;
-  const scale = 0.3;
-  let width = paperSizes[size].width;
-  let height = paperSizes[size].height;
-
-  if (!isVertical) {
-    [width, height] = [height, width];
-  }
-
-  canvas.setWidth(width * scale);
-  canvas.setHeight(height * scale);
-
-  // Update margin rectangle
-  if (marginRect) {
-    canvas.remove(marginRect);
-  }
-
-  marginRect = new fabric.Rect({
-    width: width * scale - 2 * marginPixels * scale,
-    height: height * scale - 2 * marginPixels * scale,
-    left: marginPixels * scale,
-    top: marginPixels * scale,
-    fill: "transparent",
-    stroke: "gray",
-    strokeWidth: 1,
-    strokeDashArray: [5, 5],
-    selectable: false,
-    evented: false,
-  });
-
-  canvas.add(marginRect);
-  
-  // Update the marginRect reference in movingEvents and scalingEvents
-  updateMarginRect(marginRect);
-
-  // Re-add and re-arrange images using the new function
-  reAddAndArrangeImages(images, currentLayout, currentDirection);
-
-  canvas.renderAll();
-}
-
-function changeOrientation(vertical) {
-  resizeCanvas(currentSize, vertical);
-}
+let marginWidth;
 
 scaleUpButton.addEventListener("click", () => scaleUp(canvas, marginRect));
 scaleDownButton.addEventListener("click", () => scaleDown(canvas, marginRect));
@@ -204,11 +118,31 @@ function selectArrangeImageLayout() {
   canvas.renderAll();
 }
 
-cartaButton.addEventListener("click", () => resizeCanvas("carta"));
-oficioButton.addEventListener("click", () => resizeCanvas("oficio"));
-a4Button.addEventListener("click", () => resizeCanvas("a4"));
-verticalButton.addEventListener("click", () => changeOrientation(true));
-horizontalButton.addEventListener("click", () => changeOrientation(false));
+cartaButton.addEventListener("click", () => {
+  const result = resizeCanvas("carta", canvas, marginRect);
+  marginRect = result.marginRect;
+  marginWidth = result.marginWidth;
+});
+oficioButton.addEventListener("click", () => {
+  const result = resizeCanvas("oficio", canvas, marginRect);
+  marginRect = result.marginRect;
+  marginWidth = result.marginWidth;
+});
+a4Button.addEventListener("click", () => {
+  const result = resizeCanvas("a4", canvas, marginRect);
+  marginRect = result.marginRect;
+  marginWidth = result.marginWidth;
+});
+verticalButton.addEventListener("click", () => {
+  const result = changeOrientation(true, canvas, marginRect);
+  marginRect = result.marginRect;
+  marginWidth = result.marginWidth;
+});
+horizontalButton.addEventListener("click", () => {
+  const result = changeOrientation(false, canvas, marginRect);
+  marginRect = result.marginRect;
+  marginWidth = result.marginWidth;
+});
 
 imageLoader.addEventListener("change", (e) => handleImageUpload(e, canvas, marginWidth, rotateCheckbox));
 resetImageButton.addEventListener("click", () => resetActiveImage(canvas, marginRect, originalImages));
@@ -227,7 +161,7 @@ setSizeButton.addEventListener("click", () => setImageSizeInCm({
   widthInput,
   heightInput,
   marginRect,
-  paperConfig: { currentSize, isVertical, paperSizes, dpi }
+  paperConfig: { currentSize: getCurrentSize(), isVertical: getIsVertical(), paperSizes, dpi }
 }));
 columnsCollageButton.addEventListener("click", () => {
   const newStatus = createMasonryColumnsCollage(canvas, marginRect, Swal);
@@ -274,10 +208,10 @@ const controls = fabric.Object.prototype.controls;
 const rotateControls = controls.mtr;
 rotateControls.visible = false;
 
-resizeCanvas("carta");
-
-// Calcular el ancho del margen
-let marginWidth = (canvas.width - marginRect.width) / 2;
+// Inicializar canvas con tamaño carta
+const initialResult = resizeCanvas("carta", canvas, marginRect);
+marginRect = initialResult.marginRect;
+marginWidth = initialResult.marginWidth;
 
 setupMovingEvents(canvas, marginRect);
 setupScalingEvents(canvas, marginRect);
