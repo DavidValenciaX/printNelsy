@@ -154,45 +154,31 @@ function handleRestriction({ code, obj, corners, margins, diagAngle, complementD
 // -----------------------------------------------------------------------------
 // 🔍  Detect which restriction should become active (formerly 32 if‑clauses)
 // -----------------------------------------------------------------------------
-function detectRestriction(c, m, cw) {
-  const r = [
-    { ok: c.TR.x > m.right  &&  cw, code: 'TR_RIGHT_CW'  },
-    { ok: c.BR.x > m.right  && !cw, code: 'BR_RIGHT_CCW' },
-    { ok: c.TL.x > m.right  &&  cw, code: 'TL_RIGHT_CW'  },
-    { ok: c.TR.x > m.right  && !cw, code: 'TR_RIGHT_CCW' },
-    { ok: c.BL.x > m.right  &&  cw, code: 'BL_RIGHT_CW'  },
-    { ok: c.TL.x > m.right  && !cw, code: 'TL_RIGHT_CCW' },
-    { ok: c.BR.x > m.right  &&  cw, code: 'BR_RIGHT_CW'  },
-    { ok: c.BL.x > m.right  && !cw, code: 'BL_RIGHT_CCW' },
+function detectRestriction(corners, margins, cw) {
+  // Constantes para generar detección automáticamente
+  const SIDES = ['right', 'bottom', 'left', 'top'];
+  const CORNERS = ['TR', 'BR', 'BL', 'TL'];   // orden horario
+  
+  // Qué coordenada comparar y con qué margen
+  const SIDE_CHECK = {
+    right : (p, m) => p.x > m.right,
+    left  : (p, m) => p.x < m.left,
+    bottom: (p, m) => p.y > m.bottom,
+    top   : (p, m) => p.y < m.top,
+  };
 
-    { ok: c.BR.y > m.bottom &&  cw, code: 'BR_BOTTOM_CW' },
-    { ok: c.BL.y > m.bottom && !cw, code: 'BL_BOTTOM_CCW'},
-    { ok: c.TR.y > m.bottom &&  cw, code: 'TR_BOTTOM_CW' },
-    { ok: c.BR.y > m.bottom && !cw, code: 'BR_BOTTOM_CCW'},
-    { ok: c.TL.y > m.bottom &&  cw, code: 'TL_BOTTOM_CW' },
-    { ok: c.TR.y > m.bottom && !cw, code: 'TR_BOTTOM_CCW'},
-    { ok: c.BL.y > m.bottom &&  cw, code: 'BL_BOTTOM_CW' },
-    { ok: c.TL.y > m.bottom && !cw, code: 'TL_BOTTOM_CCW'},
+  // Buscamos en orden horario / antihorario según cw
+  const order = cw ? CORNERS : [...CORNERS].reverse();
 
-    { ok: c.TL.x < m.left   && !cw, code: 'TL_LEFT_CCW'  },
-    { ok: c.BL.x < m.left   &&  cw, code: 'BL_LEFT_CW'   },
-    { ok: c.BL.x < m.left   && !cw, code: 'BL_LEFT_CCW'  },
-    { ok: c.BR.x < m.left   &&  cw, code: 'BR_LEFT_CW'   },
-    { ok: c.BR.x < m.left   && !cw, code: 'BR_LEFT_CCW'  },
-    { ok: c.TR.x < m.left   &&  cw, code: 'TR_LEFT_CW'   },
-    { ok: c.TR.x < m.left   && !cw, code: 'TR_LEFT_CCW'  },
-    { ok: c.TL.x < m.left   &&  cw, code: 'TL_LEFT_CW'   },
-
-    { ok: c.TL.y < m.top    &&  cw, code: 'TL_TOP_CW'    },
-    { ok: c.TR.y < m.top    && !cw, code: 'TR_TOP_CCW'   },
-    { ok: c.BL.y < m.top    &&  cw, code: 'BL_TOP_CW'    },
-    { ok: c.TL.y < m.top    && !cw, code: 'TL_TOP_CCW'   },
-    { ok: c.BR.y < m.top    &&  cw, code: 'BR_TOP_CW'    },
-    { ok: c.BL.y < m.top    && !cw, code: 'BL_TOP_CCW'   },
-    { ok: c.TR.y < m.top    &&  cw, code: 'TR_TOP_CW'    },
-    { ok: c.BR.y < m.top    && !cw, code: 'BR_TOP_CCW'   },
-  ].find(r => r.ok);
-  return r ? r.code : null;
+  for (const side of SIDES) {
+    for (const corner of order) {
+      const point = corners[corner];
+      if (SIDE_CHECK[side](point, margins)) {
+        return `${corner}_${side.toUpperCase()}_${cw ? 'CW':'CCW'}`;
+      }
+    }
+  }
+  return null;
 }
 
 function shouldSwitch(code, corners, margins, cw) {
@@ -200,49 +186,66 @@ function shouldSwitch(code, corners, margins, cw) {
 }
 
 // -----------------------------------------------------------------------------
-// 📋  Static metadata – one place for all the magic numbers
+// 📋  Generated metadata factory – eliminates all magic number duplication
 // -----------------------------------------------------------------------------
-const RESTRICTION_META = (() => {
-  const P  = Math.PI;
-  return {
-    //   code               corner side   base       sign diag          opposite           threshold
-    TR_RIGHT_CW:  { corner:'TR', side:'right',  base:0,       sign:+1, diag:'complement', opposite:'BR_RIGHT_CCW',  threshold:'positive' },
-    BR_RIGHT_CCW: { corner:'BR', side:'right',  base:PI2,     sign:-1, diag:'complement', opposite:'TR_RIGHT_CW',   threshold:'negative' },
-    TL_RIGHT_CW:  { corner:'TL', side:'right',  base:P/2,     sign:+1, diag:'diag',       opposite:'TR_RIGHT_CCW',  threshold:'positive' },
-    TR_RIGHT_CCW: { corner:'TR', side:'right',  base:P/2,     sign:-1, diag:'diag',       opposite:'TL_RIGHT_CW',   threshold:'negative' },
-    BL_RIGHT_CW:  { corner:'BL', side:'right',  base:P,       sign:+1, diag:'complement', opposite:'TL_RIGHT_CCW',  threshold:'positive' },
-    TL_RIGHT_CCW: { corner:'TL', side:'right',  base:P,       sign:-1, diag:'complement', opposite:'BL_RIGHT_CW',   threshold:'negative' },
-    BR_RIGHT_CW:  { corner:'BR', side:'right',  base:3*P/2,   sign:+1, diag:'diag',       opposite:'BL_RIGHT_CCW',  threshold:'positive' },
-    BL_RIGHT_CCW: { corner:'BL', side:'right',  base:3*P/2,   sign:-1, diag:'diag',       opposite:'BR_RIGHT_CW',   threshold:'negative' },
-
-    BR_BOTTOM_CW: { corner:'BR', side:'bottom', base:0,       sign:+1, diag:'diag',       opposite:'BL_BOTTOM_CCW', threshold:'positive' },
-    BL_BOTTOM_CCW:{ corner:'BL', side:'bottom', base:PI2,     sign:-1, diag:'diag',       opposite:'BR_BOTTOM_CW',  threshold:'negative' },
-    TR_BOTTOM_CW: { corner:'TR', side:'bottom', base:P/2,     sign:+1, diag:'complement', opposite:'BR_BOTTOM_CCW', threshold:'positive' },
-    BR_BOTTOM_CCW:{ corner:'BR', side:'bottom', base:P/2,     sign:-1, diag:'complement', opposite:'TR_BOTTOM_CW',  threshold:'negative' },
-    TL_BOTTOM_CW: { corner:'TL', side:'bottom', base:P,       sign:+1, diag:'diag',       opposite:'TR_BOTTOM_CCW', threshold:'positive' },
-    TR_BOTTOM_CCW:{ corner:'TR', side:'bottom', base:P,       sign:-1, diag:'diag',       opposite:'TL_BOTTOM_CW',  threshold:'negative' },
-    BL_BOTTOM_CW: { corner:'BL', side:'bottom', base:3*P/2,   sign:+1, diag:'complement', opposite:'TL_BOTTOM_CCW', threshold:'positive' },
-    TL_BOTTOM_CCW:{ corner:'TL', side:'bottom', base:3*P/2,   sign:-1, diag:'complement', opposite:'BL_BOTTOM_CW',  threshold:'negative' },
-
-    TL_LEFT_CCW:  { corner:'TL', side:'left',   base:PI2,     sign:-1, diag:'complement', opposite:'BL_LEFT_CW',    threshold:'negative' },
-    BL_LEFT_CW:   { corner:'BL', side:'left',   base:0,       sign:+1, diag:'complement', opposite:'TL_LEFT_CCW',   threshold:'positive' },
-    BL_LEFT_CCW:  { corner:'BL', side:'left',   base:P/2,     sign:-1, diag:'diag',       opposite:'BR_LEFT_CW',    threshold:'negative' },
-    BR_LEFT_CW:   { corner:'BR', side:'left',   base:P/2,     sign:+1, diag:'diag',       opposite:'BL_LEFT_CCW',   threshold:'positive' },
-    BR_LEFT_CCW:  { corner:'BR', side:'left',   base:P,       sign:-1, diag:'complement', opposite:'TR_LEFT_CW',    threshold:'negative' },
-    TR_LEFT_CW:   { corner:'TR', side:'left',   base:P,       sign:+1, diag:'complement', opposite:'BR_LEFT_CCW',   threshold:'positive' },
-    TR_LEFT_CCW:  { corner:'TR', side:'left',   base:3*P/2,   sign:-1, diag:'diag',       opposite:'TL_LEFT_CW',    threshold:'negative' },
-    TL_LEFT_CW:   { corner:'TL', side:'left',   base:3*P/2,   sign:+1, diag:'diag',       opposite:'TR_LEFT_CCW',   threshold:'positive' },
-
-    TL_TOP_CW:    { corner:'TL', side:'top',    base:0,       sign:+1, diag:'diag',       opposite:'TR_TOP_CCW',    threshold:'positive' },
-    TR_TOP_CCW:   { corner:'TR', side:'top',    base:PI2,     sign:-1, diag:'diag',       opposite:'TL_TOP_CW',     threshold:'negative' },
-    BL_TOP_CW:    { corner:'BL', side:'top',    base:P/2,     sign:+1, diag:'complement', opposite:'TL_TOP_CCW',    threshold:'positive' },
-    TL_TOP_CCW:   { corner:'TL', side:'top',    base:P/2,     sign:-1, diag:'complement', opposite:'BL_TOP_CW',     threshold:'negative' },
-    BR_TOP_CW:    { corner:'BR', side:'top',    base:P,       sign:+1, diag:'diag',       opposite:'BL_TOP_CCW',    threshold:'positive' },
-    BL_TOP_CCW:   { corner:'BL', side:'top',    base:P,       sign:-1, diag:'diag',       opposite:'BR_TOP_CW',     threshold:'negative' },
-    TR_TOP_CW:    { corner:'TR', side:'top',    base:3*P/2,   sign:+1, diag:'complement', opposite:'BR_TOP_CCW',    threshold:'positive' },
-    BR_TOP_CCW:   { corner:'BR', side:'top',    base:3*P/2,   sign:-1, diag:'complement', opposite:'TR_TOP_CW',     threshold:'negative' },
+function buildRestrictionMeta() {
+  const P = Math.PI;
+  const PI2 = 2 * Math.PI;
+  
+  // Mapeo directo consolidado - elimina la duplicación pero mantiene la precisión
+  const CONFIGS = {
+    // RIGHT side
+    'TR_right': { base: [0, P/2], diag: ['complement', 'diag'], opposite: ['BR_RIGHT_CCW', 'TL_RIGHT_CW'] },
+    'BR_right': { base: [3*P/2, PI2], diag: ['diag', 'complement'], opposite: ['BL_RIGHT_CCW', 'TR_RIGHT_CW'] },
+    'TL_right': { base: [P/2, P], diag: ['diag', 'complement'], opposite: ['TR_RIGHT_CCW', 'BL_RIGHT_CW'] },
+    'BL_right': { base: [P, 3*P/2], diag: ['complement', 'diag'], opposite: ['TL_RIGHT_CCW', 'BR_RIGHT_CW'] },
+    
+    // BOTTOM side
+    'BR_bottom': { base: [0, P/2], diag: ['diag', 'complement'], opposite: ['BL_BOTTOM_CCW', 'TR_BOTTOM_CW'] },
+    'BL_bottom': { base: [3*P/2, PI2], diag: ['complement', 'diag'], opposite: ['TL_BOTTOM_CCW', 'BR_BOTTOM_CW'] },
+    'TR_bottom': { base: [P/2, P], diag: ['complement', 'diag'], opposite: ['BR_BOTTOM_CCW', 'TL_BOTTOM_CW'] },
+    'TL_bottom': { base: [P, 3*P/2], diag: ['diag', 'complement'], opposite: ['TR_BOTTOM_CCW', 'BL_BOTTOM_CW'] },
+    
+    // LEFT side
+    'TL_left': { base: [3*P/2, PI2], diag: ['diag', 'complement'], opposite: ['TR_LEFT_CCW', 'BL_LEFT_CW'] },
+    'BL_left': { base: [0, P/2], diag: ['complement', 'diag'], opposite: ['TL_LEFT_CCW', 'BR_LEFT_CW'] },
+    'BR_left': { base: [P/2, P], diag: ['diag', 'complement'], opposite: ['BL_LEFT_CCW', 'TR_LEFT_CW'] },
+    'TR_left': { base: [P, 3*P/2], diag: ['complement', 'diag'], opposite: ['BR_LEFT_CCW', 'TL_LEFT_CW'] },
+    
+    // TOP side
+    'TL_top': { base: [0, P/2], diag: ['diag', 'complement'], opposite: ['TR_TOP_CCW', 'BL_TOP_CW'] },
+    'TR_top': { base: [3*P/2, PI2], diag: ['complement', 'diag'], opposite: ['BR_TOP_CCW', 'TL_TOP_CW'] },
+    'BL_top': { base: [P/2, P], diag: ['complement', 'diag'], opposite: ['TL_TOP_CCW', 'BR_TOP_CW'] },
+    'BR_top': { base: [P, 3*P/2], diag: ['diag', 'complement'], opposite: ['BL_TOP_CCW', 'TR_TOP_CW'] },
   };
-})();
+
+  const meta = {};
+  const SIGN = { CW: +1, CCW: -1 };
+  const THRESH = { CW: 'positive', CCW: 'negative' };
+
+  // Generar todos los códigos a partir del mapeo consolidado
+  Object.entries(CONFIGS).forEach(([key, config]) => {
+    const [corner, side] = key.split('_');
+    
+    ['CW', 'CCW'].forEach((dir, idx) => {
+      const code = `${corner}_${side.toUpperCase()}_${dir}`;
+      
+      meta[code] = {
+        corner,
+        side,
+        base: config.base[idx],
+        sign: SIGN[dir],
+        diag: config.diag[idx],
+        opposite: config.opposite[idx],
+        threshold: THRESH[dir],
+      };
+    });
+  });
+
+  return meta;
+}
+
+const RESTRICTION_META = buildRestrictionMeta();
 
 // -----------------------------------------------------------------------------
 // Re‑export for external callers that relied on the old API -------------------
