@@ -5,6 +5,8 @@ import { constrainObjectToMargin } from './constraintUtils.js';
 
 let clipboardData = null;
 let lastSystemClipboardCheck = null;
+let lastClipboardAccess = 0;
+let lastInternalCopy = 0;
 
 /**
  * Convierte un blob a base64
@@ -69,10 +71,13 @@ export async function copySelection(canvas) {
       }
     }
     
+    const copyTimestamp = Date.now();
+    lastInternalCopy = copyTimestamp;
+    
     clipboardData = {
       type: activeObjects.length > 1 ? 'multiple' : 'single',
       objects: serializedObjects,
-      timestamp: Date.now(),
+      timestamp: copyTimestamp,
       source: 'internal' // Marcar como copia interna
     };
     
@@ -98,7 +103,7 @@ export async function pasteSelection(canvas, marginRect) {
     const hasInternalClipboard = clipboardData && clipboardData.objects && clipboardData.objects.length > 0;
     const systemClipboardInfo = await checkSystemClipboardContent();
     
-    // Determinar cuál usar basado en cronología
+    // Determinar cuál usar basado en cronología y preferencias
     let useSystemClipboard = false;
     
     if (systemClipboardInfo.hasContent) {
@@ -107,15 +112,25 @@ export async function pasteSelection(canvas, marginRect) {
         useSystemClipboard = true;
         console.log('Solo hay contenido en portapapeles del sistema');
       } else {
-        // Hay contenido en ambos, comparar timestamps
+        // Hay contenido en ambos, comparar timestamps con lógica mejorada
         const internalTimestamp = clipboardData.timestamp;
         const systemTimestamp = systemClipboardInfo.estimatedTimestamp;
+        const currentTime = Date.now();
         
-        if (systemTimestamp > internalTimestamp) {
-          useSystemClipboard = true;
-          console.log('Contenido del sistema es más reciente, usando portapapeles del sistema');
+        // Priorizar siempre el contenido interno si es reciente (menos de 10 segundos)
+        const timeSinceInternalCopy = currentTime - internalTimestamp;
+        
+        if (timeSinceInternalCopy < 10000) {
+          console.log('Priorizando copia interna reciente (menos de 10 segundos)');
+          useSystemClipboard = false;
         } else {
-          console.log('Contenido interno es más reciente, usando portapapeles interno');
+          // Solo usar sistema si es mucho más nuevo
+          if (systemTimestamp > internalTimestamp + 2000) {
+            useSystemClipboard = true;
+            console.log('Contenido del sistema es mucho más reciente que copia interna antigua');
+          } else {
+            console.log('Manteniendo contenido interno por ser similar en tiempo');
+          }
         }
       }
     } else if (!hasInternalClipboard) {
@@ -202,7 +217,6 @@ async function checkSystemClipboardContent() {
       for (const type of clipboardItem.types) {
         if (type.startsWith('image/')) {
           // Hay una imagen en el portapapeles del sistema
-          // Estimar timestamp basado en cuando se detectó por primera vez
           const currentTime = Date.now();
           
           if (!lastSystemClipboardCheck) {
@@ -214,26 +228,49 @@ async function checkSystemClipboardContent() {
             return { hasContent: true, estimatedTimestamp: currentTime };
           }
           
-          // Verificar si el contenido cambió (simple heurística)
+          // Verificar si el contenido cambió o si ha pasado suficiente tiempo
+          // para considerar que es una nueva acción de copiado
           try {
             const blob = await clipboardItem.getType(type);
-            const contentHash = blob.size + '_' + blob.type; // Simple hash basado en tamaño y tipo
+            const contentHash = blob.size + '_' + blob.type + '_' + blob.lastModified;
             
+            // Si el contenido es diferente, definitivamente es nuevo
             if (lastSystemClipboardCheck.contentHash !== contentHash) {
-              // El contenido cambió, actualizar timestamp
               lastSystemClipboardCheck = {
                 hasContent: true,
                 timestamp: currentTime,
                 contentHash: contentHash
               };
               return { hasContent: true, estimatedTimestamp: currentTime };
-            } else {
-              // Mismo contenido, usar timestamp anterior
-              return { 
-                hasContent: true, 
-                estimatedTimestamp: lastSystemClipboardCheck.timestamp 
-              };
             }
+            
+            // Si es el mismo contenido, verificar si ha pasado tiempo significativo
+            // desde la última verificación o si detectamos un evento de copiado reciente
+            const timeSinceLastCheck = currentTime - lastClipboardAccess;
+            const timeSinceLastClipboard = currentTime - lastSystemClipboardCheck.timestamp;
+            const timeSinceLastCopyEvent = currentTime - lastSystemCopyEvent;
+            
+            // Solo considerar como nueva acción de copiado si ha pasado mucho tiempo
+            // y no hay copias internas recientes (ser muy conservador)
+            const timeSinceInternalCopy = currentTime - lastInternalCopy;
+            
+            // Solo actualizar timestamp si no hay copias internas recientes (más de 5 segundos)
+            // y ha pasado tiempo suficiente desde la última detección
+            if (timeSinceInternalCopy > 5000 && timeSinceLastClipboard > 3000) {
+              console.log('Detectando posible recopiado del mismo contenido (sin actividad interna reciente)');
+              lastSystemClipboardCheck = {
+                hasContent: true,
+                timestamp: currentTime,
+                contentHash: contentHash
+              };
+              return { hasContent: true, estimatedTimestamp: currentTime };
+            }
+            
+            // Mismo contenido y poco tiempo, usar timestamp anterior
+            return { 
+              hasContent: true, 
+              estimatedTimestamp: lastSystemClipboardCheck.timestamp 
+            };
           } catch (error) {
             // Si no podemos leer el contenido, asumir que hay contenido reciente
             return { hasContent: true, estimatedTimestamp: currentTime };
@@ -249,6 +286,9 @@ async function checkSystemClipboardContent() {
   } catch (error) {
     console.log('No se pudo verificar el portapapeles del sistema:', error);
     return { hasContent: false, estimatedTimestamp: 0 };
+  } finally {
+    // Actualizar el timestamp de acceso
+    lastClipboardAccess = Date.now();
   }
 }
 
@@ -426,6 +466,7 @@ async function createObjectFromData(objData) {
 
 // Variable para evitar múltiples registros de eventos
 let clipboardEventsInitialized = false;
+let lastSystemCopyEvent = 0;
 
 /**
  * Configura los eventos de teclado para copiar y pegar
@@ -438,6 +479,8 @@ export function setupClipboardEvents(canvas, marginRect) {
     console.log('Clipboard events already initialized, skipping...');
     return;
   }
+
+  // Nota: Removido el listener del evento 'copy' para evitar interferencias
 
   document.addEventListener('keydown', function clipboardKeyHandler(event) {
     // Verificar que no estemos en un input o textarea
@@ -479,6 +522,9 @@ export function setupClipboardEvents(canvas, marginRect) {
 export function clearClipboard() {
   clipboardData = null;
   lastSystemClipboardCheck = null;
+  lastClipboardAccess = 0;
+  lastSystemCopyEvent = 0;
+  lastInternalCopy = 0;
 }
 
 /**
