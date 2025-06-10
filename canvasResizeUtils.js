@@ -1,5 +1,5 @@
 import { arrangeImages } from './arrangeUtils.js';
-import { createMasonryColumnsCollage, createMasonryRowsCollage } from './collageUtils.js';
+import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from './collageUtils.js';
 import { constrainObjectToMargin } from './constraintUtils.js';
 import { updateMarginRect } from './marginRectManager.js';
 import { 
@@ -45,6 +45,11 @@ function reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, 
       // Re-add images and create collage
       images.forEach((img) => canvas.add(img));
       const newStatus = createMasonryRowsCollage(canvas, marginRect, Swal);
+      if (newStatus) setArrangementStatus(newStatus);
+    } else if (arrangementStatus === "collage") {
+      // Re-add images and create random collage
+      images.forEach((img) => canvas.add(img));
+      const newStatus = collageArrange(canvas, marginRect, Swal);
       if (newStatus) setArrangementStatus(newStatus);
     }
     else if (arrangementStatus === "none") {
