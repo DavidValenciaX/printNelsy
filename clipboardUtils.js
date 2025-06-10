@@ -63,20 +63,6 @@ export async function copySelection(canvas) {
     console.log('Objetos copiados al portapapeles (solo interno):', clipboardData);
     console.log('Objetos individuales:', serializedObjects);
     
-    // Mostrar notificación
-    if (typeof Swal !== 'undefined') {
-      const message = activeObjects.length > 1 ? 
-        `${activeObjects.length} imágenes copiadas` : 
-        'Imagen copiada';
-      
-      Swal.fire({
-        text: message,
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false
-      });
-    }
-
   } catch (error) {
     console.error('Error al copiar:', error);
     if (typeof Swal !== 'undefined') {
@@ -138,20 +124,6 @@ export async function pasteSelection(canvas, marginRect) {
 
     canvas.renderAll();
     console.log(`${pastedObjects.length} objetos pegados desde el portapapeles`);
-
-    // Mostrar notificación
-    if (typeof Swal !== 'undefined') {
-      const message = pastedObjects.length > 1 ? 
-        `${pastedObjects.length} imágenes pegadas` : 
-        'Imagen pegada';
-      
-      Swal.fire({
-        text: message,
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false
-      });
-    }
 
   } catch (error) {
     console.error('Error al pegar:', error);
