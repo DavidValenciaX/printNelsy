@@ -23,20 +23,35 @@ export async function copySelection(canvas) {
   }
 
   try {
-    // Serializar todos los objetos seleccionados individualmente
-    const serializedObjects = activeObjects.map(obj => obj.toObject(['id']));
+    // Serializar todos los objetos seleccionados con todas las propiedades necesarias
+    const serializedObjects = [];
+    
+    for (const obj of activeObjects) {
+      // Para imágenes, incluir todas las propiedades importantes
+      if (obj.type === 'image') {
+        const objectData = obj.toObject([
+          'id', 'src', 'crossOrigin', 'filters', 'originalUrl',
+          'left', 'top', 'scaleX', 'scaleY', 'angle', 'flipX', 'flipY',
+          'opacity', 'visible', 'shadow', 'clipPath'
+        ]);
+        serializedObjects.push(objectData);
+      } else {
+        // Para otros tipos de objetos, usar serialización estándar
+        const objectData = obj.toObject(['id']);
+        serializedObjects.push(objectData);
+      }
+    }
     
     clipboardData = {
       type: activeObjects.length > 1 ? 'multiple' : 'single',
-      objects: serializedObjects
+      objects: serializedObjects,
+      timestamp: Date.now()
     };
 
-    // También intentar copiar al portapapeles del sistema si es posible
-    await copyToSystemClipboard(canvas);
-
-    console.log('Objetos copiados al portapapeles');
+    console.log('Objetos copiados al portapapeles (solo interno):', clipboardData);
+    console.log('Objetos individuales:', serializedObjects);
     
-    // Mostrar notificación opcional
+    // Mostrar notificación
     if (typeof Swal !== 'undefined') {
       const message = activeObjects.length > 1 ? 
         `${activeObjects.length} imágenes copiadas` : 
@@ -68,14 +83,8 @@ export async function copySelection(canvas) {
  */
 export async function pasteSelection(canvas, marginRect) {
   try {
-    // Primero intentar pegar desde el portapapeles del sistema
-    const systemPaste = await pasteFromSystemClipboard(canvas, marginRect);
-    if (systemPaste) {
-      return;
-    }
-
-    // Si no hay nada en el portapapeles del sistema, usar el interno
-    if (!clipboardData) {
+    // Usar solo el portapapeles interno para mantener la integridad de los objetos
+    if (!clipboardData || !clipboardData.objects || clipboardData.objects.length === 0) {
       if (typeof Swal !== 'undefined') {
         Swal.fire({
           text: "No hay nada en el portapapeles para pegar.",
@@ -116,7 +125,21 @@ export async function pasteSelection(canvas, marginRect) {
     }
 
     canvas.renderAll();
-    console.log('Objetos pegados desde el portapapeles');
+    console.log(`${pastedObjects.length} objetos pegados desde el portapapeles`);
+
+    // Mostrar notificación
+    if (typeof Swal !== 'undefined') {
+      const message = pastedObjects.length > 1 ? 
+        `${pastedObjects.length} imágenes pegadas` : 
+        'Imagen pegada';
+      
+      Swal.fire({
+        text: message,
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false
+      });
+    }
 
   } catch (error) {
     console.error('Error al pegar:', error);
@@ -130,169 +153,75 @@ export async function pasteSelection(canvas, marginRect) {
 }
 
 /**
- * Copia la selección actual al portapapeles del sistema como imagen
- * @param {fabric.Canvas} canvas - Instancia del canvas de fabric.js
- */
-async function copyToSystemClipboard(canvas) {
-  try {
-    const activeObjects = canvas.getActiveObjects();
-    if (activeObjects.length === 0) return;
-
-    // Crear un canvas temporal para la selección
-    let bounds;
-    if (activeObjects.length === 1) {
-      bounds = activeObjects[0].getBoundingRect();
-    } else {
-      // Calcular bounds que contengan todos los objetos
-      bounds = activeObjects.reduce((acc, obj) => {
-        const objBounds = obj.getBoundingRect();
-        if (!acc) return objBounds;
-        
-        return {
-          left: Math.min(acc.left, objBounds.left),
-          top: Math.min(acc.top, objBounds.top),
-          width: Math.max(acc.left + acc.width, objBounds.left + objBounds.width) - Math.min(acc.left, objBounds.left),
-          height: Math.max(acc.top + acc.height, objBounds.top + objBounds.height) - Math.min(acc.top, objBounds.top)
-        };
-      }, null);
-    }
-
-    // Exportar como imagen
-    const dataURL = canvas.toDataURL({
-      left: bounds.left,
-      top: bounds.top,
-      width: bounds.width,
-      height: bounds.height,
-      format: 'png'
-    });
-
-    // Convertir a blob y copiar al portapapeles
-    const canvas2 = document.createElement('canvas');
-    const ctx = canvas2.getContext('2d');
-    const img = new Image();
-    
-    return new Promise((resolve) => {
-      img.onload = async () => {
-        canvas2.width = img.width;
-        canvas2.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        
-        canvas2.toBlob(async (blob) => {
-          try {
-            await navigator.clipboard.write([
-              new ClipboardItem({
-                'image/png': blob
-              })
-            ]);
-            resolve(true);
-          } catch (error) {
-            console.log('No se pudo copiar al portapapeles del sistema:', error);
-            resolve(false);
-          }
-        }, 'image/png');
-      };
-      img.src = dataURL;
-    });
-
-  } catch (error) {
-    console.log('Error al copiar al portapapeles del sistema:', error);
-    return false;
-  }
-}
-
-/**
- * Pega una imagen desde el portapapeles del sistema
- * @param {fabric.Canvas} canvas - Instancia del canvas de fabric.js
- * @param {fabric.Rect} marginRect - Rectángulo de márgenes
- */
-async function pasteFromSystemClipboard(canvas, marginRect) {
-  try {
-    if (!navigator.clipboard || !navigator.clipboard.read) {
-      return false;
-    }
-
-    const clipboardItems = await navigator.clipboard.read();
-    
-    for (const clipboardItem of clipboardItems) {
-      for (const type of clipboardItem.types) {
-        if (type.startsWith('image/')) {
-          const blob = await clipboardItem.getType(type);
-          const imageUrl = URL.createObjectURL(blob);
-          
-          fabric.Image.fromURL(imageUrl, function(img) {
-            // Generar un ID único para la imagen pegada
-            img.set({
-              id: 'pasted_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-              left: canvas.width / 2,
-              top: canvas.height / 2,
-              originX: 'center',
-              originY: 'center'
-            });
-
-            // Escalar la imagen si es muy grande
-            const maxWidth = canvas.width * 0.8;
-            const maxHeight = canvas.height * 0.8;
-            
-            if (img.width > maxWidth || img.height > maxHeight) {
-              const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
-              img.scale(scale);
-            }
-
-            constrainObjectToMargin(img, marginRect);
-            canvas.add(img);
-            canvas.setActiveObject(img);
-            canvas.renderAll();
-            
-            // Limpiar URL temporal
-            URL.revokeObjectURL(imageUrl);
-            
-            console.log('Imagen pegada desde el portapapeles del sistema');
-            
-            if (typeof Swal !== 'undefined') {
-              Swal.fire({
-                text: "Imagen pegada desde el portapapeles",
-                icon: "success",
-                timer: 1500,
-                showConfirmButton: false
-              });
-            }
-          });
-          
-          return true;
-        }
-      }
-    }
-    
-    return false;
-    
-  } catch (error) {
-    console.log('No se pudo acceder al portapapeles del sistema:', error);
-    return false;
-  }
-}
-
-/**
  * Crea un objeto fabric.js desde datos serializados
  * @param {Object} objData - Datos del objeto serializado
  */
 async function createObjectFromData(objData) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     try {
-      // Usar enlivenObjects para todos los tipos de objetos
-      fabric.util.enlivenObjects([objData], function(clonedObjects) {
-        const clonedObj = clonedObjects[0];
-        if (clonedObj) {
-          // Generar nuevo ID para evitar duplicados
-          const newId = (objData.id || 'unknown') + '_copy_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-          clonedObj.set({
-            id: newId
-          });
-          resolve(clonedObj);
-        } else {
-          console.error('No se pudo crear el objeto desde los datos:', objData);
+      // Método mejorado para recrear objetos
+      if (objData.type === 'image') {
+        // Para imágenes, usar fromURL con la src original para mantener la integridad
+        const imageUrl = objData.src || objData.originalUrl;
+        if (!imageUrl) {
+          console.error('No se encontró URL de imagen en los datos:', objData);
           resolve(null);
+          return;
         }
-      });
+
+        fabric.Image.fromURL(imageUrl, function(clonedObj) {
+          if (clonedObj) {
+            // Generar nuevo ID para evitar duplicados
+            const newId = (objData.id || 'unknown') + '_copy_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            
+            // Aplicar solo las propiedades seguras y necesarias
+            const safeProps = {
+              id: newId,
+              left: objData.left || 0,
+              top: objData.top || 0,
+              scaleX: objData.scaleX || 1,
+              scaleY: objData.scaleY || 1,
+              angle: objData.angle || 0,
+              flipX: objData.flipX || false,
+              flipY: objData.flipY || false,
+              opacity: objData.opacity !== undefined ? objData.opacity : 1,
+              visible: objData.visible !== undefined ? objData.visible : true
+            };
+            
+            clonedObj.set(safeProps);
+            
+            // Mantener la URL original si existe
+            if (objData.originalUrl) {
+              clonedObj.originalUrl = objData.originalUrl;
+            }
+            
+            // Aplicar filtros si existen
+            if (objData.filters && Array.isArray(objData.filters)) {
+              clonedObj.filters = objData.filters;
+              clonedObj.applyFilters();
+            }
+            
+            resolve(clonedObj);
+          } else {
+            console.error('No se pudo crear la imagen desde la URL:', imageUrl);
+            resolve(null);
+          }
+        });
+      } else {
+        // Para otros tipos de objetos, usar enlivenObjects
+        fabric.util.enlivenObjects([objData], function(clonedObjects) {
+          const clonedObj = clonedObjects[0];
+          if (clonedObj) {
+            // Generar nuevo ID para evitar duplicados
+            const newId = (objData.id || 'unknown') + '_copy_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            clonedObj.set({ id: newId });
+            resolve(clonedObj);
+          } else {
+            console.error('No se pudo crear el objeto desde los datos:', objData);
+            resolve(null);
+          }
+        });
+      }
     } catch (error) {
       console.error('Error al crear objeto desde datos:', error);
       resolve(null);
@@ -300,7 +229,8 @@ async function createObjectFromData(objData) {
   });
 }
 
-
+// Variable para evitar múltiples registros de eventos
+let clipboardEventsInitialized = false;
 
 /**
  * Configura los eventos de teclado para copiar y pegar
@@ -308,7 +238,13 @@ async function createObjectFromData(objData) {
  * @param {fabric.Rect} marginRect - Rectángulo de márgenes
  */
 export function setupClipboardEvents(canvas, marginRect) {
-  document.addEventListener('keydown', function(event) {
+  // Evitar múltiples registros de eventos
+  if (clipboardEventsInitialized) {
+    console.log('Clipboard events already initialized, skipping...');
+    return;
+  }
+
+  document.addEventListener('keydown', function clipboardKeyHandler(event) {
     // Verificar que no estemos en un input o textarea
     const activeElement = document.activeElement;
     if (activeElement && (
@@ -331,6 +267,9 @@ export function setupClipboardEvents(canvas, marginRect) {
       pasteSelection(canvas, marginRect);
     }
   });
+
+  clipboardEventsInitialized = true;
+  console.log('Clipboard events initialized');
 }
 
 /**
@@ -338,4 +277,11 @@ export function setupClipboardEvents(canvas, marginRect) {
  */
 export function clearClipboard() {
   clipboardData = null;
+}
+
+/**
+ * Obtiene información del portapapeles actual (para debugging)
+ */
+export function getClipboardInfo() {
+  return clipboardData;
 } 

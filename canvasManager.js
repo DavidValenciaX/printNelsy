@@ -46,7 +46,8 @@ export class CanvasManager {
   setupCanvasEvents(setArrangementStatus) {
     setupMovingEvents(this.canvas, this.marginRect);
     setupScalingEvents(this.canvas, this.marginRect);
-    setupRotatingEvents(this.canvas, this.marginRect, setArrangementStatus);
+    // Temporarily disable rotating events to test clipboard functionality
+    // setupRotatingEvents(this.canvas, this.marginRect, setArrangementStatus);
   }
 
   getCanvas() {
