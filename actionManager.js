@@ -28,6 +28,7 @@ import { selectArrangeImageLayout } from './layoutSelector.js';
 import { 
   copySelection, 
   pasteSelection, 
+  pasteFromSystemOnly,
   setupClipboardEvents, 
   clearClipboard 
 } from './clipboardUtils.js';
@@ -91,6 +92,7 @@ export class ActionManager {
   // Clipboard actions
   copySelection = copySelection;
   pasteSelection = pasteSelection;
+  pasteFromSystemOnly = pasteFromSystemOnly;
   setupClipboardEvents = setupClipboardEvents;
   clearClipboard = clearClipboard;
 

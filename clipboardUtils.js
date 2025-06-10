@@ -4,6 +4,7 @@
 import { constrainObjectToMargin } from './constraintUtils.js';
 
 let clipboardData = null;
+let lastSystemClipboardCheck = null;
 
 /**
  * Copia el objeto activo o selección múltiple al portapapeles interno
@@ -57,11 +58,22 @@ export async function copySelection(canvas) {
     clipboardData = {
       type: activeObjects.length > 1 ? 'multiple' : 'single',
       objects: serializedObjects,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      source: 'internal' // Marcar como copia interna
     };
 
     console.log('Objetos copiados al portapapeles interno:', clipboardData);
     console.log('Objetos individuales:', serializedObjects);
+    
+    // Mostrar confirmación de copia
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        text: `${activeObjects.length} imagen${activeObjects.length > 1 ? 'es' : ''} copiada${activeObjects.length > 1 ? 's' : ''} al portapapeles`,
+        icon: "success",
+        timer: 1000,
+        showConfirmButton: false
+      });
+    }
     
   } catch (error) {
     console.error('Error al copiar:', error);
@@ -81,14 +93,32 @@ export async function copySelection(canvas) {
  */
 export async function pasteSelection(canvas, marginRect) {
   try {
-    // Primero intentar pegar desde el portapapeles del sistema
-    const systemPaste = await pasteFromSystemClipboard(canvas, marginRect);
-    if (systemPaste) {
-      return;
-    }
-
-    // Si no hay nada en el portapapeles del sistema, usar el interno
-    if (!clipboardData || !clipboardData.objects || clipboardData.objects.length === 0) {
+    // Verificar si hay contenido en ambos portapapeles
+    const hasInternalClipboard = clipboardData && clipboardData.objects && clipboardData.objects.length > 0;
+    const systemClipboardInfo = await checkSystemClipboardContent();
+    
+    // Determinar cuál usar basado en cronología
+    let useSystemClipboard = false;
+    
+    if (systemClipboardInfo.hasContent) {
+      if (!hasInternalClipboard) {
+        // Solo hay contenido en el sistema
+        useSystemClipboard = true;
+        console.log('Solo hay contenido en portapapeles del sistema');
+      } else {
+        // Hay contenido en ambos, comparar timestamps
+        const internalTimestamp = clipboardData.timestamp;
+        const systemTimestamp = systemClipboardInfo.estimatedTimestamp;
+        
+        if (systemTimestamp > internalTimestamp) {
+          useSystemClipboard = true;
+          console.log('Contenido del sistema es más reciente, usando portapapeles del sistema');
+        } else {
+          console.log('Contenido interno es más reciente, usando portapapeles interno');
+        }
+      }
+    } else if (!hasInternalClipboard) {
+      // No hay contenido en ninguno
       if (typeof Swal !== 'undefined') {
         Swal.fire({
           text: "No hay nada en el portapapeles para pegar.",
@@ -96,6 +126,19 @@ export async function pasteSelection(canvas, marginRect) {
         });
       }
       return;
+    }
+    
+    // Pegar según la decisión
+    if (useSystemClipboard) {
+      const systemPaste = await pasteFromSystemClipboard(canvas, marginRect);
+      if (systemPaste) {
+        return;
+      }
+      // Si falla el sistema pero hay interno, usar interno como fallback
+      if (!hasInternalClipboard) {
+        return;
+      }
+      console.log('Falló pegado del sistema, usando portapapeles interno como fallback');
     }
 
     canvas.discardActiveObject();
@@ -130,6 +173,16 @@ export async function pasteSelection(canvas, marginRect) {
 
     canvas.renderAll();
     console.log(`${pastedObjects.length} objetos pegados desde el portapapeles interno`);
+    
+    // Mostrar confirmación de pegado
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        text: `${pastedObjects.length} imagen${pastedObjects.length > 1 ? 'es' : ''} pegada${pastedObjects.length > 1 ? 's' : ''} desde el portapapeles interno`,
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false
+      });
+    }
 
   } catch (error) {
     console.error('Error al pegar:', error);
@@ -140,6 +193,90 @@ export async function pasteSelection(canvas, marginRect) {
       });
     }
   }
+}
+
+/**
+ * Verifica el contenido del portapapeles del sistema y estima si es más reciente
+ * @returns {Object} Información sobre el contenido del sistema
+ */
+async function checkSystemClipboardContent() {
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.read) {
+      return { hasContent: false, estimatedTimestamp: 0 };
+    }
+
+    const clipboardItems = await navigator.clipboard.read();
+    
+    for (const clipboardItem of clipboardItems) {
+      for (const type of clipboardItem.types) {
+        if (type.startsWith('image/')) {
+          // Hay una imagen en el portapapeles del sistema
+          // Estimar timestamp basado en cuando se detectó por primera vez
+          const currentTime = Date.now();
+          
+          if (!lastSystemClipboardCheck) {
+            // Primera vez que detectamos contenido, asumir que es reciente
+            lastSystemClipboardCheck = {
+              hasContent: true,
+              timestamp: currentTime
+            };
+            return { hasContent: true, estimatedTimestamp: currentTime };
+          }
+          
+          // Verificar si el contenido cambió (simple heurística)
+          try {
+            const blob = await clipboardItem.getType(type);
+            const contentHash = blob.size + '_' + blob.type; // Simple hash basado en tamaño y tipo
+            
+            if (lastSystemClipboardCheck.contentHash !== contentHash) {
+              // El contenido cambió, actualizar timestamp
+              lastSystemClipboardCheck = {
+                hasContent: true,
+                timestamp: currentTime,
+                contentHash: contentHash
+              };
+              return { hasContent: true, estimatedTimestamp: currentTime };
+            } else {
+              // Mismo contenido, usar timestamp anterior
+              return { 
+                hasContent: true, 
+                estimatedTimestamp: lastSystemClipboardCheck.timestamp 
+              };
+            }
+          } catch (error) {
+            // Si no podemos leer el contenido, asumir que hay contenido reciente
+            return { hasContent: true, estimatedTimestamp: currentTime };
+          }
+        }
+      }
+    }
+    
+    // No hay imágenes en el portapapeles del sistema
+    lastSystemClipboardCheck = { hasContent: false, timestamp: Date.now() };
+    return { hasContent: false, estimatedTimestamp: 0 };
+    
+  } catch (error) {
+    console.log('No se pudo verificar el portapapeles del sistema:', error);
+    return { hasContent: false, estimatedTimestamp: 0 };
+  }
+}
+
+/**
+ * Pega específicamente desde el portapapeles del sistema
+ * @param {fabric.Canvas} canvas - Instancia del canvas de fabric.js
+ * @param {fabric.Rect} marginRect - Rectángulo de márgenes
+ */
+export async function pasteFromSystemOnly(canvas, marginRect) {
+  const result = await pasteFromSystemClipboard(canvas, marginRect);
+  if (!result) {
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        text: "No hay imágenes en el portapapeles del sistema.",
+        icon: "warning"
+      });
+    }
+  }
+  return result;
 }
 
 /**
@@ -189,10 +326,17 @@ async function pasteFromSystemClipboard(canvas, marginRect) {
             URL.revokeObjectURL(imageUrl);
 
             console.log('Imagen pegada desde el portapapeles del sistema');
+            
+            // Actualizar el timestamp del sistema cuando se pega exitosamente
+            lastSystemClipboardCheck = {
+              hasContent: true,
+              timestamp: Date.now(),
+              contentHash: blob.size + '_' + blob.type
+            };
 
             if (typeof Swal !== 'undefined') {
               Swal.fire({
-                text: "Imagen pegada desde el portapapeles",
+                text: "Imagen pegada desde el portapapeles del sistema",
                 icon: "success",
                 timer: 1500,
                 showConfirmButton: false
@@ -322,10 +466,16 @@ export function setupClipboardEvents(canvas, marginRect) {
       copySelection(canvas);
     }
     
-    // Ctrl+V - Pegar
-    if ((event.ctrlKey || event.metaKey) && event.key === 'v') {
+    // Ctrl+V - Pegar (prioridad a portapapeles interno)
+    if ((event.ctrlKey || event.metaKey) && event.key === 'v' && !event.shiftKey) {
       event.preventDefault();
       pasteSelection(canvas, marginRect);
+    }
+    
+    // Ctrl+Shift+V - Pegar específicamente desde portapapeles del sistema
+    if ((event.ctrlKey || event.metaKey) && event.key === 'V' && event.shiftKey) {
+      event.preventDefault();
+      pasteFromSystemOnly(canvas, marginRect);
     }
   });
 
@@ -338,6 +488,7 @@ export function setupClipboardEvents(canvas, marginRect) {
  */
 export function clearClipboard() {
   clipboardData = null;
+  lastSystemClipboardCheck = null;
 }
 
 /**
