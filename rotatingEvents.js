@@ -35,7 +35,6 @@ export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus 
     obj.previousAngle        = currentAngle;
 
     // ---- Geometry helpers ---------------------------------------------------
-    const { left: L, top: T } = obj;
     const { tl: TL, tr: TR, bl: BL, br: BR } = obj.aCoords;
     const corners = { TL, TR, BL, BR };
 
@@ -142,17 +141,15 @@ function handleRestriction({ code, obj, corners, margins, diagAngle, complementD
 
   if (allow) {
     obj.angle = radToDeg(angleRad);
-  } else {
-    // When we ‘bounce’ back across the margin we seamlessly swap handler
-    if (shouldSwitch(meta.opposite, corners, margins, state.clockwise)) {
-      state.accumulated = 0;
-      state.active      = meta.opposite;
-    }
+  } else if (shouldSwitch(meta.opposite, corners, margins, state.clockwise)) {
+    // When we 'bounce' back across the margin we seamlessly swap handler
+    state.accumulated = 0;
+    state.active      = meta.opposite;
   }
 }
 
 // -----------------------------------------------------------------------------
-// 🔍  Detect which restriction should become active (formerly 32 if‑clauses)
+// 🔍  Detect which restriction should become active (formerly 32 if‑clauses)
 // -----------------------------------------------------------------------------
 function detectRestriction(corners, margins, cw) {
   // Constantes para generar detección automáticamente
