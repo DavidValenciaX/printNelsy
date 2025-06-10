@@ -17,6 +17,7 @@ export class EventManager {
     this.initializePositionEvents();
     this.initializeSizeEvents();
     this.initializeImageOperationEvents();
+    this.initializeClipboardEvents();
     this.initializeCropEvents();
     this.initializeCollageEvents();
     this.initializeGlobalEvents();
@@ -125,6 +126,16 @@ export class EventManager {
     );
   }
 
+  initializeClipboardEvents() {
+    this.addEventBinding('copyButton', 'click', () => 
+      this.actions.copySelection(this.canvasManager.getCanvas())
+    );
+    
+    this.addEventBinding('pasteButton', 'click', () => 
+      this.actions.pasteSelection(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect())
+    );
+  }
+
   initializeCropEvents() {
     this.addEventBinding('cropButton', 'click', () => 
       this.actions.initializeCrop(
@@ -178,6 +189,9 @@ export class EventManager {
   }
 
   initializeGlobalEvents() {
+    // Setup clipboard keyboard events
+    this.actions.setupClipboardEvents(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect());
+
     // Keyboard events
     document.addEventListener("keydown", (event) => {
       if (event.key === "Delete") {

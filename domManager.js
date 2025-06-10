@@ -47,6 +47,10 @@ export class DOMManager {
       grayScaleButton: document.getElementById("grayScaleButton"),
       deleteButton: document.getElementById("deleteButton"),
       
+      // Clipboard operations
+      copyButton: document.getElementById("copyButton"),
+      pasteButton: document.getElementById("pasteButton"),
+      
       // Crop controls
       cropButton: document.getElementById("cropButton"),
       confirmCropButton: document.getElementById("confirmCrop"),

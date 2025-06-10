@@ -25,6 +25,12 @@ import {
   changeOrientation
 } from './canvasResizeUtils.js';
 import { selectArrangeImageLayout } from './layoutSelector.js';
+import { 
+  copySelection, 
+  pasteSelection, 
+  setupClipboardEvents, 
+  clearClipboard 
+} from './clipboardUtils.js';
 
 /**
  * Centraliza todas las acciones de la aplicación
@@ -81,6 +87,12 @@ export class ActionManager {
 
   // Status management
   setArrangementStatus = setArrangementStatus;
+
+  // Clipboard actions
+  copySelection = copySelection;
+  pasteSelection = pasteSelection;
+  setupClipboardEvents = setupClipboardEvents;
+  clearClipboard = clearClipboard;
 
   // Global window actions for zoom (backwards compatibility)
   exposeGlobalZoomActions() {
