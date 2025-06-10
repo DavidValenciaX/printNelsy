@@ -60,7 +60,10 @@ export async function copySelection(canvas) {
       timestamp: Date.now()
     };
 
-    console.log('Objetos copiados al portapapeles (solo interno):', clipboardData);
+    // También intentar copiar al portapapeles del sistema si es posible
+    await copyToSystemClipboard(canvas);
+
+    console.log('Objetos copiados al portapapeles (interno y sistema):', clipboardData);
     console.log('Objetos individuales:', serializedObjects);
     
   } catch (error) {
@@ -81,7 +84,13 @@ export async function copySelection(canvas) {
  */
 export async function pasteSelection(canvas, marginRect) {
   try {
-    // Usar solo el portapapeles interno para mantener la integridad de los objetos
+    // Primero intentar pegar desde el portapapeles del sistema
+    const systemPaste = await pasteFromSystemClipboard(canvas, marginRect);
+    if (systemPaste) {
+      return;
+    }
+
+    // Si no hay nada en el portapapeles del sistema, usar el interno
     if (!clipboardData || !clipboardData.objects || clipboardData.objects.length === 0) {
       if (typeof Swal !== 'undefined') {
         Swal.fire({
@@ -123,7 +132,7 @@ export async function pasteSelection(canvas, marginRect) {
     }
 
     canvas.renderAll();
-    console.log(`${pastedObjects.length} objetos pegados desde el portapapeles`);
+    console.log(`${pastedObjects.length} objetos pegados desde el portapapeles interno`);
 
   } catch (error) {
     console.error('Error al pegar:', error);
@@ -133,6 +142,77 @@ export async function pasteSelection(canvas, marginRect) {
         icon: "error"
       });
     }
+  }
+}
+
+/**
+ * Pega una imagen desde el portapapeles del sistema
+ * @param {fabric.Canvas} canvas - Instancia del canvas de fabric.js
+ * @param {fabric.Rect} marginRect - Rectángulo de márgenes
+ */
+async function pasteFromSystemClipboard(canvas, marginRect) {
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.read) {
+      return false;
+    }
+
+    const clipboardItems = await navigator.clipboard.read();
+
+    for (const clipboardItem of clipboardItems) {
+      for (const type of clipboardItem.types) {
+        if (type.startsWith('image/')) {
+          const blob = await clipboardItem.getType(type);
+          const imageUrl = URL.createObjectURL(blob);
+
+          fabric.Image.fromURL(imageUrl, function(img) {
+            // Generar un ID único para la imagen pegada
+            img.set({
+              id: 'pasted_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+              left: canvas.width / 2,
+              top: canvas.height / 2,
+              originX: 'center',
+              originY: 'center'
+            });
+
+            // Escalar la imagen si es muy grande
+            const maxWidth = canvas.width * 0.8;
+            const maxHeight = canvas.height * 0.8;
+
+            if (img.width > maxWidth || img.height > maxHeight) {
+              const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+              img.scale(scale);
+            }
+
+            constrainObjectToMargin(img, marginRect);
+            canvas.add(img);
+            canvas.setActiveObject(img);
+            canvas.renderAll();
+
+            // Limpiar URL temporal
+            URL.revokeObjectURL(imageUrl);
+
+            console.log('Imagen pegada desde el portapapeles del sistema');
+
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                text: "Imagen pegada desde el portapapeles",
+                icon: "success",
+                timer: 1500,
+                showConfirmButton: false
+              });
+            }
+          });
+
+          return true;
+        }
+      }
+    }
+
+    return false;
+
+  } catch (error) {
+    console.log('No se pudo acceder al portapapeles del sistema:', error);
+    return false;
   }
 }
 
