@@ -61,19 +61,6 @@ export async function copySelection(canvas) {
       timestamp: Date.now(),
       source: 'internal' // Marcar como copia interna
     };
-
-    console.log('Objetos copiados al portapapeles interno:', clipboardData);
-    console.log('Objetos individuales:', serializedObjects);
-    
-    // Mostrar confirmación de copia
-    if (typeof Swal !== 'undefined') {
-      Swal.fire({
-        text: `${activeObjects.length} imagen${activeObjects.length > 1 ? 'es' : ''} copiada${activeObjects.length > 1 ? 's' : ''} al portapapeles`,
-        icon: "success",
-        timer: 1000,
-        showConfirmButton: false
-      });
-    }
     
   } catch (error) {
     console.error('Error al copiar:', error);
@@ -173,16 +160,6 @@ export async function pasteSelection(canvas, marginRect) {
 
     canvas.renderAll();
     console.log(`${pastedObjects.length} objetos pegados desde el portapapeles interno`);
-    
-    // Mostrar confirmación de pegado
-    if (typeof Swal !== 'undefined') {
-      Swal.fire({
-        text: `${pastedObjects.length} imagen${pastedObjects.length > 1 ? 'es' : ''} pegada${pastedObjects.length > 1 ? 's' : ''} desde el portapapeles interno`,
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false
-      });
-    }
 
   } catch (error) {
     console.error('Error al pegar:', error);
@@ -333,15 +310,6 @@ async function pasteFromSystemClipboard(canvas, marginRect) {
               timestamp: Date.now(),
               contentHash: blob.size + '_' + blob.type
             };
-
-            if (typeof Swal !== 'undefined') {
-              Swal.fire({
-                text: "Imagen pegada desde el portapapeles del sistema",
-                icon: "success",
-                timer: 1500,
-                showConfirmButton: false
-              });
-            }
           });
 
           return true;
