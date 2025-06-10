@@ -7,6 +7,20 @@ let clipboardData = null;
 let lastSystemClipboardCheck = null;
 
 /**
+ * Convierte un blob a base64
+ * @param {Blob} blob - Blob a convertir
+ * @returns {Promise<string>} URL data en formato base64
+ */
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+/**
  * Copia el objeto activo o selección múltiple al portapapeles interno
  * @param {fabric.Canvas} canvas - Instancia del canvas de fabric.js
  */
@@ -273,9 +287,11 @@ async function pasteFromSystemClipboard(canvas, marginRect) {
       for (const type of clipboardItem.types) {
         if (type.startsWith('image/')) {
           const blob = await clipboardItem.getType(type);
-          const imageUrl = URL.createObjectURL(blob);
-
-          fabric.Image.fromURL(imageUrl, function(img) {
+          
+          // Convertir blob a base64 para persistencia
+          const base64Data = await blobToBase64(blob);
+          
+          fabric.Image.fromURL(base64Data, function(img) {
             // Generar un ID único para la imagen pegada
             img.set({
               id: 'pasted_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
@@ -284,6 +300,9 @@ async function pasteFromSystemClipboard(canvas, marginRect) {
               originX: 'center',
               originY: 'center'
             });
+
+            // Guardar la URL base64 como originalUrl para referencia futura
+            img.originalUrl = base64Data;
 
             // Escalar la imagen si es muy grande
             const maxWidth = canvas.width * 0.8;
@@ -298,9 +317,6 @@ async function pasteFromSystemClipboard(canvas, marginRect) {
             canvas.add(img);
             canvas.setActiveObject(img);
             canvas.renderAll();
-
-            // Limpiar URL temporal
-            URL.revokeObjectURL(imageUrl);
 
             console.log('Imagen pegada desde el portapapeles del sistema');
             
@@ -334,10 +350,16 @@ async function createObjectFromData(objData) {
     try {
       // Método mejorado para recrear objetos
       if (objData.type === 'image') {
-        // Para imágenes, usar fromURL con la src original para mantener la integridad
-        const imageUrl = objData.src || objData.originalUrl;
+        // Para imágenes, priorizar originalUrl si existe, sino usar src
+        let imageUrl = objData.originalUrl || objData.src;
+        
+        // Si la src es un blob revocado, usar solo originalUrl
+        if (objData.src && objData.src.startsWith('blob:') && objData.originalUrl) {
+          imageUrl = objData.originalUrl;
+        }
+        
         if (!imageUrl) {
-          console.error('No se encontró URL de imagen en los datos:', objData);
+          console.error('No se encontró URL de imagen válida en los datos:', objData);
           resolve(null);
           return;
         }
