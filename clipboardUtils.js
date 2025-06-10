@@ -31,9 +31,21 @@ export async function copySelection(canvas) {
       if (obj.type === 'image') {
         const objectData = obj.toObject([
           'id', 'src', 'crossOrigin', 'filters', 'originalUrl',
-          'left', 'top', 'scaleX', 'scaleY', 'angle', 'flipX', 'flipY',
           'opacity', 'visible', 'shadow', 'clipPath'
         ]);
+
+        const transform = obj.calcTransformMatrix();
+        const decomposed = fabric.util.qrDecompose(transform);
+
+        objectData.left = decomposed.translateX;
+        objectData.top = decomposed.translateY;
+        objectData.angle = decomposed.angle;
+        objectData.scaleX = decomposed.scaleX;
+        objectData.scaleY = decomposed.scaleY;
+        
+        objectData.flipX = false;
+        objectData.flipY = false;
+
         serializedObjects.push(objectData);
       } else {
         // Para otros tipos de objetos, usar serialización estándar
