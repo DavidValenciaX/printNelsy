@@ -60,10 +60,7 @@ export async function copySelection(canvas) {
       timestamp: Date.now()
     };
 
-    // También intentar copiar al portapapeles del sistema si es posible
-    await copyToSystemClipboard(canvas);
-
-    console.log('Objetos copiados al portapapeles (interno y sistema):', clipboardData);
+    console.log('Objetos copiados al portapapeles interno:', clipboardData);
     console.log('Objetos individuales:', serializedObjects);
     
   } catch (error) {
