@@ -32,35 +32,37 @@ export function getIsVertical() {
 }
 
 function reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, marginRect, marginWidth) {
-  if (images.length > 0) {
-    if (arrangementStatus === "grid") {
-      // Arrange images in grid layout
+  if (images.length === 0) return;
+
+  const arrangementStrategies = {
+    "grid": () => {
       setArrangementStatus(arrangeImages(canvas, images, currentLayout, marginWidth, currentDirection));
-    } else if (arrangementStatus === "columns-collage") {
-      // Re-add images and create collage
+    },
+    "columns-collage": () => {
       images.forEach((img) => canvas.add(img));
       const newStatus = createMasonryColumnsCollage(canvas, marginRect, Swal);
       if (newStatus) setArrangementStatus(newStatus);
-    } else if (arrangementStatus === "rows-collage") {
-      // Re-add images and create collage
+    },
+    "rows-collage": () => {
       images.forEach((img) => canvas.add(img));
       const newStatus = createMasonryRowsCollage(canvas, marginRect, Swal);
       if (newStatus) setArrangementStatus(newStatus);
-    } else if (arrangementStatus === "collage") {
-      // Re-add images and create random collage
+    },
+    "collage": () => {
       images.forEach((img) => canvas.add(img));
       const newStatus = collageArrange(canvas, marginRect, Swal);
       if (newStatus) setArrangementStatus(newStatus);
-    }
-    else if (arrangementStatus === "none") {
-      // Re-add images and keep their positions.
+    },
+    "none": () => {
       images.forEach((img) => {
         canvas.add(img);
-        // Constrain image position within the new margin
         constrainObjectToMargin(img, marginRect);
       });
     }
-  }
+  };
+
+  const strategy = arrangementStrategies[arrangementStatus];
+  if (strategy) strategy();
 }
 
 export function resizeCanvas(size, canvas, marginRect, orientation = isVertical) {
