@@ -1,7 +1,6 @@
 import { arrangeImages } from './arrangeUtils.js';
 import { 
-  lastLayout, 
-  lastDirection,
+  imageState,
   setArrangementStatus,
   setLastLayout,
   setLastDirection
@@ -34,7 +33,7 @@ export function selectArrangeImageLayout(canvas, marginWidth, Swal) {
     "single-row-reverse": { layout: "rows", direction: "forward" }
   };
 
-  const currentState = `${lastLayout}-${lastDirection}`;
+  const currentState = `${imageState.lastLayout}-${imageState.lastDirection}`;
   const nextState = stateTransitions[currentState] || { layout: "rows", direction: "forward" };
 
   setArrangementStatus(arrangeImages(canvas, images, nextState.layout, marginWidth, nextState.direction));

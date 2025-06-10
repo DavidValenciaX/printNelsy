@@ -2,23 +2,25 @@ import { arrangeImages } from './arrangeUtils.js';
 
 // Variables exportadas para gestión de imágenes
 export const originalImages = {};
-export let arrangementStatus = "none";
-export let lastLayout = "rows";
-export let lastDirection = "forward";
+export const imageState = {
+  arrangementStatus: "none",
+  lastLayout: "rows",
+  lastDirection: "forward"
+};
 
 // Función para actualizar el estado de arreglo
 export function setArrangementStatus(status) {
-  arrangementStatus = status;
+  imageState.arrangementStatus = status;
 }
 
 // Función para actualizar el layout
 export function setLastLayout(layout) {
-  lastLayout = layout;
+  imageState.lastLayout = layout;
 }
 
 // Función para actualizar la dirección
 export function setLastDirection(direction) {
-  lastDirection = direction;
+  imageState.lastDirection = direction;
 }
 
 // Función principal para manejar la subida de imágenes
@@ -64,13 +66,13 @@ export function handleImageUpload(e, canvas, marginWidth, rotateCheckbox) {
         if (processedCount === numFilesToProcess) {
           // Primero, se organiza el layout de las imágenes
           if (numFilesToProcess <= 2) {
-            arrangementStatus = arrangeImages(canvas, loadedImages, "cols", marginWidth, "forward");
-            lastLayout = "cols";
-            lastDirection = "forward";
+            imageState.arrangementStatus = arrangeImages(canvas, loadedImages, "cols", marginWidth, "forward");
+            imageState.lastLayout = "cols";
+            imageState.lastDirection = "forward";
           } else {
-            arrangementStatus = arrangeImages(canvas, loadedImages, "rows", marginWidth, "forward");
-            lastLayout = "rows";
-            lastDirection = "forward";
+            imageState.arrangementStatus = arrangeImages(canvas, loadedImages, "rows", marginWidth, "forward");
+            imageState.lastLayout = "rows";
+            imageState.lastDirection = "forward";
           }
 
           // Luego, se guardan los datos originales ya con sus valores de top, left, scaleX y scaleY actualizados

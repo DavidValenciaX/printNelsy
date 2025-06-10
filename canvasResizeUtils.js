@@ -3,8 +3,7 @@ import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange }
 import { constrainObjectToMargin } from './constraintUtils.js';
 import { updateMarginRect } from './marginRectManager.js';
 import { 
-  arrangementStatus, 
-  lastLayout,
+  imageState,
   setArrangementStatus
 } from './imageUploadUtils.js';
 
@@ -61,14 +60,14 @@ function reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, 
     }
   };
 
-  const strategy = arrangementStrategies[arrangementStatus];
+  const strategy = arrangementStrategies[imageState.arrangementStatus];
   if (strategy) strategy();
 }
 
 export function resizeCanvas(size, canvas, marginRect, orientation = isVertical) {
   // Store current canvas state
   const images = canvas.getObjects().filter((obj) => obj.type === "image");
-  const currentLayout = lastLayout || (images.length <= 2 ? "cols" : "rows");
+  const currentLayout = imageState.lastLayout || (images.length <= 2 ? "cols" : "rows");
   const currentDirection = "forward";
 
   // Remove all images from canvas
