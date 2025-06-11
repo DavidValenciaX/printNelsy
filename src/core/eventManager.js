@@ -33,6 +33,20 @@ export class EventManager {
     );
   }
 
+  updatePaperSizeButtons(selectedSize) {
+    const paperSizes = ['carta', 'oficio', 'a4'];
+    paperSizes.forEach(size => {
+      const button = this.dom.get(`${size}Button`);
+      if (button) {
+        if (size === selectedSize) {
+          button.classList.add('active');
+        } else {
+          button.classList.remove('active');
+        }
+      }
+    });
+  }
+
   initializePaperSizeEvents() {
     const paperSizes = ['carta', 'oficio', 'a4'];
     
@@ -40,19 +54,24 @@ export class EventManager {
       this.addEventBinding(`${size}Button`, 'click', () => {
         const result = this.actions.resizeCanvas(size, this.canvasManager.getCanvas(), this.canvasManager.getMarginRect());
         this.canvasManager.updateMargins(result.marginRect, result.marginWidth);
+        this.updatePaperSizeButtons(size);
       });
     });
+
+    this.updatePaperSizeButtons('carta');
   }
 
   initializeOrientationEvents() {
     this.addEventBinding('verticalButton', 'click', () => {
       const result = this.actions.changeOrientation(true, this.canvasManager.getCanvas(), this.canvasManager.getMarginRect());
       this.canvasManager.updateMargins(result.marginRect, result.marginWidth);
+      this.updatePaperSizeButtons(this.canvasManager.getPaperConfig().currentSize);
     });
 
     this.addEventBinding('horizontalButton', 'click', () => {
       const result = this.actions.changeOrientation(false, this.canvasManager.getCanvas(), this.canvasManager.getMarginRect());
       this.canvasManager.updateMargins(result.marginRect, result.marginWidth);
+      this.updatePaperSizeButtons(this.canvasManager.getPaperConfig().currentSize);
     });
   }
 

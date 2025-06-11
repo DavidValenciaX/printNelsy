@@ -221,3 +221,26 @@ input:focus {
 body.drag-over {
   border: 4px dashed #007bff;
 }
+
+/* Estilos para botones de tamaño de papel */
+.size-button {
+  background-color: transparent;
+  border: 2px solid #4CAF50;
+  color: #4CAF50;
+}
+
+.size-button:hover {
+  background-color: rgba(76, 175, 80, 0.1); /* Verde claro transparente */
+  color: #4CAF50;
+  transform: translateY(-1px);
+}
+
+.size-button.active {
+  background-color: #4CAF50;
+  color: white;
+  border-color: #4CAF50;
+}
+
+.size-button.active:hover {
+  background-color: #45a049; /* Un poco más oscuro en hover */
+}
