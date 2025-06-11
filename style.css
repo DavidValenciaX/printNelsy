@@ -217,3 +217,7 @@ input:focus {
 .button-icon {
   font-size: 1rem;
 }
+
+body.drag-over {
+  border: 4px dashed #007bff;
+}

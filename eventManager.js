@@ -192,6 +192,23 @@ export class EventManager {
     // Setup clipboard keyboard events
     this.actions.setupClipboardEvents(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect());
 
+    // Drag and drop events for image upload
+    document.body.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      document.body.classList.add('drag-over');
+    });
+
+    document.body.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      document.body.classList.remove('drag-over');
+    });
+
+    document.body.addEventListener('drop', (e) => 
+      this.actions.handleImageDrop(e, this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom.get('rotateCheckbox'))
+    );
+
     // Keyboard events
     document.addEventListener("keydown", (event) => {
       if (event.key === "Delete") {

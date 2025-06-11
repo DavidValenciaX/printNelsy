@@ -23,26 +23,18 @@ export function setLastDirection(direction) {
   imageState.lastDirection = direction;
 }
 
-// Función principal para manejar la subida de imágenes
-export function handleImageUpload(e, canvas, marginWidth, rotateCheckbox) {
-  const files = e.target.files;
+function _processFilesForCanvas(files, canvas, marginWidth, rotateCheckbox) {
+  const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
 
-  // Es una buena práctica verificar si se seleccionaron archivos.
-  if (!files || files.length === 0) {
-    // Resetea el valor del input incluso si no se seleccionaron archivos (ej. el usuario canceló el diálogo).
-    // Esto asegura que una futura selección del mismo archivo (después de una cancelación) funcione.
-    if (e.target) {
-      e.target.value = null;
-    }
+  if (imageFiles.length === 0) {
     return;
   }
 
   const loadedImages = [];
   let processedCount = 0;
-  const numFilesToProcess = files.length; // Guardar la cantidad original de archivos a procesar.
+  const numFilesToProcess = imageFiles.length;
 
-  for (const element of files) {
-    const file = element;
+  for (const file of imageFiles) {
     const reader = new FileReader();
     reader.onload = function (event) {
       fabric.Image.fromURL(event.target.result, function (img) {
@@ -100,10 +92,32 @@ export function handleImageUpload(e, canvas, marginWidth, rotateCheckbox) {
     };
     reader.readAsDataURL(file);
   }
+}
+
+// Función principal para manejar la subida de imágenes
+export function handleImageUpload(e, canvas, marginWidth, rotateCheckbox) {
+  const files = e.target.files;
+
+  // Es una buena práctica verificar si se seleccionaron archivos.
+  if (files && files.length > 0) {
+    _processFilesForCanvas(files, canvas, marginWidth, rotateCheckbox);
+  }
 
   // Resetea el valor del input de archivo.
   // Esto permite que el evento 'change' se dispare de nuevo si el usuario selecciona el mismo archivo.
   if (e.target) {
     e.target.value = null;
   }
-} 
+}
+
+// Nueva función para manejar el drop de imágenes
+export function handleImageDrop(e, canvas, marginWidth, rotateCheckbox) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.body.classList.remove('drag-over');
+
+  const files = e.dataTransfer.files;
+  if (files && files.length > 0) {
+    _processFilesForCanvas(files, canvas, marginWidth, rotateCheckbox);
+  }
+}

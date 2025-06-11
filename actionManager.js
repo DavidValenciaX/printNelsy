@@ -12,6 +12,7 @@ import { scaleUp, scaleDown } from './scaleUtils.js';
 import { convertToGrayscale } from './imageEffects.js';
 import { 
   handleImageUpload, 
+  handleImageDrop,
   originalImages,
   setArrangementStatus
 } from './imageUploadUtils.js';
@@ -64,6 +65,7 @@ export class ActionManager {
   // File actions
   printCanvas = printCanvas;
   handleImageUpload = handleImageUpload;
+  handleImageDrop = handleImageDrop;
 
   // Object actions
   deactivateObjects = deactivateObjects;
