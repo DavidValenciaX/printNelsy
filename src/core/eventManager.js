@@ -47,6 +47,21 @@ export class EventManager {
     });
   }
 
+  updateOrientationButtons(isVertical) {
+    const verticalButton = this.dom.get('verticalButton');
+    const horizontalButton = this.dom.get('horizontalButton');
+
+    if (verticalButton && horizontalButton) {
+      if (isVertical) {
+        verticalButton.classList.add('active');
+        horizontalButton.classList.remove('active');
+      } else {
+        verticalButton.classList.remove('active');
+        horizontalButton.classList.add('active');
+      }
+    }
+  }
+
   initializePaperSizeEvents() {
     const paperSizes = ['carta', 'oficio', 'a4'];
     
@@ -65,14 +80,16 @@ export class EventManager {
     this.addEventBinding('verticalButton', 'click', () => {
       const result = this.actions.changeOrientation(true, this.canvasManager.getCanvas(), this.canvasManager.getMarginRect());
       this.canvasManager.updateMargins(result.marginRect, result.marginWidth);
-      this.updatePaperSizeButtons(this.canvasManager.getPaperConfig().currentSize);
+      this.updateOrientationButtons(true);
     });
 
     this.addEventBinding('horizontalButton', 'click', () => {
       const result = this.actions.changeOrientation(false, this.canvasManager.getCanvas(), this.canvasManager.getMarginRect());
       this.canvasManager.updateMargins(result.marginRect, result.marginWidth);
-      this.updatePaperSizeButtons(this.canvasManager.getPaperConfig().currentSize);
+      this.updateOrientationButtons(false);
     });
+
+    this.updateOrientationButtons(true);
   }
 
   initializeTransformEvents() {
