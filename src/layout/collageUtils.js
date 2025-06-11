@@ -198,7 +198,7 @@ export function createMasonryRowsCollage(canvas, marginRect, Swal) {
   return "rows-collage";
 }
 
-import { checkOverlap } from './mathUtils.js';
+import { checkOverlap } from './../utils/mathUtils.js';
 
 /**
  * Random collage WITHOUT OVERLAPS

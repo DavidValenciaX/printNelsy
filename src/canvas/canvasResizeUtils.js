@@ -1,11 +1,11 @@
-import { arrangeImages } from './arrangeUtils.js';
-import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from './collageUtils.js';
+import { arrangeImages } from '../transform/arrangeUtils.js';
+import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from '../layout/collageUtils.js';
 import { constrainObjectToMargin } from './constraintUtils.js';
 import { updateMarginRect } from './marginRectManager.js';
 import { 
   imageState,
   setArrangementStatus
-} from './imageUploadUtils.js';
+} from '../image/imageUploadUtils.js';
 
 // Constantes de configuración del papel
 const dpi = 300;

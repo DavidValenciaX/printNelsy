@@ -1,4 +1,4 @@
-import { roundToDecimals } from './mathUtils.js';
+import { roundToDecimals } from './../utils/mathUtils.js';
 
 export function arrangeImages(canvas, images, orientation, marginWidth, order = "forward") {
   const count = images.length;

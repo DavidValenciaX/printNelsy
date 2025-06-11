@@ -1,4 +1,4 @@
-import { constrainObjectToMargin, scaleToFitWithinMargin } from './constraintUtils.js';
+import { constrainObjectToMargin, scaleToFitWithinMargin } from './../canvas/constraintUtils.js';
 
 export function rotateImage(canvas, deg, marginRect) {
   const activeObject = canvas.getActiveObject();

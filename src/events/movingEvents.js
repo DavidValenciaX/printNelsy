@@ -1,5 +1,5 @@
-import { constrainObjectToMargin } from './constraintUtils.js';
-import { getCurrentMarginRect, updateMarginRect } from './marginRectManager.js';
+import { constrainObjectToMargin } from './../canvas/constraintUtils.js';
+import { getCurrentMarginRect, updateMarginRect } from './../canvas/marginRectManager.js';
 
 export function setupMovingEvents(canvas, marginRect) {
   // Store the reference to marginRect in the centralized manager

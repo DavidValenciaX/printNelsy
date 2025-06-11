@@ -189,7 +189,7 @@ function setImageSizeInCm({ canvas, widthInput, heightInput, marginRect, paperCo
 }
 
 // Import required function
-import { constrainObjectToMargin } from './constraintUtils.js';
+import { constrainObjectToMargin } from './../canvas/constraintUtils.js';
 
 export {
   setImageSizeInCm,

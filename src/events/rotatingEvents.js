@@ -1,5 +1,5 @@
-import { radToDeg, calculateDistance } from './mathUtils.js';
-import { getCurrentMarginRect, updateMarginRect } from './marginRectManager.js';
+import { radToDeg, calculateDistance } from './../utils/mathUtils.js';
+import { getCurrentMarginRect, updateMarginRect } from './../canvas/marginRectManager.js';
 
 /**
  * Consolidated, DRY implementation that keeps the original behaviour but removes

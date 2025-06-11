@@ -1,7 +1,7 @@
 /**
  * Utilidades para copiar y pegar imágenes en el canvas
  */
-import { constrainObjectToMargin } from './constraintUtils.js';
+import { constrainObjectToMargin } from './../canvas/constraintUtils.js';
 
 let clipboardData = null;
 let lastSystemClipboardCheck = null;

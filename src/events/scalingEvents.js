@@ -1,4 +1,4 @@
-import { getCurrentMarginRect, updateMarginRect } from './marginRectManager.js';
+import { getCurrentMarginRect, updateMarginRect } from './../canvas/marginRectManager.js';
 
 export function setupScalingEvents(canvas, marginRect) {
   // Store the reference to marginRect in the centralized manager

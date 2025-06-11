@@ -1,10 +1,10 @@
-import { arrangeImages } from './arrangeUtils.js';
+import { arrangeImages } from './../transform/arrangeUtils.js';
 import { 
   imageState,
   setArrangementStatus,
   setLastLayout,
   setLastDirection
-} from './imageUploadUtils.js';
+} from '../image/imageUploadUtils.js';
 
 export function selectArrangeImageLayout(canvas, marginWidth, Swal) {
   // 1. Get all current images

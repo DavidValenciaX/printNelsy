@@ -2,7 +2,7 @@ import { DOMManager } from './domManager.js';
 import { CanvasManager } from './canvasManager.js';
 import { ActionManager } from './actionManager.js';
 import { EventManager } from './eventManager.js';
-import { setupAccessibility } from './accessibilityUtils.js';
+import { setupAccessibility } from '../utils/accessibilityUtils.js';
 
 /**
  * Clase principal de la aplicación que orquesta todos los módulos

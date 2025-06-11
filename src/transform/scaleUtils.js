@@ -1,4 +1,4 @@
-import { constrainObjectToMargin } from './constraintUtils.js';
+import { constrainObjectToMargin } from './../canvas/constraintUtils.js';
 
 const SCALE_FACTOR = 0.01;
 

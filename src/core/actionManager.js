@@ -1,38 +1,38 @@
 // Import all action functions
-import { zoomIn, zoomOut, applyZoom } from './zoom.js';
-import { centerVertically, centerHorizontally } from './center.js';
-import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from './collageUtils.js';
-import { setImageSizeInCm } from './imageSize.js';
-import { printCanvas } from './printUtils.js';
-import { deactivateObjects } from './deactivateObjects.js';
-import { rotateImage } from './rotateUtils.js';
-import { resetActiveImage } from './resetUtils.js';
-import { deleteActiveObject } from './deleteUtils.js';
-import { scaleUp, scaleDown } from './scaleUtils.js';
-import { convertToGrayscale } from './imageEffects.js';
+import { zoomIn, zoomOut, applyZoom } from '../output/zoom.js';
+import { centerVertically, centerHorizontally } from '../transform/center.js';
+import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from '../layout/collageUtils.js';
+import { setImageSizeInCm } from '../image/imageSize.js';
+import { printCanvas } from '../output/printUtils.js';
+import { deactivateObjects } from '../interactions/deactivateObjects.js';
+import { rotateImage } from '../transform/rotateUtils.js';
+import { resetActiveImage } from '../image/resetUtils.js';
+import { deleteActiveObject } from '../interactions/deleteUtils.js';
+import { scaleUp, scaleDown } from '../transform/scaleUtils.js';
+import { convertToGrayscale } from '../image/imageEffects.js';
 import { 
   handleImageUpload, 
   handleImageDrop,
   originalImages,
   setArrangementStatus
-} from './imageUploadUtils.js';
+} from '../image/imageUploadUtils.js';
 import { 
   initializeCrop, 
   confirmCrop, 
   exitCropMode
-} from './cropUtils.js';
+} from '../image/cropUtils.js';
 import { 
   resizeCanvas, 
   changeOrientation
-} from './canvasResizeUtils.js';
-import { selectArrangeImageLayout } from './layoutSelector.js';
+} from '../canvas/canvasResizeUtils.js';
+import { selectArrangeImageLayout } from '../layout/layoutSelector.js';
 import { 
   copySelection, 
   pasteSelection, 
   pasteFromSystemOnly,
   setupClipboardEvents, 
   clearClipboard 
-} from './clipboardUtils.js';
+} from '../interactions/clipboardUtils.js';
 
 /**
  * Centraliza todas las acciones de la aplicación

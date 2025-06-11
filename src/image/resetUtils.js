@@ -1,4 +1,4 @@
-import { constrainObjectToMargin } from './constraintUtils.js';
+import { constrainObjectToMargin } from './../canvas/constraintUtils.js';
 
 export function resetActiveImage(canvas, marginRect, originalImages) {
   const activeObjects = canvas.getActiveObjects();

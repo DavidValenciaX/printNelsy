@@ -5,10 +5,10 @@ import {
   dpi, 
   getCurrentSize, 
   getIsVertical 
-} from './canvasResizeUtils.js';
-import { setupMovingEvents } from './movingEvents.js';
-import { setupScalingEvents } from './scalingEvents.js';
-import { setupRotatingEvents } from './rotatingEvents.js';
+} from '../canvas/canvasResizeUtils.js';
+import { setupMovingEvents } from '../events/movingEvents.js';
+import { setupScalingEvents } from '../events/scalingEvents.js';
+import { setupRotatingEvents } from '../events/rotatingEvents.js';
 
 /**
  * Gestiona el canvas y sus configuraciones
