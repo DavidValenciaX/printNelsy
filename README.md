@@ -4,11 +4,9 @@ Una aplicación web para manipular, organizar e imprimir imágenes usando Fabric
 
 ## 📁 Estructura del Proyecto
 
-```
+```bash
 imprimir_imagenes_fabric/
-├── 📁 public/                    # Archivos públicos
-│   └── index.html               # HTML principal de la aplicación
-│
+├── index.html               # HTML principal de la aplicación
 ├── 📁 src/                      # Código fuente
 │   ├── 📁 core/                 # Módulos principales de la aplicación
 │   │   ├── app.js              # Clase principal de la aplicación
@@ -40,7 +38,7 @@ imprimir_imagenes_fabric/
 │   │   ├── collageUtils.js         # Creación de collages
 │   │   └── layoutSelector.js       # Selección de layouts
 │   │
-│   ├── 📁 events/              # Eventos específicos del canvas
+│   ├── 📁 events/              # Eventos específicas del canvas
 │   │   ├── movingEvents.js         # Eventos de movimiento
 │   │   ├── scalingEvents.js        # Eventos de escalado
 │   │   └── rotatingEvents.js       # Eventos de rotación
@@ -67,11 +65,13 @@ imprimir_imagenes_fabric/
 ## 🚀 Funcionalidades
 
 ### ✨ Gestión de Imágenes
+
 - **Carga múltiple**: Soporte para drag & drop y selección múltiple
 - **Formatos soportados**: JPG, PNG, GIF, WebP
 - **Organización automática**: Disposición inteligente de imágenes
 
 ### 🖼️ Manipulación de Imágenes
+
 - **Redimensionamiento**: Escalado manual y automático
 - **Rotación**: 90° o rotación libre
 - **Recorte**: Herramienta de recorte interactiva
@@ -79,22 +79,26 @@ imprimir_imagenes_fabric/
 - **Centrado**: Centrado horizontal y vertical
 
 ### 📐 Configuración de Papel
+
 - **Tamaños estándar**: Carta, Oficio, A4
 - **Orientaciones**: Vertical y horizontal
 - **Márgenes**: Configurables con restricciones automáticas
 
 ### 🎨 Layouts y Collages
+
 - **Collage de columnas**: Organización en columnas tipo masonry
 - **Collage de filas**: Organización en filas tipo masonry
 - **Collage aleatorio**: Distribución automática optimizada
 - **Layouts en grilla**: Organizaciones en filas y columnas
 
 ### 📋 Interacciones
+
 - **Copiar/Pegar**: Con soporte para Ctrl+C/Ctrl+V
 - **Deshacer cambios**: Restauración de estado original
 - **Selección múltiple**: Manipulación de múltiples objetos
 
 ### 🖨️ Impresión
+
 - **Vista previa**: Visualización antes de imprimir
 - **Optimización**: Preparación automática para impresión
 - **Formato**: Mantiene proporciones y calidad
@@ -110,6 +114,7 @@ imprimir_imagenes_fabric/
 ## 🏗️ Arquitectura
 
 ### Patrón de Diseño
+
 La aplicación utiliza un patrón modular con separación clara de responsabilidades:
 
 1. **Core**: Gestiona la inicialización y orquestación de módulos
@@ -118,6 +123,7 @@ La aplicación utiliza un patrón modular con separación clara de responsabilid
 4. **Utilidades**: Funciones reutilizables en diferentes módulos
 
 ### Flujo de Datos
+
 1. **Entrada**: El usuario interactúa con la UI
 2. **Eventos**: `EventManager` captura y dirige eventos
 3. **Acciones**: `ActionManager` ejecuta la lógica correspondiente
@@ -127,6 +133,7 @@ La aplicación utiliza un patrón modular con separación clara de responsabilid
 ## 🔧 Instalación y Uso
 
 ### Instalación
+
 ```bash
 # Clonar el repositorio
 git clone [url-del-repositorio]
@@ -137,10 +144,11 @@ cd imprimir_imagenes_fabric
 # Servir los archivos (ejemplo con Python)
 python -m http.server 8000
 # o con Node.js
-npx serve public
+npx serve .
 ```
 
 ### Uso
+
 1. Abrir `http://localhost:8000` en el navegador
 2. Cargar imágenes usando el botón "Cargar imágenes" o drag & drop
 3. Manipular las imágenes usando las herramientas de la barra lateral
@@ -163,4 +171,4 @@ Para contribuir al proyecto:
 - **Fabric.js**: La aplicación depende de Fabric.js para manipulación del canvas
 - **Responsive**: La UI es adaptable a diferentes tamaños de pantalla
 - **Accesibilidad**: Incluye funciones de accesibilidad para usuarios con discapacidades
-- **Navegadores**: Compatible con navegadores modernos que soporten ES6 modules 
+- **Navegadores**: Compatible con navegadores modernos que soporten ES6 modules
