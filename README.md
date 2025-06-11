@@ -2,6 +2,14 @@
 
 Una aplicación web para manipular, organizar e imprimir imágenes usando Fabric.js.
 
+## ❤️ Dedicatoria
+
+Este proyecto fue creado y está dedicado con todo mi amor a mi madre, **Maria Nelsy**.
+
+Lo hice como una forma de ayudarla a imprimir más fácilmente en la papelería que teníamos en casa, la **Papelería Nelsy**, que tanto nos ayudó a conseguir los ingresos para subsistir.
+
+**Te quiero mucho, Madre.**
+
 ## 📁 Estructura del Proyecto
 
 ```bash
