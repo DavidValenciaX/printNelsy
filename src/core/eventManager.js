@@ -1,3 +1,5 @@
+import { initializeKeyboardInteractions } from '../interactions/keyboardInteractions.js';
+
 /**
  * Gestiona todos los event listeners de la aplicación
  */
@@ -21,6 +23,7 @@ export class EventManager {
     this.initializeCropEvents();
     this.initializeCollageEvents();
     this.initializeGlobalEvents();
+    this.initializeKeyboardEvents();
   }
 
   initializeFileEvents() {
@@ -256,6 +259,10 @@ export class EventManager {
     document.body.addEventListener("click", (event) => 
       this.actions.deactivateObjects(event, this.canvasManager.getCanvas())
     );
+  }
+
+  initializeKeyboardEvents() {
+    initializeKeyboardInteractions();
   }
 
   addEventBinding(elementKey, event, handler) {
