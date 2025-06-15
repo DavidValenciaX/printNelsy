@@ -1,4 +1,5 @@
 import { getAppInstance } from '../core/app.js';
+import { constrainObjectToMargin } from '../canvas/constraintUtils.js';
 
 const MOVEMENT_SPEED = 2; // Píxeles por pulsación de tecla
 
@@ -7,7 +8,8 @@ function handleKeyDown(e) {
     if (!app) return;
 
     const canvas = app.getCanvas();
-    if (!canvas) return;
+    const canvasManager = app.getCanvasManager();
+    if (!canvas || !canvasManager) return;
 
     const activeObject = canvas.getActiveObject();
     if (!activeObject) return;
@@ -34,7 +36,13 @@ function handleKeyDown(e) {
     }
 
     if (needsRender) {
-        activeObject.setCoords();
+        const marginRect = canvasManager.getMarginRect();
+        if (marginRect) {
+            constrainObjectToMargin(activeObject, marginRect);
+        } else {
+            activeObject.setCoords();
+        }
+        
         canvas.renderAll();
         e.preventDefault(); // Evitar el comportamiento predeterminado (como el scroll)
     }
