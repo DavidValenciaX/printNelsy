@@ -1,11 +1,13 @@
 // Add accessibility improvements: set ARIA labels and focus outlines on interactive elements.
 export function setupAccessibility() {
   // Get all interactive elements by id.
+  const imageLoader = document.getElementById("imageLoader");
   const printButton = document.getElementById("printButton");
   const deleteButton = document.getElementById("deleteButton");
   const cropButton = document.getElementById("cropButton");
   const confirmCropButton = document.getElementById("confirmCrop");
   const cancelCropButton = document.getElementById("cancelCrop");
+  const downloadPdfButton = document.getElementById("downloadPdfButton");
   const cartaButton = document.getElementById("cartaButton");
   const oficioButton = document.getElementById("oficioButton");
   const a4Button = document.getElementById("a4Button");
@@ -27,11 +29,13 @@ export function setupAccessibility() {
 
   // List all interactive elements
   const elements = [
+    imageLoader,
     printButton,
     deleteButton,
     cropButton,
     confirmCropButton,
     cancelCropButton,
+    downloadPdfButton,
     cartaButton,
     oficioButton,
     a4Button,

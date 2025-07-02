@@ -4,6 +4,7 @@ import { centerVertically, centerHorizontally } from '../transform/center.js';
 import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from '../layout/collageUtils.js';
 import { setImageSizeInCm } from '../image/imageSize.js';
 import { printCanvas } from '../output/printUtils.js';
+import { downloadAsPDF } from '../output/pdfUtils.js';
 import { deactivateObjects } from '../interactions/deactivateObjects.js';
 import { rotateImage } from '../transform/rotateUtils.js';
 import { resetActiveImage } from '../image/resetUtils.js';
@@ -64,6 +65,7 @@ export class ActionManager {
 
   // File actions
   printCanvas = printCanvas;
+  downloadAsPDF = downloadAsPDF;
   handleImageUpload = handleImageUpload;
   handleImageDrop = handleImageDrop;
 

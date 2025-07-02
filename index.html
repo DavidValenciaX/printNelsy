@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/src/ui/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
@@ -35,6 +36,9 @@
                         <i class="fas fa-upload button-icon"></i> Cargar imágenes
                     </label>
                     <input type="file" id="imageLoader" accept="image/*" multiple aria-label="Cargar imágenes" />
+                    <button type="button" id="downloadPdfButton" class="control-button">
+                        <i class="fas fa-file-pdf button-icon"></i> Descargar PDF
+                    </button>
                     <button type="button" id="printButton" class="control-button">
                         <i class="fas fa-print button-icon"></i> Imprimir
                     </button>

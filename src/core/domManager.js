@@ -3,48 +3,41 @@
  */
 export class DOMManager {
   constructor() {
-    this.elements = this.initializeElements();
-  }
+    this.elements = {
 
-  initializeElements() {
-    return {
       // Canvas
-      canvasElement: document.getElementById("canvas"),
-      
+      canvas: document.getElementById("canvas"),
+
       // File operations
       imageLoader: document.getElementById("imageLoader"),
       printButton: document.getElementById("printButton"),
-      
+      downloadPdfButton: document.getElementById("downloadPdfButton"),
+
       // Paper size buttons
+      verticalButton: document.getElementById("verticalButton"),
+      horizontalButton: document.getElementById("horizontalButton"),
       cartaButton: document.getElementById("cartaButton"),
       oficioButton: document.getElementById("oficioButton"),
       a4Button: document.getElementById("a4Button"),
-      
-      // Orientation buttons
-      verticalButton: document.getElementById("verticalButton"),
-      horizontalButton: document.getElementById("horizontalButton"),
-      
-      // Transform controls
-      rotateButton_p90: document.getElementById("rotateButton+90"),
-      rotateButton_n90: document.getElementById("rotateButton-90"),
-      rotateCheckbox: document.getElementById("rotateControl"),
-      resetImageButton: document.getElementById("resetImageButton"),
-      
-      // Positioning controls
-      centerVerticallyButton: document.getElementById("centerVerticallyButton"),
-      centerHorizontallyButton: document.getElementById("centerHorizontallyButton"),
-      arrangeButton: document.getElementById("arrangeButton"),
-      
+
       // Size controls
       scaleUpButton: document.getElementById("scaleUpButton"),
       scaleDownButton: document.getElementById("scaleDownButton"),
-      setSizeButton: document.getElementById("setSizeButton"),
       widthInput: document.getElementById("widthInput"),
       heightInput: document.getElementById("heightInput"),
-      maintainAspectCheckbox: document.getElementById("maintainAspectCheckbox"),
-      
+      setSizeButton: document.getElementById("setSizeButton"),
+      centerVerticallyButton: document.getElementById("centerVerticallyButton"),
+      centerHorizontallyButton: document.getElementById("centerHorizontallyButton"),
+
+      // Positioning controls
+      arrangeButton: document.getElementById("arrangeButton"),
+      "rotateButton_p90": document.getElementById("rotateButton+90"),
+      "rotateButton_n90": document.getElementById("rotateButton-90"),
+      rotateCheckbox: document.getElementById("rotateControl"),
+
       // Image operations
       grayScaleButton: document.getElementById("grayScaleButton"),
+      resetImageButton: document.getElementById("resetImageButton"),
       deleteButton: document.getElementById("deleteButton"),
       
       // Clipboard operations
@@ -59,7 +52,8 @@ export class DOMManager {
       // Collage controls
       columnsCollageButton: document.getElementById("columnsCollageButton"),
       rowsCollageButton: document.getElementById("rowsCollageButton"),
-      collageButton: document.getElementById("collageButton")
+      collageButton: document.getElementById("collageButton"),
+      maintainAspectCheckbox: document.getElementById("maintainAspectCheckbox")
     };
   }
 

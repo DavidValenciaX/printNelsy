@@ -1,0 +1,29 @@
+export function downloadAsPDF(canvas, marginRect) {
+  // Store original opacity
+  const originalOpacity = marginRect.opacity;
+
+  // Make margin invisible for printing
+  marginRect.opacity = 0;
+  canvas.renderAll();
+
+  const dataUrl = canvas.toDataURL({
+    format: "png",
+    quality: 1,
+    multiplier: 1 / canvas.getZoom(),
+  });
+
+    const orientation = canvas.width > canvas.height ? 'l' : 'p';
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: orientation,
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+    });
+
+    doc.addImage(dataUrl, 'PNG', 0, 0, canvas.width, canvas.height);
+    doc.save('canvas.pdf');
+
+  // Restore margin visibility
+  marginRect.opacity = originalOpacity;
+  canvas.renderAll();
+} 

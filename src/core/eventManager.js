@@ -31,6 +31,10 @@ export class EventManager {
       this.actions.handleImageUpload(e, this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom.get('rotateCheckbox'))
     );
     
+    this.addEventBinding('downloadPdfButton', 'click', () =>
+      this.actions.downloadAsPDF(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect())
+    );
+
     this.addEventBinding('printButton', 'click', () => 
       this.actions.printCanvas(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect())
     );
