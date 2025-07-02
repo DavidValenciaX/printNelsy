@@ -5,6 +5,7 @@ import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange }
 import { setImageSizeInCm } from '../image/imageSize.js';
 import { printCanvas } from '../output/printUtils.js';
 import { downloadAsPDF } from '../output/pdfUtils.js';
+import { downloadAsPNG } from '../output/pngUtils.js';
 import { deactivateObjects } from '../interactions/deactivateObjects.js';
 import { rotateImage } from '../transform/rotateUtils.js';
 import { resetActiveImage } from '../image/resetUtils.js';
@@ -66,6 +67,7 @@ export class ActionManager {
   // File actions
   printCanvas = printCanvas;
   downloadAsPDF = downloadAsPDF;
+  downloadAsPNG = downloadAsPNG;
   handleImageUpload = handleImageUpload;
   handleImageDrop = handleImageDrop;
 

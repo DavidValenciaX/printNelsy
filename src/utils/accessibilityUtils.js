@@ -8,6 +8,7 @@ export function setupAccessibility() {
   const confirmCropButton = document.getElementById("confirmCrop");
   const cancelCropButton = document.getElementById("cancelCrop");
   const downloadPdfButton = document.getElementById("downloadPdfButton");
+  const downloadPngButton = document.getElementById("downloadPngButton");
   const cartaButton = document.getElementById("cartaButton");
   const oficioButton = document.getElementById("oficioButton");
   const a4Button = document.getElementById("a4Button");
@@ -36,6 +37,7 @@ export function setupAccessibility() {
     confirmCropButton,
     cancelCropButton,
     downloadPdfButton,
+    downloadPngButton,
     cartaButton,
     oficioButton,
     a4Button,

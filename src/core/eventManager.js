@@ -35,6 +35,10 @@ export class EventManager {
       this.actions.downloadAsPDF(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect())
     );
 
+    this.addEventBinding('downloadPngButton', 'click', () =>
+      this.actions.downloadAsPNG(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect())
+    );
+
     this.addEventBinding('printButton', 'click', () => 
       this.actions.printCanvas(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect())
     );
