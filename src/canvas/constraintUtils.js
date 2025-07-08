@@ -153,6 +153,58 @@ function findCollisionDetails(obj, marginRect) {
 }
 
 /**
+ * Finds the corner of an object that is closest to a specific margin edge.
+ * @param {fabric.Object} obj The object to check.
+ * @param {string} marginEdge The margin edge ('left', 'top', 'right', 'bottom').
+ * @param {Object} marginRect The margin rectangle.
+ * @returns {string} The name of the closest corner ('tl', 'tr', 'br', 'bl').
+ */
+function getClosestCornerToMargin(obj, marginEdge, marginRect) {
+  // Coords should be up-to-date when this is called
+  const corners = {
+    tl: obj.aCoords.tl,
+    tr: obj.aCoords.tr,
+    br: obj.aCoords.br,
+    bl: obj.aCoords.bl,
+  };
+
+  let closestCorner = null;
+  let minDistance = Infinity;
+
+  const marginRight = marginRect.left + marginRect.width;
+  const marginBottom = marginRect.top + marginRect.height;
+
+  for (const cornerName in corners) {
+    const point = corners[cornerName];
+    let distance;
+
+    switch (marginEdge) {
+      case 'left':
+        distance = point.x - marginRect.left;
+        break;
+      case 'right':
+        distance = marginRight - point.x;
+        break;
+      case 'top':
+        distance = point.y - marginRect.top;
+        break;
+      case 'bottom':
+        distance = marginBottom - point.y;
+        break;
+      default:
+        continue;
+    }
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestCorner = cornerName;
+    }
+  }
+
+  return closestCorner;
+}
+
+/**
  * Constrains the rotation of an object so that it remains fully inside the
  * supplied margin rectangle. The algorithm is direction-agnostic and works for
  * any corner that may collide with any border.
@@ -191,8 +243,30 @@ export function constrainRotationToMargin(obj, marginRect) {
 
     if (isValid()) {
       // The user rotated back into a valid position.
-      obj._rotationState = 'unblocked';
-      obj._lastAngle = proposedAngle; // Update reference angle.
+      // But we must check if they unblocked by reversing the collision,
+      // not by rotating the object around.
+      const { corner: originalCorner, margin: originalMargin } =
+        obj._collisionDetails;
+      const closestCornerNow = getClosestCornerToMargin(
+        obj,
+        originalMargin,
+        marginRect
+      );
+
+      if (closestCornerNow === originalCorner) {
+        // The object unblocked correctly by moving the colliding corner back.
+        console.log('Rotation unblocked: Object re-entered correctly.');
+        obj._rotationState = 'unblocked';
+        obj._lastAngle = proposedAngle; // Update reference angle.
+      } else {
+        // The object is inside, but has a different orientation. Keep it blocked.
+        console.log(
+          `Rotation still blocked: Object re-entered with a different orientation. ` +
+            `Original corner: '${originalCorner}', closest now: '${closestCornerNow}' to margin '${originalMargin}'.`
+        );
+        // Revert to the last valid "wall" angle
+        obj.angle = obj._lastAngle;
+      }
     } else {
       // Still invalid, remain blocked and revert to the last good angle.
       obj.angle = obj._lastAngle;
