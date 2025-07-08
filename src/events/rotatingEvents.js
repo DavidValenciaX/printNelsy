@@ -30,7 +30,12 @@ export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus 
   });
 
   // Reset transient angle accumulator once the user releases the mouse.
-  canvas.on('object:modified', () => {
+  canvas.on('object:modified', (e) => {
+    const obj = e.target;
+    if (obj) {
+      delete obj._lastAngle;
+      delete obj._rotationState;
+    }
     if (updateArrangementStatus) updateArrangementStatus('none');
   });
 }

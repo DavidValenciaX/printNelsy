@@ -136,33 +136,52 @@ export function constrainRotationToMargin(obj, marginRect) {
 
   const isValid = () => isObjectWithinMargin(obj, marginRect);
 
-  const proposedAngle = obj.angle; // Current angle coming from the event (°)
+  const proposedAngle = obj.angle; // Current angle from the event (°)
 
-  // First time we see this object while rotating ⇒ initialise reference angle.
-  if (typeof obj._lastAngle === "undefined") {
+  // Initialize for first-time rotation.
+  if (typeof obj._lastAngle === 'undefined') {
     obj._lastAngle = proposedAngle;
-    return; // Nothing else to do, the object started inside the margins.
-  }
-
-  const lastValidAngle = obj._lastAngle;
-
-  // Fast path: proposed angle is already valid → just update reference.
-  if (isValid()) {
-    obj._lastAngle = proposedAngle;
+    obj._rotationState = 'unblocked'; // Initial state
     return;
   }
 
-  // Slow path: proposed angle makes the object exceed the margins.
-  // Perform a binary search (interpolation) between the last known good angle
-  // and the invalid proposed one to find the closest valid value.
-  const finalAngle = findClosestValidAngle(
-    obj,
-    isValid,
-    lastValidAngle,
-    proposedAngle
-  );
+  // --- State Machine ---
+
+  if (obj._rotationState === 'blocked') {
+    // We are currently constrained.
+    // Tentatively apply the user's desired angle to see if it's valid.
+    obj.angle = proposedAngle;
+    obj.setCoords();
+
+    if (isValid()) {
+      // The user rotated back into a valid position.
+      obj._rotationState = 'unblocked';
+      obj._lastAngle = proposedAngle; // Update reference angle.
+    } else {
+      // Still invalid, remain blocked and revert to the last good angle.
+      obj.angle = obj._lastAngle;
+    }
+    // 'unblocked': We are currently moving freely.
+  } else if (!isValid()) {
+    // We just hit a boundary.
+    obj._rotationState = 'blocked';
+
+    // Find the angle just before we became invalid.
+    const lastValidAngle = obj._lastAngle;
+    const finalAngle = findClosestValidAngle(
+      obj,
+      isValid,
+      lastValidAngle,
+      proposedAngle
+    );
+
+    obj.angle = finalAngle;
+    obj._lastAngle = finalAngle; // This is the new "wall".
+  } else {
+    // Still valid, just update our last known good position.
+    obj._lastAngle = proposedAngle;
+  }
 
   // Apply the best valid angle found.
-  obj.angle = finalAngle;
   obj.setCoords();
 }
