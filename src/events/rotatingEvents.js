@@ -35,6 +35,7 @@ export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus 
     if (obj) {
       delete obj._lastAngle;
       delete obj._rotationState;
+      delete obj._collisionDetails;
     }
     if (updateArrangementStatus) updateArrangementStatus('none');
   });
