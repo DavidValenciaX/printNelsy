@@ -2,6 +2,34 @@ import { getCurrentMarginRect, updateMarginRect } from './../canvas/marginRectMa
 import { constrainRotationToMargin } from './../canvas/constraintUtils.js';
 
 /**
+ * Detects the rotation direction of a Fabric.js object and logs it.
+ * @param {fabric.Object} obj The object being rotated.
+ */
+function detectRotationDirection(obj) {
+  if (typeof obj._angleForDirectionDetection !== 'undefined') {
+    const currentAngle = obj.angle;
+    const lastAngle = obj._angleForDirectionDetection;
+    let delta = currentAngle - lastAngle;
+
+    // Normalize the delta to handle angle wrapping (e.g., from 359 to 1 degree)
+    if (delta > 180) {
+      delta -= 360;
+    } else if (delta < -180) {
+      delta += 360;
+    }
+
+    if (delta > 0) {
+      console.log('clockwise');
+    } else if (delta < 0) {
+      console.log('counterclockwise');
+    }
+  }
+
+  // Store the current angle for the next event
+  obj._angleForDirectionDetection = obj.angle;
+}
+
+/**
  * Registers a generic rotation handler that guarantees the rotated object
  * remains inside the printable margins no matter which corner is involved or
  * in which direction the user rotates it.
@@ -25,6 +53,7 @@ export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus 
   canvas.on('object:rotating', (e) => {
     const obj = e.target;
 
+    detectRotationDirection(obj);
     constrainRotationToMargin(obj, getCurrentMarginRect());
     canvas.renderAll();
   });
@@ -36,6 +65,7 @@ export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus 
       delete obj._lastAngle;
       delete obj._rotationState;
       delete obj._collisionDetails;
+      delete obj._angleForDirectionDetection;
     }
     if (updateArrangementStatus) updateArrangementStatus('none');
   });
