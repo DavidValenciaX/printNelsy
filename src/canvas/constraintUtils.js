@@ -215,10 +215,16 @@ function getClosestCornerToMargin(obj, marginEdge, marginRect) {
  * the same one already applied for scaling constraints and guarantees finding
  * the closest valid angle in **O(log n)** steps.
  *
+ * The unblocking logic has been enhanced to require that the object:
+ * 1. Is fully inside the margins
+ * 2. Has the same corner closest to the original margin that caused the collision
+ * 3. Has reversed its rotation direction from when the collision occurred
+ *
  * @param {fabric.Object} obj           The Fabric.js object being rotated.
  * @param {Object}       marginRect    The margin rectangle with `{left, top, width, height}`.
+ * @param {string|null}  direction     The current rotation direction ('clockwise', 'counterclockwise', or null).
  */
-export function constrainRotationToMargin(obj, marginRect) {
+export function constrainRotationToMargin(obj, marginRect, direction = null) {
   // Ensure coordinates are up-to-date before validation.
   obj.setCoords();
 
@@ -243,26 +249,39 @@ export function constrainRotationToMargin(obj, marginRect) {
 
     if (isValid()) {
       // The user rotated back into a valid position.
-      // But we must check if they unblocked by reversing the collision,
-      // not by rotating the object around.
-      const { corner: originalCorner, margin: originalMargin } =
-        obj._collisionDetails;
-      const closestCornerNow = getClosestCornerToMargin(
-        obj,
-        originalMargin,
-        marginRect
-      );
-
-      if (closestCornerNow === originalCorner) {
-        // The object unblocked correctly by moving the colliding corner back.
-        console.log('Rotation unblocked: Object re-entered correctly.');
+      // Enhanced unblocking logic: check all three conditions
+      const { corner: originalCorner, margin: originalMargin } = obj._collisionDetails;
+      const closestCornerNow = getClosestCornerToMargin(obj, originalMargin, marginRect);
+      
+      // Check if rotation direction has been reversed
+      const reversed = direction && obj._lockDir && (direction !== obj._lockDir);
+      
+      // All three conditions must be met to unblock
+      const inside = true; // Already verified by isValid() above
+      const sameCorner = closestCornerNow === originalCorner;
+      
+      if (inside && reversed && sameCorner) {
+        // The object unblocked correctly: inside + reversed direction + same corner
+        console.log(
+          `Rotation unblocked: Object re-entered correctly. ` +
+          `Direction changed from '${obj._lockDir}' to '${direction}', ` +
+          `corner '${originalCorner}' still closest to margin '${originalMargin}'.`
+        );
         obj._rotationState = 'unblocked';
         obj._lastAngle = proposedAngle; // Update reference angle.
+        delete obj._lockDir; // Clear lock direction
       } else {
-        // The object is inside, but has a different orientation. Keep it blocked.
+        // One or more conditions not met, keep blocked
+        let reason = [];
+        if (!sameCorner) {
+          reason.push(`corner changed from '${originalCorner}' to '${closestCornerNow}'`);
+        }
+        if (!reversed) {
+          reason.push(`direction not reversed (lock: '${obj._lockDir}', current: '${direction}')`);
+        }
+        
         console.log(
-          `Rotation still blocked: Object re-entered with a different orientation. ` +
-            `Original corner: '${originalCorner}', closest now: '${closestCornerNow}' to margin '${originalMargin}'.`
+          `Rotation still blocked: Object is inside but ${reason.join(' and ')}.`
         );
         // Revert to the last valid "wall" angle
         obj.angle = obj._lastAngle;
@@ -283,6 +302,12 @@ export function constrainRotationToMargin(obj, marginRect) {
       console.log(
         `Rotation blocked: Corner '${collisionDetails.corner}' crossed margin '${collisionDetails.margin}'.`
       );
+    }
+    
+    // Store the rotation direction that caused the collision
+    if (direction) {
+      obj._lockDir = direction;
+      console.log(`Lock direction stored: ${direction}`);
     }
     // --- END DEBUG ---
 
