@@ -64,6 +64,59 @@ export function scaleToFitWithinMargin(obj, marginRect) {
 }
 
 /**
+ * Finds the closest valid angle for an object by performing a binary search
+ * between a known good angle and a proposed invalid angle.
+ *
+ * @param {fabric.Object} obj            The object being rotated.
+ * @param {Function}      isValid        A function that returns true if the object is within constraints.
+ * @param {number}        lastValidAngle The last known angle where the object was valid.
+ * @param {number}        proposedAngle  The new, invalid angle.
+ * @returns {number} The closest valid angle found.
+ */
+function findClosestValidAngle(obj, isValid, lastValidAngle, proposedAngle) {
+  let low = 0; // Corresponds to lastValidAngle (t = 0)
+  let high = 1; // Corresponds to proposedAngle   (t = 1)
+  const tolerance = 0.002; // Controls precision of the search (ratio, not °)
+  let finalAngle = lastValidAngle;
+
+  while (high - low > tolerance) {
+    const mid = (low + high) / 2;
+    // Interpolate between the last valid angle and the proposed angle
+    const testAngle = lastValidAngle + mid * (proposedAngle - lastValidAngle);
+
+    obj.angle = testAngle;
+    obj.setCoords();
+
+    if (isValid()) {
+      low = mid; // Valid → move lower bound towards proposed angle
+      finalAngle = testAngle;
+    } else {
+      high = mid; // Invalid → bring upper bound down
+    }
+  }
+
+  return finalAngle;
+}
+
+/**
+ * Checks if an object is fully contained within the margin boundaries.
+ * @param {fabric.Object} obj The object to check.
+ * @param {Object} marginRect The margin rectangle with `{left, top, width, height}`.
+ * @returns {boolean} True if the object is within the margins.
+ */
+function isObjectWithinMargin(obj, marginRect) {
+  const br = obj.getBoundingRect(true);
+  const marginRight = marginRect.left + marginRect.width;
+  const marginBottom = marginRect.top + marginRect.height;
+  return (
+    br.left >= marginRect.left &&
+    br.top >= marginRect.top &&
+    br.left + br.width <= marginRight &&
+    br.top + br.height <= marginBottom
+  );
+}
+
+/**
  * Constrains the rotation of an object so that it remains fully inside the
  * supplied margin rectangle. The algorithm is direction-agnostic and works for
  * any corner that may collide with any border.
@@ -81,19 +134,7 @@ export function constrainRotationToMargin(obj, marginRect) {
   // Ensure coordinates are up-to-date before validation.
   obj.setCoords();
 
-  const marginRight  = marginRect.left + marginRect.width;
-  const marginBottom = marginRect.top  + marginRect.height;
-
-  // Helper that checks if the object is fully contained in the margins.
-  function isValid() {
-    const br = obj.getBoundingRect(true);
-    return (
-      br.left               >= marginRect.left  &&
-      br.top                >= marginRect.top   &&
-      br.left  + br.width   <= marginRight      &&
-      br.top   + br.height  <= marginBottom
-    );
-  }
+  const isValid = () => isObjectWithinMargin(obj, marginRect);
 
   const proposedAngle = obj.angle; // Current angle coming from the event (°)
 
@@ -114,27 +155,14 @@ export function constrainRotationToMargin(obj, marginRect) {
   // Slow path: proposed angle makes the object exceed the margins.
   // Perform a binary search (interpolation) between the last known good angle
   // and the invalid proposed one to find the closest valid value.
-  let low = 0;     // Corresponds to lastValidAngle (t = 0)
-  let high = 1;    // Corresponds to proposedAngle   (t = 1)
-  const tolerance = 0.002; // Controls precision of the search (ratio, not °)
-  let finalAngle = lastValidAngle;
-
-  while (high - low > tolerance) {
-    const mid = (low + high) / 2;
-    const testAngle = lastValidAngle + mid * (proposedAngle - lastValidAngle);
-
-    obj.angle = testAngle;
-    obj.setCoords();
-
-    if (isValid()) {
-      low = mid;            // Valid → move lower bound towards proposed angle
-      finalAngle = testAngle;
-    } else {
-      high = mid;           // Invalid → bring upper bound down
-    }
-  }
+  const finalAngle = findClosestValidAngle(
+    obj,
+    isValid,
+    lastValidAngle,
+    proposedAngle
+  );
 
   // Apply the best valid angle found.
   obj.angle = finalAngle;
   obj.setCoords();
-} 
+}
