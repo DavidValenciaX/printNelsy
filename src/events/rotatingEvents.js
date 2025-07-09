@@ -59,7 +59,7 @@ export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus 
   // Main rotation constraint.
   canvas.on('object:rotating', (e) => {
     const obj = e.target;
-
+    console.log('angle', obj.angle);
     const direction = detectRotationDirection(obj);
     constrainRotationToMargin(obj, getCurrentMarginRect(), direction);
     canvas.renderAll();

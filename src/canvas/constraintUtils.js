@@ -81,8 +81,17 @@ function findClosestValidAngle(obj, isValid, lastValidAngle, proposedAngle) {
 
   while (high - low > tolerance) {
     const mid = (low + high) / 2;
+    
+    // Normalize the delta to ensure the interpolation takes the shortest path around the circle.
+    let delta = proposedAngle - lastValidAngle;
+    if (delta > 180) {
+      delta -= 360;
+    } else if (delta < -180) {
+      delta += 360;
+    }
+
     // Interpolate between the last valid angle and the proposed angle
-    const testAngle = lastValidAngle + mid * (proposedAngle - lastValidAngle);
+    const testAngle = lastValidAngle + mid * delta;
 
     obj.angle = testAngle;
     obj.setCoords();
@@ -319,6 +328,8 @@ export function constrainRotationToMargin(obj, marginRect, direction = null) {
       lastValidAngle,
       proposedAngle
     );
+
+    console.log(`Objeto bloqueado en ángulo: ${finalAngle.toFixed(2)}°`);
 
     obj.angle = finalAngle;
     obj._lastAngle = finalAngle; // This is the new "wall".
