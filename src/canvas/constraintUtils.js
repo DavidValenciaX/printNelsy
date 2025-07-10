@@ -214,6 +214,111 @@ function getClosestCornerToMargin(obj, marginEdge, marginRect) {
 }
 
 /**
+ * Initializes rotation state for first-time rotation
+ */
+function initializeRotationState(obj, proposedAngle) {
+  obj._lastAngle = proposedAngle;
+  obj._rotationState = 'unblocked';
+}
+
+/**
+ * Checks if rotation is within acceptable range to prevent 180-degree flips
+ */
+function isRotationNearby(proposedAngle, lastValidAngle) {
+  let angleDelta = proposedAngle - lastValidAngle;
+  if (angleDelta > 180) {
+    angleDelta -= 360;
+  } else if (angleDelta < -180) {
+    angleDelta += 360;
+  }
+  return Math.abs(angleDelta) < 90;
+}
+
+/**
+ * Determines if object should be unblocked based on enhanced conditions
+ */
+function shouldUnblock(obj, marginRect, direction, proposedAngle) {
+  const { corner: originalCorner, margin: originalMargin } = obj._collisionDetails;
+  const closestCornerNow = getClosestCornerToMargin(obj, originalMargin, marginRect);
+  const reversed = direction && obj._lockDir && (direction !== obj._lockDir);
+  const sameCorner = closestCornerNow === originalCorner;
+  const nearby = isRotationNearby(proposedAngle, obj._lastAngle);
+  
+  return reversed && sameCorner && nearby;
+}
+
+/**
+ * Handles rotation when object is in blocked state
+ */
+function handleBlockedState(obj, marginRect, direction, proposedAngle, isValid) {
+  obj.angle = proposedAngle;
+  obj.setCoords();
+
+  if (isValid()) {
+    if (shouldUnblock(obj, marginRect, direction, proposedAngle)) {
+      const { corner: originalCorner, margin: originalMargin } = obj._collisionDetails;
+      console.log(
+        `Rotation unblocked: Object re-entered correctly. ` +
+        `Direction changed from '${obj._lockDir}' to '${direction}', ` +
+        `corner '${originalCorner}' still closest to margin '${originalMargin}'.`
+      );
+      obj._rotationState = 'unblocked';
+      obj._lastAngle = proposedAngle;
+      delete obj._lockDir;
+    } else {
+      const { corner: originalCorner, margin: originalMargin } = obj._collisionDetails;
+      const closestCornerNow = getClosestCornerToMargin(obj, originalMargin, marginRect);
+      const reversed = direction && obj._lockDir && (direction !== obj._lockDir);
+      const nearby = isRotationNearby(proposedAngle, obj._lastAngle);
+      
+      let reason = [];
+      if (closestCornerNow !== originalCorner) {
+        reason.push(`corner changed from '${originalCorner}' to '${closestCornerNow}'`);
+      }
+      if (!reversed) {
+        reason.push(`direction not reversed (lock: '${obj._lockDir}', current: '${direction}')`);
+      }
+      if (!nearby) {
+        reason.push(`rotation has flipped by ~180 degrees`);
+      }
+      
+      console.log(`Rotation still blocked: Object is inside but ${reason.join(' and ')}.`);
+      obj.angle = obj._lastAngle;
+    }
+  } else {
+    obj.angle = obj._lastAngle;
+  }
+}
+
+/**
+ * Handles rotation when object transitions from unblocked to blocked state
+ */
+function handleUnblockedState(obj, marginRect, direction, proposedAngle, isValid) {
+  obj._rotationState = 'blocked';
+  
+  const collisionDetails = findCollisionDetails(obj, marginRect);
+  if (collisionDetails) {
+    obj._collisionDetails = collisionDetails;
+    console.log(
+      `Rotation blocked: Corner '${collisionDetails.corner}' crossed margin '${collisionDetails.margin}'.`
+    );
+  }
+  
+  if (direction) {
+    obj._lockDir = direction;
+    console.log(`Lock direction stored: ${direction}`);
+  }
+  
+  const lastValidAngle = obj._lastAngle;
+  const finalAngle = findClosestValidAngle(obj, isValid, lastValidAngle, proposedAngle);
+  
+  console.log(`Objeto bloqueado en ángulo: ${finalAngle.toFixed(2)}°`);
+  
+  obj.angle = finalAngle;
+  obj._lastAngle = finalAngle;
+}
+
+/**
  * Constrains the rotation of an object so that it remains fully inside the
  * supplied margin rectangle. The algorithm is direction-agnostic and works for
  * any corner that may collide with any border.
@@ -234,124 +339,23 @@ function getClosestCornerToMargin(obj, marginEdge, marginRect) {
  * @param {string|null}  direction     The current rotation direction ('clockwise', 'counterclockwise', or null).
  */
 export function constrainRotationToMargin(obj, marginRect, direction = null) {
-  // Ensure coordinates are up-to-date before validation.
   obj.setCoords();
-
+  
   const isValid = () => isObjectWithinMargin(obj, marginRect);
+  const proposedAngle = obj.angle;
 
-  const proposedAngle = obj.angle; // Current angle from the event (°)
-
-  // Initialize for first-time rotation.
   if (typeof obj._lastAngle === 'undefined') {
-    obj._lastAngle = proposedAngle;
-    obj._rotationState = 'unblocked'; // Initial state
+    initializeRotationState(obj, proposedAngle);
     return;
   }
 
-  // --- State Machine ---
-
   if (obj._rotationState === 'blocked') {
-    // We are currently constrained.
-    // Tentatively apply the user's desired angle to see if it's valid.
-    obj.angle = proposedAngle;
-    obj.setCoords();
-
-    if (isValid()) {
-      // The user rotated back into a valid position.
-      // Enhanced unblocking logic: check all three conditions
-      const { corner: originalCorner, margin: originalMargin } = obj._collisionDetails;
-      const closestCornerNow = getClosestCornerToMargin(obj, originalMargin, marginRect);
-      
-      // Check if rotation direction has been reversed
-      const reversed = direction && obj._lockDir && (direction !== obj._lockDir);
-      
-      // All three conditions must be met to unblock
-      const inside = true; // Already verified by isValid() above
-      const sameCorner = closestCornerNow === originalCorner;
-      
-      // NEW: Check if the current angle is reasonably close to the blocked angle.
-      // This prevents unblocking when the object is rotated ~180 degrees, which can
-      // create a symmetric valid state that we want to avoid.
-      let angleDelta = proposedAngle - obj._lastAngle;
-      if (angleDelta > 180) {
-        angleDelta -= 360;
-      } else if (angleDelta < -180) {
-        angleDelta += 360;
-      }
-      const isRotationNearby = Math.abs(angleDelta) < 90; // Prevent 180-degree flips
-      
-      if (inside && reversed && sameCorner && isRotationNearby) {
-        // The object unblocked correctly: inside + reversed direction + same corner
-        console.log(
-          `Rotation unblocked: Object re-entered correctly. ` +
-          `Direction changed from '${obj._lockDir}' to '${direction}', ` +
-          `corner '${originalCorner}' still closest to margin '${originalMargin}'.`
-        );
-        obj._rotationState = 'unblocked';
-        obj._lastAngle = proposedAngle; // Update reference angle.
-        delete obj._lockDir; // Clear lock direction
-      } else {
-        // One or more conditions not met, keep blocked
-        let reason = [];
-        if (!sameCorner) {
-          reason.push(`corner changed from '${originalCorner}' to '${closestCornerNow}'`);
-        }
-        if (!reversed) {
-          reason.push(`direction not reversed (lock: '${obj._lockDir}', current: '${direction}')`);
-        }
-        if (!isRotationNearby) {
-          reason.push(`rotation has flipped by ~180 degrees`);
-        }
-        
-        console.log(
-          `Rotation still blocked: Object is inside but ${reason.join(' and ')}.`
-        );
-        // Revert to the last valid "wall" angle
-        obj.angle = obj._lastAngle;
-      }
-    } else {
-      // Still invalid, remain blocked and revert to the last good angle.
-      obj.angle = obj._lastAngle;
-    }
-    // 'unblocked': We are currently moving freely.
+    handleBlockedState(obj, marginRect, direction, proposedAngle, isValid);
   } else if (!isValid()) {
-    // We just hit a boundary.
-    obj._rotationState = 'blocked';
-
-    // --- DEBUG: Identify which corner and margin are involved ---
-    const collisionDetails = findCollisionDetails(obj, marginRect);
-    if (collisionDetails) {
-      obj._collisionDetails = collisionDetails;
-      console.log(
-        `Rotation blocked: Corner '${collisionDetails.corner}' crossed margin '${collisionDetails.margin}'.`
-      );
-    }
-    
-    // Store the rotation direction that caused the collision
-    if (direction) {
-      obj._lockDir = direction;
-      console.log(`Lock direction stored: ${direction}`);
-    }
-    // --- END DEBUG ---
-
-    // Find the angle just before we became invalid.
-    const lastValidAngle = obj._lastAngle;
-    const finalAngle = findClosestValidAngle(
-      obj,
-      isValid,
-      lastValidAngle,
-      proposedAngle
-    );
-
-    console.log(`Objeto bloqueado en ángulo: ${finalAngle.toFixed(2)}°`);
-
-    obj.angle = finalAngle;
-    obj._lastAngle = finalAngle; // This is the new "wall".
+    handleUnblockedState(obj, marginRect, direction, proposedAngle, isValid);
   } else {
-    // Still valid, just update our last known good position.
     obj._lastAngle = proposedAngle;
   }
 
-  // Apply the best valid angle found.
   obj.setCoords();
 }
