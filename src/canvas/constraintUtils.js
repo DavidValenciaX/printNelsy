@@ -269,7 +269,18 @@ export function constrainRotationToMargin(obj, marginRect, direction = null) {
       const inside = true; // Already verified by isValid() above
       const sameCorner = closestCornerNow === originalCorner;
       
-      if (inside && reversed && sameCorner) {
+      // NEW: Check if the current angle is reasonably close to the blocked angle.
+      // This prevents unblocking when the object is rotated ~180 degrees, which can
+      // create a symmetric valid state that we want to avoid.
+      let angleDelta = proposedAngle - obj._lastAngle;
+      if (angleDelta > 180) {
+        angleDelta -= 360;
+      } else if (angleDelta < -180) {
+        angleDelta += 360;
+      }
+      const isRotationNearby = Math.abs(angleDelta) < 90; // Prevent 180-degree flips
+      
+      if (inside && reversed && sameCorner && isRotationNearby) {
         // The object unblocked correctly: inside + reversed direction + same corner
         console.log(
           `Rotation unblocked: Object re-entered correctly. ` +
@@ -287,6 +298,9 @@ export function constrainRotationToMargin(obj, marginRect, direction = null) {
         }
         if (!reversed) {
           reason.push(`direction not reversed (lock: '${obj._lockDir}', current: '${direction}')`);
+        }
+        if (!isRotationNearby) {
+          reason.push(`rotation has flipped by ~180 degrees`);
         }
         
         console.log(
