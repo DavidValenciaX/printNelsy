@@ -112,6 +112,14 @@ export class EventManager {
       this.actions.rotateImage(this.canvasManager.getCanvas(), 270, this.canvasManager.getMarginRect())
     );
 
+    this.addEventBinding('flipHorizontalButton', 'click', () =>
+      this.actions.flipHorizontal(this.canvasManager.getCanvas())
+    );
+
+    this.addEventBinding('flipVerticalButton', 'click', () =>
+      this.actions.flipVertical(this.canvasManager.getCanvas())
+    );
+
     this.addEventBinding('rotateCheckbox', 'change', (e) => {
       const canvas = this.canvasManager.getCanvas();
       canvas.getObjects().forEach((obj) => {

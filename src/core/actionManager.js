@@ -35,6 +35,7 @@ import {
   setupClipboardEvents, 
   clearClipboard 
 } from '../interactions/clipboardUtils.js';
+import { flipHorizontal, flipVertical } from '../transform/flipUtils.js';
 
 /**
  * Centraliza todas las acciones de la aplicación
@@ -79,6 +80,8 @@ export class ActionManager {
   // Transform actions
   rotateImage = rotateImage;
   convertToGrayscale = convertToGrayscale;
+  flipHorizontal = flipHorizontal;
+  flipVertical = flipVertical;
 
   // Crop actions
   initializeCrop = initializeCrop;
