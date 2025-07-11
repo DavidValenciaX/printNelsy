@@ -34,6 +34,8 @@ export class DOMManager {
       arrangeButton: document.getElementById("arrangeButton"),
       "rotateButton_p90": document.getElementById("rotateButton+90"),
       "rotateButton_n90": document.getElementById("rotateButton-90"),
+      flipHorizontalButton: document.getElementById("flipHorizontalButton"),
+      flipVerticalButton: document.getElementById("flipVerticalButton"),
       rotateCheckbox: document.getElementById("rotateControl"),
 
       // Image operations

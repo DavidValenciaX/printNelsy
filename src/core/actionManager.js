@@ -8,6 +8,7 @@ import { downloadAsPDF } from '../output/pdfUtils.js';
 import { downloadAsPNG } from '../output/pngUtils.js';
 import { deactivateObjects } from '../interactions/deactivateObjects.js';
 import { rotateImage } from '../transform/rotateUtils.js';
+import { flipHorizontal, flipVertical } from '../transform/flipUtils.js';
 import { resetActiveImage } from '../image/resetUtils.js';
 import { deleteActiveObject } from '../interactions/deleteUtils.js';
 import { scaleUp, scaleDown } from '../transform/scaleUtils.js';
@@ -79,6 +80,8 @@ export class ActionManager {
   // Transform actions
   rotateImage = rotateImage;
   convertToGrayscale = convertToGrayscale;
+  flipHorizontal = flipHorizontal;
+  flipVertical = flipVertical;
 
   // Crop actions
   initializeCrop = initializeCrop;

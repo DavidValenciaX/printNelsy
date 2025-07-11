@@ -1,5 +1,6 @@
 import { getAppInstance } from '../core/app.js';
 import { constrainObjectToMargin } from '../canvas/constraintUtils.js';
+import { flipHorizontal, flipVertical } from '../transform/flipUtils.js';
 
 const MOVEMENT_SPEED = 2; // Píxeles por pulsación de tecla
 
@@ -15,6 +16,20 @@ function handleKeyDown(e) {
     if (!activeObject) return;
 
     let needsRender = false;
+
+    // Flip shortcuts with Alt key
+    if (e.altKey) {
+        switch (e.key.toLowerCase()) {
+            case 'h':
+                flipHorizontal();
+                e.preventDefault();
+                return; // Exit after handling
+            case 'v':
+                flipVertical();
+                e.preventDefault();
+                return; // Exit after handling
+        }
+    }
 
     switch (e.key) {
         case 'ArrowUp':
