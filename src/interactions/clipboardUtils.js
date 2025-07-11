@@ -100,7 +100,7 @@ export async function copySelection(canvas) {
 export async function pasteSelection(canvas, marginRect) {
   try {
     // Verificar si hay contenido en ambos portapapeles
-    const hasInternalClipboard = clipboardData && clipboardData.objects && clipboardData.objects.length > 0;
+    const hasInternalClipboard = clipboardData?.objects?.length > 0;
     const systemClipboardInfo = await checkSystemClipboardContent();
     
     // Determinar cuál usar basado en cronología y preferencias
@@ -123,14 +123,12 @@ export async function pasteSelection(canvas, marginRect) {
         if (timeSinceInternalCopy < 10000) {
           console.log('Priorizando copia interna reciente (menos de 10 segundos)');
           useSystemClipboard = false;
-        } else {
           // Solo usar sistema si es mucho más nuevo
-          if (systemTimestamp > internalTimestamp + 2000) {
-            useSystemClipboard = true;
-            console.log('Contenido del sistema es mucho más reciente que copia interna antigua');
-          } else {
-            console.log('Manteniendo contenido interno por ser similar en tiempo');
-          }
+        } else if (systemTimestamp > internalTimestamp + 2000) {
+          useSystemClipboard = true;
+          console.log('Contenido del sistema es mucho más reciente que copia interna antigua');
+        } else {
+          console.log('Manteniendo contenido interno por ser similar en tiempo');
         }
       }
     } else if (!hasInternalClipboard) {
@@ -207,7 +205,7 @@ export async function pasteSelection(canvas, marginRect) {
  */
 async function checkSystemClipboardContent() {
   try {
-    if (!navigator.clipboard || !navigator.clipboard.read) {
+    if (!navigator.clipboard?.read) {
       return { hasContent: false, estimatedTimestamp: 0 };
     }
 
@@ -272,6 +270,7 @@ async function checkSystemClipboardContent() {
               estimatedTimestamp: lastSystemClipboardCheck.timestamp 
             };
           } catch (error) {
+            console.error('Error leyendo el contenido del portapapeles:', error);
             // Si no podemos leer el contenido, asumir que hay contenido reciente
             return { hasContent: true, estimatedTimestamp: currentTime };
           }
@@ -317,7 +316,7 @@ export async function pasteFromSystemOnly(canvas, marginRect) {
  */
 async function pasteFromSystemClipboard(canvas, marginRect) {
   try {
-    if (!navigator.clipboard || !navigator.clipboard.read) {
+    if (!navigator.clipboard?.read) {
       return false;
     }
 
@@ -394,7 +393,7 @@ async function createObjectFromData(objData) {
         let imageUrl = objData.originalUrl || objData.src;
         
         // Si la src es un blob revocado, usar solo originalUrl
-        if (objData.src && objData.src.startsWith('blob:') && objData.originalUrl) {
+        if (objData.src?.startsWith('blob:') && objData.originalUrl) {
           imageUrl = objData.originalUrl;
         }
         
