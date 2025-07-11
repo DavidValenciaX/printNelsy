@@ -12,7 +12,10 @@ function flipObject(axis) {
     if (!canvas) return;
 
     const activeObject = canvas.getActiveObject();
-    if (!activeObject) return;
+    if (!activeObject) {
+        Swal.fire({ text: "Seleccione primero una imagen.", icon: "warning" });
+        return;
+    }
 
     activeObject.set(axis, !activeObject.get(axis));
     canvas.renderAll();
