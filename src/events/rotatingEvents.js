@@ -55,82 +55,93 @@ function isRealDirectionChange(dir1, dir2, angleDelta) {
 }
 
 /**
+ * Handles large angle jumps with interpolation to prevent wrap-around bugs
+ * @param {fabric.Object} obj The object being rotated
+ * @param {number} delta The angle delta
+ * @param {number} lastAngle The previous angle
+ * @param {number} currentAngle The current angle
+ */
+function handleLargeAngleJump(obj, delta, lastAngle, currentAngle) {
+  const jumpDirection = delta > 0 ? DIRECTION_CLOCKWISE : DIRECTION_COUNTERCLOCKWISE;
+  
+  // Don't interpolate if object is blocked and user continues same direction (wrap-around)
+  const isWrapAround = obj._rotationState === 'blocked' && jumpDirection === obj._lockDir;
+  if (isWrapAround) {
+    return; // Continue without interpolating to prevent the bug
+  }
+  
+  console.log(`Large angle jump detected: ${delta.toFixed(2)}° (from ${lastAngle.toFixed(2)}° to ${currentAngle.toFixed(2)}°)`);
+  
+  interpolateAngleSteps(obj, delta, lastAngle, jumpDirection);
+}
+
+/**
+ * Performs angle interpolation with constraint checking
+ * @param {fabric.Object} obj The object being rotated
+ * @param {number} delta The total angle delta
+ * @param {number} lastAngle The starting angle
+ * @param {string} stepDirection The direction of rotation
+ */
+function interpolateAngleSteps(obj, delta, lastAngle, stepDirection) {
+  const steps = Math.ceil(Math.abs(delta) / INTERPOLATION_STEP_SIZE);
+  const stepSize = delta / steps;
+  
+  console.log(`Interpolating ${steps} steps of ${stepSize.toFixed(2)}° each in ${stepDirection} direction`);
+  
+  for (let i = 1; i <= steps; i++) {
+    const intermediateAngle = lastAngle + (stepSize * i);
+    
+    obj.angle = intermediateAngle;
+    obj.setCoords();
+    
+    constrainRotationToMargin(obj, getCurrentMarginRect(), stepDirection);
+    
+    if (obj._rotationState === 'blocked') {
+      console.log(`Object blocked at intermediate angle: ${intermediateAngle.toFixed(2)}°`);
+      break;
+    }
+  }
+}
+
+/**
+ * Calculates rotation direction from angle delta
+ * @param {number} delta The angle delta
+ * @returns {string|null} Direction or null
+ */
+function calculateDirectionFromDelta(delta) {
+  if (Math.abs(delta) <= 0.1) {
+    return null; // Below minimum threshold to avoid noise
+  }
+  
+  const direction = delta > 0 ? DIRECTION_CLOCKWISE : DIRECTION_COUNTERCLOCKWISE;
+  console.log(direction);
+  return direction;
+}
+
+/**
  * Detects the rotation direction of a Fabric.js object with improved
  * wrap-around handling to prevent false direction changes.
  * @param {fabric.Object} obj The object being rotated.
  * @returns {string|null} 'clockwise', 'counterclockwise', or null if no direction detected.
  */
 function detectRotationDirection(obj) {
-  let direction = null;
-  
-  if (typeof obj._angleForDirectionDetection !== 'undefined') {
-    const currentAngle = obj.angle;
-    const lastAngle = obj._angleForDirectionDetection;
-    
-    // Use shortest path calculation to avoid wrap-around issues
-    const delta = getShortestAngleDelta(lastAngle, currentAngle);
-    
-    // Check for large angle jumps that need interpolation
-    const isLargeJump = Math.abs(delta) > LARGE_ANGLE_JUMP_THRESHOLD;
-    
-    if (isLargeJump) {
-      const jumpDirection = delta > 0 ? DIRECTION_CLOCKWISE : DIRECTION_COUNTERCLOCKWISE;
-
-      // **DO NOT** interpolate if the object is already blocked AND the user
-      // continues to rotate in the SAME direction. This is the "wrap-around"
-      // scenario that causes the unblocking bug.
-      const isWrapAround = obj._rotationState === 'blocked' && jumpDirection === obj._lockDir;
-
-      if (isWrapAround) {
-        // Continue without interpolating to prevent the bug.
-      } else {
-        // In all other cases (fast flick to block, or flick to unblock),
-        // interpolation is desired for a smooth experience.
-        console.log(`Large angle jump detected: ${delta.toFixed(2)}° (from ${lastAngle.toFixed(2)}° to ${currentAngle.toFixed(2)}°)`);
-        
-        // Calculate interpolation steps using shortest path
-        const steps = Math.ceil(Math.abs(delta) / INTERPOLATION_STEP_SIZE);
-        const stepSize = delta / steps;
-        const stepDirection = stepSize > 0 ? DIRECTION_CLOCKWISE : DIRECTION_COUNTERCLOCKWISE;
-        
-        console.log(`Interpolating ${steps} steps of ${stepSize.toFixed(2)}° each in ${stepDirection} direction`);
-        
-        // Process each intermediate angle
-        for (let i = 1; i <= steps; i++) {
-          const intermediateAngle = lastAngle + (stepSize * i);
-          
-          // Temporarily set the intermediate angle
-          obj.angle = intermediateAngle;
-          obj.setCoords();
-          
-          // Apply constraints at each step
-          constrainRotationToMargin(obj, getCurrentMarginRect(), stepDirection);
-          
-          // Break early if object gets blocked to avoid unnecessary processing
-          if (obj._rotationState === 'blocked') {
-            console.log(`Object blocked at intermediate angle: ${intermediateAngle.toFixed(2)}°`);
-            break;
-          }
-        }
-      }
-    }
-
-    // Determine final direction based on shortest path delta
-    if (Math.abs(delta) > 0.1) { // Minimum threshold to avoid noise
-      if (delta > 0) {
-        direction = DIRECTION_CLOCKWISE;
-        console.log(DIRECTION_CLOCKWISE);
-      } else {
-        direction = DIRECTION_COUNTERCLOCKWISE;
-        console.log(DIRECTION_COUNTERCLOCKWISE);
-      }
-    }
+  if (typeof obj._angleForDirectionDetection === 'undefined') {
+    obj._angleForDirectionDetection = obj.angle;
+    return null;
   }
-
-  // Store the current angle for the next event
-  obj._angleForDirectionDetection = obj.angle;
   
-  return direction;
+  const currentAngle = obj.angle;
+  const lastAngle = obj._angleForDirectionDetection;
+  const delta = getShortestAngleDelta(lastAngle, currentAngle);
+  
+  // Handle large angle jumps that need interpolation
+  if (Math.abs(delta) > LARGE_ANGLE_JUMP_THRESHOLD) {
+    handleLargeAngleJump(obj, delta, lastAngle, currentAngle);
+  }
+  
+  // Store current angle for next event and return direction
+  obj._angleForDirectionDetection = obj.angle;
+  return calculateDirectionFromDelta(delta);
 }
 
 /**
