@@ -9,8 +9,54 @@ const DIRECTION_CLOCKWISE = 'clockwise';
 const DIRECTION_COUNTERCLOCKWISE = 'counterclockwise';
 
 /**
- * Detects the rotation direction of a Fabric.js object with interpolation
- * to handle large angle jumps during fast rotations.
+ * Normalizes an angle to the range [0, 360)
+ * @param {number} angle Angle in degrees
+ * @returns {number} Normalized angle
+ */
+function normalizeAngle(angle) {
+  angle = angle % 360;
+  return angle < 0 ? angle + 360 : angle;
+}
+
+/**
+ * Calculates the shortest angular distance between two angles
+ * @param {number} from Starting angle
+ * @param {number} to Ending angle
+ * @returns {number} Shortest delta (positive = clockwise, negative = counterclockwise)
+ */
+function getShortestAngleDelta(from, to) {
+  let delta = to - from;
+  
+  // Normalize to [-180, 180] to get shortest path
+  while (delta > 180) delta -= 360;
+  while (delta < -180) delta += 360;
+  
+  return delta;
+}
+
+/**
+ * Checks if two directions are actually different (not just wrap-around artifacts)
+ * @param {string} dir1 First direction
+ * @param {string} dir2 Second direction
+ * @param {number} angleDelta The actual angle delta
+ * @returns {boolean} True if this is a real direction change
+ */
+function isRealDirectionChange(dir1, dir2, angleDelta) {
+  if (!dir1 || !dir2) return false;
+  
+  // If directions are different, check if the delta supports this
+  if (dir1 !== dir2) {
+    // Real direction change should have a delta that matches the new direction
+    const deltaDirection = angleDelta > 0 ? DIRECTION_CLOCKWISE : DIRECTION_COUNTERCLOCKWISE;
+    return deltaDirection === dir2;
+  }
+  
+  return false;
+}
+
+/**
+ * Detects the rotation direction of a Fabric.js object with improved
+ * wrap-around handling to prevent false direction changes.
  * @param {fabric.Object} obj The object being rotated.
  * @returns {string|null} 'clockwise', 'counterclockwise', or null if no direction detected.
  */
@@ -20,52 +66,64 @@ function detectRotationDirection(obj) {
   if (typeof obj._angleForDirectionDetection !== 'undefined') {
     const currentAngle = obj.angle;
     const lastAngle = obj._angleForDirectionDetection;
-    let delta = currentAngle - lastAngle;
-
-    // Normalize the delta to handle angle wrapping (e.g., from 359 to 1 degree)
-    if (delta > ANGLE_WRAP_THRESHOLD) {
-      delta -= 360;
-    } else if (delta < -ANGLE_WRAP_THRESHOLD) {
-      delta += 360;
-    }
-
+    
+    // Use shortest path calculation to avoid wrap-around issues
+    const delta = getShortestAngleDelta(lastAngle, currentAngle);
+    
     // Check for large angle jumps that need interpolation
     const isLargeJump = Math.abs(delta) > LARGE_ANGLE_JUMP_THRESHOLD;
     
     if (isLargeJump) {
-      console.log(`Large angle jump detected: ${delta.toFixed(2)}°, applying interpolation`);
-      
-      // Calculate interpolation steps
-      const steps = Math.ceil(Math.abs(delta) / INTERPOLATION_STEP_SIZE);
-      const stepSize = delta / steps;
-      const stepDirection = stepSize > 0 ? DIRECTION_CLOCKWISE : DIRECTION_COUNTERCLOCKWISE;
-      
-      // Process each intermediate angle
-      for (let i = 1; i <= steps; i++) {
-        const intermediateAngle = lastAngle + (stepSize * i);
+      const jumpDirection = delta > 0 ? DIRECTION_CLOCKWISE : DIRECTION_COUNTERCLOCKWISE;
+
+      // **DO NOT** interpolate if the object is already blocked AND the user
+      // continues to rotate in the SAME direction. This is the "wrap-around"
+      // scenario that causes the unblocking bug.
+      const isWrapAround = obj._rotationState === 'blocked' && jumpDirection === obj._lockDir;
+
+      if (isWrapAround) {
+        // Continue without interpolating to prevent the bug.
+      } else {
+        // In all other cases (fast flick to block, or flick to unblock),
+        // interpolation is desired for a smooth experience.
+        console.log(`Large angle jump detected: ${delta.toFixed(2)}° (from ${lastAngle.toFixed(2)}° to ${currentAngle.toFixed(2)}°)`);
         
-        // Temporarily set the intermediate angle
-        obj.angle = intermediateAngle;
-        obj.setCoords();
+        // Calculate interpolation steps using shortest path
+        const steps = Math.ceil(Math.abs(delta) / INTERPOLATION_STEP_SIZE);
+        const stepSize = delta / steps;
+        const stepDirection = stepSize > 0 ? DIRECTION_CLOCKWISE : DIRECTION_COUNTERCLOCKWISE;
         
-        // Apply constraints at each step
-        constrainRotationToMargin(obj, getCurrentMarginRect(), stepDirection);
+        console.log(`Interpolating ${steps} steps of ${stepSize.toFixed(2)}° each in ${stepDirection} direction`);
         
-        // Break early if object gets blocked to avoid unnecessary processing
-        if (obj._rotationState === 'blocked') {
-          console.log(`Object blocked at intermediate angle: ${intermediateAngle.toFixed(2)}°`);
-          break;
+        // Process each intermediate angle
+        for (let i = 1; i <= steps; i++) {
+          const intermediateAngle = lastAngle + (stepSize * i);
+          
+          // Temporarily set the intermediate angle
+          obj.angle = intermediateAngle;
+          obj.setCoords();
+          
+          // Apply constraints at each step
+          constrainRotationToMargin(obj, getCurrentMarginRect(), stepDirection);
+          
+          // Break early if object gets blocked to avoid unnecessary processing
+          if (obj._rotationState === 'blocked') {
+            console.log(`Object blocked at intermediate angle: ${intermediateAngle.toFixed(2)}°`);
+            break;
+          }
         }
       }
     }
 
-    // Determine final direction
-    if (delta > 0) {
-      direction = DIRECTION_CLOCKWISE;
-      console.log(DIRECTION_CLOCKWISE);
-    } else if (delta < 0) {
-      direction = DIRECTION_COUNTERCLOCKWISE;
-      console.log(DIRECTION_COUNTERCLOCKWISE);
+    // Determine final direction based on shortest path delta
+    if (Math.abs(delta) > 0.1) { // Minimum threshold to avoid noise
+      if (delta > 0) {
+        direction = DIRECTION_CLOCKWISE;
+        console.log(DIRECTION_CLOCKWISE);
+      } else {
+        direction = DIRECTION_COUNTERCLOCKWISE;
+        console.log(DIRECTION_COUNTERCLOCKWISE);
+      }
     }
   }
 
@@ -114,6 +172,7 @@ export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus 
       delete obj._lockDir;
       delete obj._angleForDirectionDetection;
       delete obj._directionHistory;
+      delete obj._angleDeltaHistory;
     }
     if (updateArrangementStatus) updateArrangementStatus('none');
   });
@@ -121,3 +180,52 @@ export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus 
 
 // For backwards-compatibility with legacy imports.
 export { updateMarginRect };
+
+/**
+ * Test function to verify angle handling works correctly
+ * Can be called from console for debugging: testAngleHandling()
+ */
+function testAngleHandling() {
+  console.log('=== Testing Angle Handling ===');
+  
+  // Test cases that were problematic
+  const testCases = [
+    { from: 183.79, to: 207.94, expected: 24.15, expectedDir: 'clockwise' },
+    { from: 350, to: 10, expected: 20, expectedDir: 'clockwise' },
+    { from: 10, to: 350, expected: -20, expectedDir: 'counterclockwise' },
+    { from: 0, to: 180, expected: 180, expectedDir: 'clockwise' },
+    { from: 180, to: 0, expected: -180, expectedDir: 'counterclockwise' },
+    { from: 5, to: -5, expected: -10, expectedDir: 'counterclockwise' }
+  ];
+  
+  testCases.forEach((test, index) => {
+    const delta = getShortestAngleDelta(test.from, test.to);
+    const direction = delta > 0 ? DIRECTION_CLOCKWISE : DIRECTION_COUNTERCLOCKWISE;
+    const deltaOk = Math.abs(delta - test.expected) < 0.1;
+    const dirOk = direction === test.expectedDir;
+    
+    console.log(`Test ${index + 1}: ${test.from}° → ${test.to}°`);
+    console.log(`  Expected: ${test.expected}° (${test.expectedDir})`);
+    console.log(`  Got: ${delta.toFixed(2)}° (${direction})`);
+    console.log(`  Result: ${deltaOk && dirOk ? '✅ PASS' : '❌ FAIL'}`);
+    console.log('');
+  });
+  
+  // Test the problematic case from the logs
+  console.log('=== Problematic Case from Logs ===');
+  const problemFrom = 183.79;
+  const problemTo = 207.94;
+  const problemDelta = getShortestAngleDelta(problemFrom, problemTo);
+  console.log(`${problemFrom}° → ${problemTo}°: ${problemDelta.toFixed(2)}°`);
+  console.log(`Should be ~24.15° clockwise, got: ${problemDelta.toFixed(2)}° ${problemDelta > 0 ? 'clockwise' : 'counterclockwise'}`);
+  
+  // Test real vs fake direction changes
+  console.log('=== Direction Change Detection ===');
+  console.log('Real change (clockwise to counterclockwise with negative delta):');
+  console.log('  Result:', isRealDirectionChange('clockwise', 'counterclockwise', -10));
+  console.log('Fake change (clockwise to counterclockwise but positive delta - wrap artifact):');
+  console.log('  Result:', isRealDirectionChange('clockwise', 'counterclockwise', 20));
+}
+
+// Export for debugging
+window.testAngleHandling = testAngleHandling;

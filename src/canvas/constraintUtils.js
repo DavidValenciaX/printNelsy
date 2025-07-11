@@ -5,6 +5,50 @@
 // Constants for robust unblocking system
 const DIRECTION_HISTORY_SIZE = 5;
 const ROTATION_NEARBY_THRESHOLD = 90; // degrees
+const DIRECTION_CLOCKWISE = 'clockwise';
+const DIRECTION_COUNTERCLOCKWISE = 'counterclockwise';
+
+/**
+ * Calculates the shortest angular distance between two angles
+ * @param {number} from Starting angle
+ * @param {number} to Ending angle
+ * @returns {number} Shortest delta (positive = clockwise, negative = counterclockwise)
+ */
+function getShortestAngleDelta(from, to) {
+  let delta = to - from;
+  
+  // Normalize to [-180, 180] to get shortest path
+  while (delta > 180) delta -= 360;
+  while (delta < -180) delta += 360;
+  
+  return delta;
+}
+
+/**
+ * Checks if two directions are actually different (not just wrap-around artifacts)
+ * @param {string} dir1 First direction
+ * @param {string} dir2 Second direction
+ * @param {number} angleDelta The actual angle delta
+ * @returns {boolean} True if this is a real direction change
+ */
+function isRealDirectionChange(dir1, dir2, angleDelta) {
+  if (!dir1 || !dir2) return false;
+  
+  // If directions are different, check if the delta supports this
+  if (dir1 !== dir2) {
+    // A real direction change shouldn't have a massive angle jump,
+    // which usually indicates a wrap-around artifact.
+    if (Math.abs(angleDelta) > ROTATION_NEARBY_THRESHOLD) {
+      return false;
+    }
+    
+    // Real direction change should have a delta that matches the new direction
+    const deltaDirection = angleDelta > 0 ? DIRECTION_CLOCKWISE : DIRECTION_COUNTERCLOCKWISE;
+    return deltaDirection === dir2;
+  }
+  
+  return false;
+}
 
 export function constrainObjectToMargin(obj, marginRect) {
   obj.setCoords();
@@ -241,28 +285,42 @@ function isRotationNearby(proposedAngle, lastValidAngle) {
 
 /**
  * Determines if object should be unblocked based on enhanced conditions with direction history
+ * and improved detection of real direction changes vs wrap-around artifacts
  */
 function shouldUnblock(obj, marginRect, direction, proposedAngle) {
   const { corner: originalCorner, margin: originalMargin } = obj._collisionDetails;
   
-  // Initialize direction history if it doesn't exist
+  // Initialize tracking structures
   if (!obj._directionHistory) {
     obj._directionHistory = [];
   }
+  if (!obj._angleDeltaHistory) {
+    obj._angleDeltaHistory = [];
+  }
   
-  // Add current direction to history
-  if (direction) {
-    obj._directionHistory.push(direction);
+  // Calculate real angle delta using shortest path
+  const angleDelta = obj._lastAngle ? getShortestAngleDelta(obj._lastAngle, proposedAngle) : 0;
+  
+  // Add current direction and angle delta to history
+  if (direction && Math.abs(angleDelta) > 0.1) {
+    const directionData = {
+      direction: direction,
+      angleDelta: angleDelta,
+      angle: proposedAngle
+    };
+    
+    obj._directionHistory.push(directionData);
+    
     // Maintain only the last DIRECTION_HISTORY_SIZE events
     if (obj._directionHistory.length > DIRECTION_HISTORY_SIZE) {
       obj._directionHistory.shift();
     }
   }
   
-  // Check if there was a direction change in recent history
-  const hasDirectionChange = obj._directionHistory.some(dir => 
-    dir !== obj._lockDir && dir !== null
-  );
+  // Check for REAL direction changes (not wrap-around artifacts)
+  const hasRealDirectionChange = obj._directionHistory.some(dirData => {
+    return isRealDirectionChange(obj._lockDir, dirData.direction, dirData.angleDelta);
+  });
   
   const closestCornerNow = getClosestCornerToMargin(obj, originalMargin, marginRect);
   const sameCorner = closestCornerNow === originalCorner;
@@ -271,19 +329,28 @@ function shouldUnblock(obj, marginRect, direction, proposedAngle) {
   
   // Enhanced unblocking conditions:
   // 1. Object must be within margin
-  // 2. Direction must have changed in recent history
+  // 2. Must have a REAL direction change (not wrap-around artifact)
   // 3. Same corner must be closest to original margin
   // 4. Rotation must be nearby (not ~180° flip)
-  const shouldUnblockResult = isWithinMargin && hasDirectionChange && sameCorner && nearby;
+  const shouldUnblockResult = isWithinMargin && hasRealDirectionChange && sameCorner && nearby;
   
   if (shouldUnblockResult) {
     console.log(`Enhanced unblock conditions met:`, {
       isWithinMargin,
-      hasDirectionChange,
+      hasRealDirectionChange,
       sameCorner: `${closestCornerNow} === ${originalCorner}`,
       nearby,
-      directionHistory: obj._directionHistory.slice(-3), // Show last 3 directions
-      lockDir: obj._lockDir
+      lockDir: obj._lockDir,
+      recentDirections: obj._directionHistory.slice(-3).map(d => `${d.direction}(${d.angleDelta.toFixed(1)}°)`)
+    });
+  } else if (isWithinMargin) {
+    // Debug why unblocking failed when object is within margin
+    console.log(`Unblocking failed while within margin:`, {
+      hasRealDirectionChange,
+      sameCorner: `${closestCornerNow} === ${originalCorner}`,
+      nearby,
+      lockDir: obj._lockDir,
+      recentDirections: obj._directionHistory.slice(-3).map(d => `${d.direction}(${d.angleDelta.toFixed(1)}°)`)
     });
   }
   
@@ -308,6 +375,7 @@ function handleBlockedState(obj, marginRect, direction, proposedAngle, isValid) 
       obj._lastAngle = proposedAngle;
       delete obj._lockDir;
       delete obj._directionHistory;
+      delete obj._angleDeltaHistory;
     } else {
       console.log(`Rotation still blocked: Enhanced unblock conditions not met.`);
       obj.angle = obj._lastAngle;
@@ -358,14 +426,15 @@ function handleUnblockedState(obj, marginRect, direction, proposedAngle, isValid
  *
  * ENHANCED VERSION: This implementation includes optimizations for fast rotations:
  * - Angle interpolation: Large angle jumps (>5°) are broken down into smaller steps
- * - Robust unblocking: Uses direction history instead of single direction comparison
- * - Improved collision detection: More reliable detection of direction changes
+ * - Robust unblocking: Uses direction history with real direction change detection
+ * - Wrap-around handling: Prevents false direction changes from angle wrap-around
+ * - Shortest path calculation: Always uses shortest angular distance between angles
  *
  * The enhanced unblocking logic requires that the object:
  * 1. Is fully inside the margins
  * 2. Has the same corner closest to the original margin that caused the collision
- * 3. Has shown a direction change in recent rotation history (last 5 events)
- * 4. Rotation is nearby (not ~180° flip)
+ * 3. Has shown a REAL direction change (not wrap-around artifact) in recent history
+ * 4. Rotation is nearby (not ~180° flip from last valid angle)
  *
  * @param {fabric.Object} obj           The Fabric.js object being rotated.
  * @param {Object}       marginRect    The margin rectangle with `{left, top, width, height}`.
