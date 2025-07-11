@@ -1,6 +1,11 @@
 /**
  * Constrains an object to stay within the margin boundaries
  */
+
+// Constants for robust unblocking system
+const DIRECTION_HISTORY_SIZE = 5;
+const ROTATION_NEARBY_THRESHOLD = 90; // degrees
+
 export function constrainObjectToMargin(obj, marginRect) {
   obj.setCoords();
 
@@ -231,20 +236,58 @@ function isRotationNearby(proposedAngle, lastValidAngle) {
   } else if (angleDelta < -180) {
     angleDelta += 360;
   }
-  return Math.abs(angleDelta) < 90;
+  return Math.abs(angleDelta) < ROTATION_NEARBY_THRESHOLD;
 }
 
 /**
- * Determines if object should be unblocked based on enhanced conditions
+ * Determines if object should be unblocked based on enhanced conditions with direction history
  */
 function shouldUnblock(obj, marginRect, direction, proposedAngle) {
   const { corner: originalCorner, margin: originalMargin } = obj._collisionDetails;
+  
+  // Initialize direction history if it doesn't exist
+  if (!obj._directionHistory) {
+    obj._directionHistory = [];
+  }
+  
+  // Add current direction to history
+  if (direction) {
+    obj._directionHistory.push(direction);
+    // Maintain only the last DIRECTION_HISTORY_SIZE events
+    if (obj._directionHistory.length > DIRECTION_HISTORY_SIZE) {
+      obj._directionHistory.shift();
+    }
+  }
+  
+  // Check if there was a direction change in recent history
+  const hasDirectionChange = obj._directionHistory.some(dir => 
+    dir !== obj._lockDir && dir !== null
+  );
+  
   const closestCornerNow = getClosestCornerToMargin(obj, originalMargin, marginRect);
-  const reversed = direction && obj._lockDir && (direction !== obj._lockDir);
   const sameCorner = closestCornerNow === originalCorner;
   const nearby = isRotationNearby(proposedAngle, obj._lastAngle);
+  const isWithinMargin = isObjectWithinMargin(obj, marginRect);
   
-  return reversed && sameCorner && nearby;
+  // Enhanced unblocking conditions:
+  // 1. Object must be within margin
+  // 2. Direction must have changed in recent history
+  // 3. Same corner must be closest to original margin
+  // 4. Rotation must be nearby (not ~180° flip)
+  const shouldUnblockResult = isWithinMargin && hasDirectionChange && sameCorner && nearby;
+  
+  if (shouldUnblockResult) {
+    console.log(`Enhanced unblock conditions met:`, {
+      isWithinMargin,
+      hasDirectionChange,
+      sameCorner: `${closestCornerNow} === ${originalCorner}`,
+      nearby,
+      directionHistory: obj._directionHistory.slice(-3), // Show last 3 directions
+      lockDir: obj._lockDir
+    });
+  }
+  
+  return shouldUnblockResult;
 }
 
 /**
@@ -258,31 +301,15 @@ function handleBlockedState(obj, marginRect, direction, proposedAngle, isValid) 
     if (shouldUnblock(obj, marginRect, direction, proposedAngle)) {
       const { corner: originalCorner, margin: originalMargin } = obj._collisionDetails;
       console.log(
-        `Rotation unblocked: Object re-entered correctly. ` +
-        `Direction changed from '${obj._lockDir}' to '${direction}', ` +
-        `corner '${originalCorner}' still closest to margin '${originalMargin}'.`
+        `Rotation unblocked: Object re-entered correctly using enhanced logic. ` +
+        `Original collision: corner '${originalCorner}' at margin '${originalMargin}'.`
       );
       obj._rotationState = 'unblocked';
       obj._lastAngle = proposedAngle;
       delete obj._lockDir;
+      delete obj._directionHistory;
     } else {
-      const { corner: originalCorner, margin: originalMargin } = obj._collisionDetails;
-      const closestCornerNow = getClosestCornerToMargin(obj, originalMargin, marginRect);
-      const reversed = direction && obj._lockDir && (direction !== obj._lockDir);
-      const nearby = isRotationNearby(proposedAngle, obj._lastAngle);
-      
-      let reason = [];
-      if (closestCornerNow !== originalCorner) {
-        reason.push(`corner changed from '${originalCorner}' to '${closestCornerNow}'`);
-      }
-      if (!reversed) {
-        reason.push(`direction not reversed (lock: '${obj._lockDir}', current: '${direction}')`);
-      }
-      if (!nearby) {
-        reason.push(`rotation has flipped by ~180 degrees`);
-      }
-      
-      console.log(`Rotation still blocked: Object is inside but ${reason.join(' and ')}.`);
+      console.log(`Rotation still blocked: Enhanced unblock conditions not met.`);
       obj.angle = obj._lastAngle;
     }
   } else {
@@ -329,10 +356,16 @@ function handleUnblockedState(obj, marginRect, direction, proposedAngle, isValid
  * the same one already applied for scaling constraints and guarantees finding
  * the closest valid angle in **O(log n)** steps.
  *
- * The unblocking logic has been enhanced to require that the object:
+ * ENHANCED VERSION: This implementation includes optimizations for fast rotations:
+ * - Angle interpolation: Large angle jumps (>5°) are broken down into smaller steps
+ * - Robust unblocking: Uses direction history instead of single direction comparison
+ * - Improved collision detection: More reliable detection of direction changes
+ *
+ * The enhanced unblocking logic requires that the object:
  * 1. Is fully inside the margins
  * 2. Has the same corner closest to the original margin that caused the collision
- * 3. Has reversed its rotation direction from when the collision occurred
+ * 3. Has shown a direction change in recent rotation history (last 5 events)
+ * 4. Rotation is nearby (not ~180° flip)
  *
  * @param {fabric.Object} obj           The Fabric.js object being rotated.
  * @param {Object}       marginRect    The margin rectangle with `{left, top, width, height}`.

@@ -1,8 +1,16 @@
 import { getCurrentMarginRect, updateMarginRect } from './../canvas/marginRectManager.js';
 import { constrainRotationToMargin } from './../canvas/constraintUtils.js';
 
+// Constants for rotation handling
+const LARGE_ANGLE_JUMP_THRESHOLD = 5; // degrees
+const INTERPOLATION_STEP_SIZE = 2; // degrees
+const ANGLE_WRAP_THRESHOLD = 180; // degrees
+const DIRECTION_CLOCKWISE = 'clockwise';
+const DIRECTION_COUNTERCLOCKWISE = 'counterclockwise';
+
 /**
- * Detects the rotation direction of a Fabric.js object and returns it.
+ * Detects the rotation direction of a Fabric.js object with interpolation
+ * to handle large angle jumps during fast rotations.
  * @param {fabric.Object} obj The object being rotated.
  * @returns {string|null} 'clockwise', 'counterclockwise', or null if no direction detected.
  */
@@ -15,18 +23,49 @@ function detectRotationDirection(obj) {
     let delta = currentAngle - lastAngle;
 
     // Normalize the delta to handle angle wrapping (e.g., from 359 to 1 degree)
-    if (delta > 180) {
+    if (delta > ANGLE_WRAP_THRESHOLD) {
       delta -= 360;
-    } else if (delta < -180) {
+    } else if (delta < -ANGLE_WRAP_THRESHOLD) {
       delta += 360;
     }
 
+    // Check for large angle jumps that need interpolation
+    const isLargeJump = Math.abs(delta) > LARGE_ANGLE_JUMP_THRESHOLD;
+    
+    if (isLargeJump) {
+      console.log(`Large angle jump detected: ${delta.toFixed(2)}°, applying interpolation`);
+      
+      // Calculate interpolation steps
+      const steps = Math.ceil(Math.abs(delta) / INTERPOLATION_STEP_SIZE);
+      const stepSize = delta / steps;
+      const stepDirection = stepSize > 0 ? DIRECTION_CLOCKWISE : DIRECTION_COUNTERCLOCKWISE;
+      
+      // Process each intermediate angle
+      for (let i = 1; i <= steps; i++) {
+        const intermediateAngle = lastAngle + (stepSize * i);
+        
+        // Temporarily set the intermediate angle
+        obj.angle = intermediateAngle;
+        obj.setCoords();
+        
+        // Apply constraints at each step
+        constrainRotationToMargin(obj, getCurrentMarginRect(), stepDirection);
+        
+        // Break early if object gets blocked to avoid unnecessary processing
+        if (obj._rotationState === 'blocked') {
+          console.log(`Object blocked at intermediate angle: ${intermediateAngle.toFixed(2)}°`);
+          break;
+        }
+      }
+    }
+
+    // Determine final direction
     if (delta > 0) {
-      direction = 'clockwise';
-      console.log('clockwise');
+      direction = DIRECTION_CLOCKWISE;
+      console.log(DIRECTION_CLOCKWISE);
     } else if (delta < 0) {
-      direction = 'counterclockwise';
-      console.log('counterclockwise');
+      direction = DIRECTION_COUNTERCLOCKWISE;
+      console.log(DIRECTION_COUNTERCLOCKWISE);
     }
   }
 
@@ -74,6 +113,7 @@ export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus 
       delete obj._collisionDetails;
       delete obj._lockDir;
       delete obj._angleForDirectionDetection;
+      delete obj._directionHistory;
     }
     if (updateArrangementStatus) updateArrangementStatus('none');
   });
