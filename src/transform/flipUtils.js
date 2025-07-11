@@ -22,12 +22,12 @@ function flipObject(axis) {
  * Flips the active object horizontally.
  */
 export function flipHorizontal() {
-    flipObject('flipX');
+    flipObject('flipY');
 }
 
 /**
  * Flips the active object vertically.
  */
 export function flipVertical() {
-    flipObject('flipY');
+    flipObject('flipX');
 } 
