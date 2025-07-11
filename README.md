@@ -1,6 +1,9 @@
-# 🖼️ Asistente de Impresión de Imágenes
+# 🖼️ Print Nelsy - Asistente de Impresión de Imágenes
 
 Una aplicación web para manipular, organizar e imprimir imágenes usando Fabric.js.
+
+🌐 **Aplicación en línea**: [https://print-nelsy.vercel.app/](https://print-nelsy.vercel.app/)
+📦 **Repositorio**: [https://github.com/DavidValenciaX/printNelsy](https://github.com/DavidValenciaX/printNelsy)
 
 ## ❤️ Dedicatoria
 
@@ -114,9 +117,12 @@ imprimir_imagenes_fabric/
 ## 🛠️ Tecnologías Utilizadas
 
 - **Frontend**: HTML5, CSS3, JavaScript ES6+
+- **Build Tool**: Vite 5.0+ (desarrollo y producción)
 - **Canvas**: Fabric.js v5.3.1
-- **UI**: SweetAlert2 para alertas
-- **Icons**: Font Awesome 6.0
+- **PDF Generation**: jsPDF v2.5.1
+- **UI**: SweetAlert2 v11+ para alertas
+- **Icons**: Font Awesome 6.5.1 + Bootstrap Icons 1.11.3
+- **Package Manager**: npm
 - **Arquitectura**: Modular con ES6 modules
 
 ## 🏗️ Arquitectura
@@ -140,16 +146,45 @@ La aplicación utiliza un patrón modular con separación clara de responsabilid
 
 ## 🔧 Instalación y Uso
 
-### Instalación
+### 🌐 Usar la Aplicación en Línea
+
+**La forma más fácil es usar la aplicación directamente en tu navegador:**
+
+👉 **[https://print-nelsy.vercel.app/](https://print-nelsy.vercel.app/)**
+
+### ⚡ Instalación Local (Vite + npm - Para Desarrollo)
 
 ```bash
 # Clonar el repositorio
-git clone [url-del-repositorio]
+git clone https://github.com/DavidValenciaX/printNelsy.git
 
 # Navegar al directorio
-cd imprimir_imagenes_fabric
+cd printNelsy
 
-# Servir los archivos (ejemplo con Python)
+# Instalar dependencias
+npm install
+
+# Iniciar servidor de desarrollo
+npm run dev
+```
+
+### 🏗️ Comandos Disponibles
+
+```bash
+# Desarrollo con HMR
+npm run dev
+
+# Build de producción
+npm run build
+
+# Preview del build
+npm run preview
+```
+
+### 📋 Instalación Alternativa (Servidor estático)
+
+```bash
+# Servir archivos estáticamente
 python -m http.server 8000
 # o con Node.js
 npx serve .
@@ -157,21 +192,38 @@ npx serve .
 
 ### Uso
 
-1. Abrir `http://localhost:8000` en el navegador
+1. Abrir `http://localhost:3000` en el navegador (Vite) o `http://localhost:8000` (servidor estático)
 2. Cargar imágenes usando el botón "Cargar imágenes" o drag & drop
 3. Manipular las imágenes usando las herramientas de la barra lateral
 4. Configurar el tamaño de papel y orientación según necesites
 5. Imprimir usando el botón "Imprimir"
 
+## 🚀 Despliegue
+
+El proyecto está configurado para **Vercel** con optimizaciones automáticas:
+
+- **Framework**: Vite detectado automáticamente
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist/`
+- **Cache optimizado**: Assets con hash para cache a largo plazo
+
+### Deploy en Vercel
+
+1. Conecta tu repositorio GitHub a Vercel
+2. Vercel detecta automáticamente la configuración
+3. Deployments automáticos en cada push a main
+
 ## 🤝 Contribución
 
 Para contribuir al proyecto:
 
-1. Seguir la estructura modular existente
-2. Colocar nuevas funcionalidades en el directorio apropiado
-3. Mantener las importaciones relativas correctas
-4. Documentar nuevas funciones y módulos
-5. Probar en diferentes navegadores y tamaños de papel
+1. Fork el repositorio: [https://github.com/DavidValenciaX/printNelsy](https://github.com/DavidValenciaX/printNelsy)
+2. Seguir la estructura modular existente
+3. Colocar nuevas funcionalidades en el directorio apropiado
+4. Mantener las importaciones relativas correctas
+5. Documentar nuevas funciones y módulos
+6. Probar en diferentes navegadores y tamaños de papel
+7. Crear Pull Request con descripción detallada
 
 ## 📝 Notas de Desarrollo
 

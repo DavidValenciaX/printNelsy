@@ -1,3 +1,5 @@
+import { jsPDF } from '../utils/globals.js';
+
 export function downloadAsPDF(canvas, marginRect) {
   // Store original opacity
   const originalOpacity = marginRect.opacity;
@@ -13,7 +15,6 @@ export function downloadAsPDF(canvas, marginRect) {
   });
 
     const orientation = canvas.width > canvas.height ? 'l' : 'p';
-    const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
         orientation: orientation,
         unit: 'px',

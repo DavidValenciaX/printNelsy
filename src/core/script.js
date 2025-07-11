@@ -2,6 +2,7 @@
  * Punto de entrada principal de la aplicación
  * Este archivo ahora es mucho más limpio y solo se encarga de inicializar la aplicación
  */
+import '../utils/globals.js'; // Importar librerías globales
 import { initializeApp, getAppInstance } from './app.js';
 
 // Inicializar la aplicación cuando el DOM esté listo

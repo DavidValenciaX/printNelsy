@@ -1,0 +1,5 @@
+/* Importar iconos de FontAwesome */
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+
+/* Importar iconos de Bootstrap Icons */
+@import 'bootstrap-icons/font/bootstrap-icons.css'; 
