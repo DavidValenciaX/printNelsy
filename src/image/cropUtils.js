@@ -1,3 +1,9 @@
+import {
+  showNoObjectSelectedWarning,
+  showSingleImageWarning,
+  showInvalidSelectionWarning,
+} from "../utils/uiUtils.js";
+
 let cropRect = null;
 let activeImage = null;
 let inactivatedObjects = [];
@@ -106,10 +112,7 @@ function createCanvasBackground(canvas) {
 
 function confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton, cancelCropButton, cropButton) {
   if (!isCropping || !cropRect || !activeImage) {
-    Swal.fire({
-      text: "Seleccione primero una imagen y active el modo de recorte.",
-      icon: "warning",
-    });
+    showNoObjectSelectedWarning();
     return;
   }
 
@@ -198,24 +201,18 @@ function initializeCrop(canvas, Swal, confirmCropButton, cancelCropButton, cropB
   console.log(activeObjects);
 
   if (activeObjects.length === 0) {
-    Swal.fire({ text: "Seleccione primero una imagen.", icon: "warning" });
+    showNoObjectSelectedWarning();
     return;
   }
 
   if (activeObjects.length !== 1) {
-    Swal.fire({
-      text: "Seleccione solo una imagen para recortar.",
-      icon: "warning",
-    });
+    showSingleImageWarning();
     return;
   }
 
   const activeObject = activeObjects[0];
   if (activeObject.type !== "image") {
-    Swal.fire({
-      text: "La selección debe ser una imagen válida.",
-      icon: "warning",
-    });
+    showInvalidSelectionWarning();
     return;
   }
 

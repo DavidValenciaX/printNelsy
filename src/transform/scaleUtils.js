@@ -1,11 +1,12 @@
 import { constrainObjectToMargin } from './../canvas/constraintUtils.js';
+import { showNoObjectSelectedWarning } from '../utils/uiUtils.js';
 
 const SCALE_FACTOR = 0.01;
 
 function scaleUp(canvas, marginRect) {
   const activeObject = canvas.getActiveObject();
   if (!activeObject) {
-    Swal.fire({ text: "Seleccione primero una imagen.", icon: "warning" });
+    showNoObjectSelectedWarning();
     return;
   }
 
@@ -62,7 +63,7 @@ function scaleUp(canvas, marginRect) {
 function scaleDown(canvas, marginRect) {
   const activeObject = canvas.getActiveObject();
   if (!activeObject) {
-    Swal.fire({ text: "Seleccione primero una imagen.", icon: "warning" });
+    showNoObjectSelectedWarning();
     return;
   }
 

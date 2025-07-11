@@ -1,9 +1,11 @@
+import { showNoObjectSelectedWarning } from "../utils/uiUtils.js";
+
 export function convertToGrayscale(canvas) {
   const activeObjects = canvas
     .getActiveObjects()
     .filter((obj) => obj.type === "image");
   if (activeObjects.length === 0) {
-    Swal.fire({ text: "Seleccione primero una imagen.", icon: "warning" });
+    showNoObjectSelectedWarning();
     return;
   }
   activeObjects.forEach((obj) => {

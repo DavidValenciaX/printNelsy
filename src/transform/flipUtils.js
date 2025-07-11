@@ -1,4 +1,5 @@
 import { getAppInstance } from '../core/app.js';
+import { showNoObjectSelectedWarning } from '../utils/uiUtils.js';
 
 /**
  * Flips the active object on the specified axis.
@@ -13,7 +14,7 @@ function flipObject(axis) {
 
     const activeObject = canvas.getActiveObject();
     if (!activeObject) {
-        Swal.fire({ text: "Seleccione primero una imagen.", icon: "warning" });
+        showNoObjectSelectedWarning();
         return;
     }
 

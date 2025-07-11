@@ -1,9 +1,10 @@
 import { constrainObjectToMargin } from './../canvas/constraintUtils.js';
+import { showNoObjectSelectedWarning } from '../utils/uiUtils.js';
 
 export function resetActiveImage(canvas, marginRect, originalImages) {
   const activeObjects = canvas.getActiveObjects();
   if (activeObjects.length === 0) {
-    Swal.fire({ text: "Seleccione primero una imagen.", icon: "warning" });
+    showNoObjectSelectedWarning();
     return;
   }
 

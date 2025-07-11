@@ -1,9 +1,10 @@
 import { constrainObjectToMargin, scaleToFitWithinMargin } from './../canvas/constraintUtils.js';
+import { showNoObjectSelectedWarning } from '../utils/uiUtils.js';
 
 export function rotateImage(canvas, deg, marginRect) {
   const activeObject = canvas.getActiveObject();
   if (!activeObject) {
-    Swal.fire({ text: "Seleccione primero una imagen.", icon: "warning" });
+    showNoObjectSelectedWarning();
     return;
   }
 
