@@ -36,13 +36,13 @@ export function updateGridControlButtons(rows, cols, imageCount, domManager) {
     increaseRowsButton.disabled = rows >= MAX_ROWS || (rows * cols >= imageCount * 2);
   }
   if (decreaseRowsButton) {
-    decreaseRowsButton.disabled = rows <= MIN_ROWS;
+    decreaseRowsButton.disabled = rows <= MIN_ROWS || ((rows - 1) * cols < imageCount);
   }
   if (increaseColsButton) {
     increaseColsButton.disabled = cols >= MAX_COLS || (rows * cols >= imageCount * 2);
   }
   if (decreaseColsButton) {
-    decreaseColsButton.disabled = cols <= MIN_COLS;
+    decreaseColsButton.disabled = cols <= MIN_COLS || (rows * (cols - 1) < imageCount);
   }
 }
 
