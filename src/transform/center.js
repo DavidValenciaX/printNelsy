@@ -1,3 +1,5 @@
+import Swal from 'sweetalert2';
+
 // Functions for centering objects on the canvas
 
 /**

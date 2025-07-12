@@ -1,3 +1,6 @@
+import { fabric } from 'fabric';
+import Swal from 'sweetalert2';
+
 /**
  * Utilidades para copiar y pegar imágenes en el canvas
  */

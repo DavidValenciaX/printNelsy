@@ -1,4 +1,4 @@
-import { Swal } from './globals.js';
+import Swal from 'sweetalert2';
 
 const MESSAGES = {
   SELECT_IMAGE_FIRST: "Seleccione primero una imagen.",

@@ -1,3 +1,4 @@
+import { fabric } from 'fabric';
 import { arrangeImages } from '../transform/arrangeUtils.js';
 
 // Variables exportadas para gestión de imágenes

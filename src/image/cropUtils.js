@@ -1,3 +1,4 @@
+import { fabric } from 'fabric';
 import {
   showNoObjectSelectedWarning,
   showSingleImageWarning,

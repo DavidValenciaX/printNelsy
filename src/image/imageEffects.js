@@ -1,3 +1,4 @@
+import { fabric } from 'fabric';
 import { showNoObjectSelectedWarning } from "../utils/uiUtils.js";
 
 export function convertToGrayscale(canvas) {

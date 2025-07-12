@@ -2,7 +2,7 @@
  * Punto de entrada principal de la aplicación
  * Este archivo ahora es mucho más limpio y solo se encarga de inicializar la aplicación
  */
-import '../utils/globals.js'; // Importar librerías globales
+import Swal from 'sweetalert2';
 import { initializeApp, getAppInstance } from './app.js';
 
 // Inicializar la aplicación cuando el DOM esté listo
@@ -27,20 +27,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.error('💥 Fatal error during application initialization:', error);
     
-    // Mostrar error al usuario si SweetAlert está disponible
-    if (typeof Swal !== 'undefined') {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error de Inicialización',
-        text: 'No se pudo inicializar la aplicación. Por favor, recarga la página.',
-        confirmButtonText: 'Recargar',
-        allowOutsideClick: false
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.reload();
-        }
-      });
-    }
+    // Mostrar error al usuario
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de Inicialización',
+      text: 'No se pudo inicializar la aplicación. Por favor, recarga la página.',
+      confirmButtonText: 'Recargar',
+      allowOutsideClick: false
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.reload();
+      }
+    });
   }
 });
 

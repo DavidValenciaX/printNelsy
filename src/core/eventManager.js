@@ -1,4 +1,5 @@
 import { initializeKeyboardInteractions } from '../interactions/keyboardInteractions.js';
+import Swal from 'sweetalert2';
 
 /**
  * Gestiona todos los event listeners de la aplicación

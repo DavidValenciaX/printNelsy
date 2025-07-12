@@ -1,5 +1,7 @@
+import { fabric } from 'fabric';
 import { constrainObjectToMargin } from './../canvas/constraintUtils.js';
 import { showNoObjectSelectedWarning } from '../utils/uiUtils.js';
+import Swal from 'sweetalert2';
 
 export function resetActiveImage(canvas, marginRect, originalImages) {
   const activeObjects = canvas.getActiveObjects();

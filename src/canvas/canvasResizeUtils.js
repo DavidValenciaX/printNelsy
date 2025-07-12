@@ -1,3 +1,5 @@
+import { fabric } from 'fabric';
+import Swal from 'sweetalert2';
 import { arrangeImages } from '../transform/arrangeUtils.js';
 import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from '../layout/collageUtils.js';
 import { constrainObjectToMargin } from './constraintUtils.js';
