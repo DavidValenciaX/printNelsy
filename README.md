@@ -52,7 +52,8 @@ imprimir_imagenes_fabric/
 │   ├── 📁 events/              # Eventos específicas del canvas
 │   │   ├── movingEvents.js         # Eventos de movimiento
 │   │   ├── scalingEvents.js        # Eventos de escalado
-│   │   └── rotatingEvents.js       # Eventos de rotación
+│   │   ├── rotatingEvents.js       # Eventos de rotación
+│   │   └── skewingEvents.js        # Eventos de skewing/inclinación
 │   │
 │   ├── 📁 interactions/        # Interacciones del usuario
 │   │   ├── clipboardUtils.js       # Copiar/pegar

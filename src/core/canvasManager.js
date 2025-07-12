@@ -10,6 +10,7 @@ import {
 import { setupMovingEvents } from '../events/movingEvents.js';
 import { setupScalingEvents } from '../events/scalingEvents.js';
 import { setupRotatingEvents } from '../events/rotatingEvents.js';
+import { setupSkewingEvents } from '../events/skewingEvents.js';
 
 /**
  * Gestiona el canvas y sus configuraciones
@@ -48,6 +49,7 @@ export class CanvasManager {
     setupMovingEvents(this.canvas, this.marginRect);
     setupScalingEvents(this.canvas, this.marginRect);
     setupRotatingEvents(this.canvas, this.marginRect, setArrangementStatus);
+    setupSkewingEvents(this.canvas, this.marginRect);
   }
 
   getCanvas() {
