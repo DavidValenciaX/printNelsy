@@ -74,22 +74,16 @@ export function initializeGridControls(canvas, domManager) {
                            (imageState.lastLayout === 'rows' || imageState.lastLayout === 'cols');
   
   if (isGridArrangement) {
-    // Si tenemos dimensiones personalizadas, usarlas; sino, calcular las actuales
-    let rows, cols;
-    if (currentCustomRows !== null && currentCustomCols !== null) {
-      rows = currentCustomRows;
-      cols = currentCustomCols;
-    } else {
+    // Si no tenemos dimensiones personalizadas, calcular las actuales y guardarlas
+    if (currentCustomRows === null && currentCustomCols === null) {
       const dimensions = getCurrentGridDimensions(images, imageState.lastLayout);
-      rows = dimensions.rows;
-      cols = dimensions.cols;
-      // Guardar las dimensiones actuales como personalizadas
-      currentCustomRows = rows;
-      currentCustomCols = cols;
+      currentCustomRows = dimensions.rows;
+      currentCustomCols = dimensions.cols;
     }
     
-    updateGridDisplays(rows, cols, domManager);
-    updateGridControlButtons(rows, cols, images.length, domManager);
+    // Usar las dimensiones personalizadas (ya sean las que teníamos o las que acabamos de calcular)
+    updateGridDisplays(currentCustomRows, currentCustomCols, domManager);
+    updateGridControlButtons(currentCustomRows, currentCustomCols, images.length, domManager);
   }
   
   toggleGridControlsVisibility(domManager);

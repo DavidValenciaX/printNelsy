@@ -8,7 +8,7 @@ import {
   imageState,
   setArrangementStatus
 } from '../image/imageUploadUtils.js';
-import { resetCustomGridDimensions } from '../layout/gridControls.js';
+import { getCustomGridDimensions } from '../layout/gridControls.js';
 
 // Constantes de configuración del papel
 const dpi = 300;
@@ -36,9 +36,20 @@ export function getIsVertical() {
 function reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, marginRect, marginWidth) {
   if (images.length === 0) return;
 
+  // Obtener dimensiones personalizadas de los grid controls si están disponibles
+  const customDimensions = getCustomGridDimensions();
+  
   const arrangementStrategies = {
     "grid": () => {
-      setArrangementStatus(arrangeImages(canvas, images, currentLayout, marginWidth, currentDirection));
+      setArrangementStatus(arrangeImages(
+        canvas, 
+        images, 
+        currentLayout, 
+        marginWidth, 
+        currentDirection,
+        customDimensions.rows,
+        customDimensions.cols
+      ));
     },
     "columns-collage": () => {
       images.forEach((img) => canvas.add(img));
@@ -72,9 +83,6 @@ export function resizeCanvas(size, canvas, marginRect, orientation = isVertical)
   const images = canvas.getObjects().filter((obj) => obj.type === "image");
   const currentLayout = imageState.lastLayout || (images.length <= 2 ? "cols" : "rows");
   const currentDirection = "forward";
-
-  // Reset custom grid dimensions when resizing canvas
-  resetCustomGridDimensions();
 
   // Remove all images from canvas
   images.forEach((img) => canvas.remove(img));
