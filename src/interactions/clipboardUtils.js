@@ -120,16 +120,15 @@ export async function pasteSelection(canvas, marginRect) {
         const systemTimestamp = systemClipboardInfo.estimatedTimestamp;
         const currentTime = Date.now();
         
-        // Priorizar siempre el contenido interno si es reciente (menos de 10 segundos)
         const timeSinceInternalCopy = currentTime - internalTimestamp;
         
-        if (timeSinceInternalCopy < 10000) {
-          console.log('Priorizando copia interna reciente (menos de 10 segundos)');
-          useSystemClipboard = false;
-          // Solo usar sistema si es mucho más nuevo
-        } else if (systemTimestamp > internalTimestamp + 2000) {
+        // Solo usar sistema si es mucho más nuevo que una copia interna "antigua"
+        if (timeSinceInternalCopy >= 10000 && systemTimestamp > internalTimestamp + 2000) {
           useSystemClipboard = true;
           console.log('Contenido del sistema es mucho más reciente que copia interna antigua');
+        } else if (timeSinceInternalCopy < 10000) {
+          // En otros casos, se prioriza el portapapeles interno. Log para depuración.
+          console.log('Priorizando copia interna reciente (menos de 10 segundos)');
         } else {
           console.log('Manteniendo contenido interno por ser similar en tiempo');
         }
@@ -204,7 +203,7 @@ export async function pasteSelection(canvas, marginRect) {
 
 /**
  * Verifica el contenido del portapapeles del sistema y estima si es más reciente
- * @returns {Object} Información sobre el contenido del sistema
+ * @returns {Promise<Object>} Información sobre el contenido del sistema
  */
 async function checkSystemClipboardContent() {
   try {
@@ -247,9 +246,7 @@ async function checkSystemClipboardContent() {
             
             // Si es el mismo contenido, verificar si ha pasado tiempo significativo
             // desde la última verificación o si detectamos un evento de copiado reciente
-            const timeSinceLastCheck = currentTime - lastClipboardAccess;
             const timeSinceLastClipboard = currentTime - lastSystemClipboardCheck.timestamp;
-            const timeSinceLastCopyEvent = currentTime - lastSystemCopyEvent;
             
             // Solo considerar como nueva acción de copiado si ha pasado mucho tiempo
             // y no hay copias internas recientes (ser muy conservador)
