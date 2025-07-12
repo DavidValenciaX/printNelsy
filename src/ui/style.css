@@ -263,7 +263,7 @@ body.drag-over {
 .grid-control-row label {
   font-size: 0.875rem;
   color: #333;
-  min-width: 4rem;
+  min-width: 5rem;
   font-weight: 500;
 }
 
