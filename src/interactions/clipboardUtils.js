@@ -96,45 +96,94 @@ export async function copySelection(canvas) {
 }
 
 /**
+ * Determina qué portapapeles usar basado en contenido y timestamps
+ * @param {Object|null} clipboardData - Datos del portapapeles interno
+ * @param {Object} systemClipboardInfo - Información del portapapeles del sistema
+ * @returns {string} 'system', 'internal', o 'none'
+ */
+function determineClipboardSource(clipboardData, systemClipboardInfo) {
+  const hasInternalClipboard = clipboardData?.objects?.length > 0;
+  const hasSystemClipboard = systemClipboardInfo.hasContent;
+  
+  if (!hasSystemClipboard && !hasInternalClipboard) {
+    return 'none';
+  }
+  
+  if (hasSystemClipboard && !hasInternalClipboard) {
+    return 'system';
+  }
+  
+  if (!hasSystemClipboard && hasInternalClipboard) {
+    return 'internal';
+  }
+  
+  // Ambos tienen contenido, decidir por timestamp
+  const internalTimestamp = clipboardData.timestamp;
+  const systemTimestamp = systemClipboardInfo.estimatedTimestamp;
+  const timeSinceInternalCopy = Date.now() - internalTimestamp;
+  
+  // Usar sistema solo si es mucho más nuevo que copia interna "antigua"
+  if (timeSinceInternalCopy >= 10000 && systemTimestamp > internalTimestamp + 2000) {
+    return 'system';
+  }
+  
+  return 'internal';
+}
+
+/**
+ * Crea y posiciona objetos pegados en el canvas
+ * @param {fabric.Canvas} canvas - Instancia del canvas
+ * @param {Array} objectsData - Datos de los objetos a crear
+ * @param {fabric.Rect} marginRect - Rectángulo de márgenes
+ * @returns {Promise<Array>} Array de objetos creados
+ */
+async function createAndPositionObjects(canvas, objectsData, marginRect) {
+  const pastedObjects = [];
+  
+  for (const objData of objectsData) {
+    const clonedObject = await createObjectFromData(objData);
+    if (clonedObject) {
+      clonedObject.set({
+        left: clonedObject.left + 20,
+        top: clonedObject.top + 20
+      });
+      
+      constrainObjectToMargin(clonedObject, marginRect);
+      canvas.add(clonedObject);
+      pastedObjects.push(clonedObject);
+    }
+  }
+  
+  return pastedObjects;
+}
+
+/**
+ * Selecciona los objetos pegados en el canvas
+ * @param {fabric.Canvas} canvas - Instancia del canvas
+ * @param {Array} pastedObjects - Objetos a seleccionar
+ */
+function selectPastedObjects(canvas, pastedObjects) {
+  if (pastedObjects.length > 1) {
+    const selection = new fabric.ActiveSelection(pastedObjects, {
+      canvas: canvas,
+    });
+    canvas.setActiveObject(selection);
+  } else if (pastedObjects.length === 1) {
+    canvas.setActiveObject(pastedObjects[0]);
+  }
+}
+
+/**
  * Pega los objetos del portapapeles interno al canvas
  * @param {fabric.Canvas} canvas - Instancia del canvas de fabric.js
  * @param {fabric.Rect} marginRect - Rectángulo de márgenes para constrainer
  */
 export async function pasteSelection(canvas, marginRect) {
   try {
-    // Verificar si hay contenido en ambos portapapeles
-    const hasInternalClipboard = clipboardData?.objects?.length > 0;
     const systemClipboardInfo = await checkSystemClipboardContent();
+    const clipboardSource = determineClipboardSource(clipboardData, systemClipboardInfo);
     
-    // Determinar cuál usar basado en cronología y preferencias
-    let useSystemClipboard = false;
-    
-    if (systemClipboardInfo.hasContent) {
-      if (!hasInternalClipboard) {
-        // Solo hay contenido en el sistema
-        useSystemClipboard = true;
-        console.log('Solo hay contenido en portapapeles del sistema');
-      } else {
-        // Hay contenido en ambos, comparar timestamps con lógica mejorada
-        const internalTimestamp = clipboardData.timestamp;
-        const systemTimestamp = systemClipboardInfo.estimatedTimestamp;
-        const currentTime = Date.now();
-        
-        const timeSinceInternalCopy = currentTime - internalTimestamp;
-        
-        // Solo usar sistema si es mucho más nuevo que una copia interna "antigua"
-        if (timeSinceInternalCopy >= 10000 && systemTimestamp > internalTimestamp + 2000) {
-          useSystemClipboard = true;
-          console.log('Contenido del sistema es mucho más reciente que copia interna antigua');
-        } else if (timeSinceInternalCopy < 10000) {
-          // En otros casos, se prioriza el portapapeles interno. Log para depuración.
-          console.log('Priorizando copia interna reciente (menos de 10 segundos)');
-        } else {
-          console.log('Manteniendo contenido interno por ser similar en tiempo');
-        }
-      }
-    } else if (!hasInternalClipboard) {
-      // No hay contenido en ninguno
+    if (clipboardSource === 'none') {
       if (typeof Swal !== 'undefined') {
         Swal.fire({
           text: "No hay nada en el portapapeles para pegar.",
@@ -144,50 +193,26 @@ export async function pasteSelection(canvas, marginRect) {
       return;
     }
     
-    // Pegar según la decisión
-    if (useSystemClipboard) {
+    // Intentar pegar desde sistema si es la fuente elegida
+    if (clipboardSource === 'system') {
       const systemPaste = await pasteFromSystemClipboard(canvas, marginRect);
       if (systemPaste) {
         return;
       }
+      
       // Si falla el sistema pero hay interno, usar interno como fallback
-      if (!hasInternalClipboard) {
+      if (!clipboardData?.objects?.length) {
         return;
       }
       console.log('Falló pegado del sistema, usando portapapeles interno como fallback');
     }
 
+    // Pegar desde portapapeles interno
     canvas.discardActiveObject();
-
-    // Crear todos los objetos pegados
-    const pastedObjects = [];
-    
-    for (const objData of clipboardData.objects) {
-      const clonedObject = await createObjectFromData(objData);
-      if (clonedObject) {
-        // Offset para evitar solapamiento
-        clonedObject.set({
-          left: clonedObject.left + 20,
-          top: clonedObject.top + 20
-        });
-        
-        constrainObjectToMargin(clonedObject, marginRect);
-        canvas.add(clonedObject);
-        pastedObjects.push(clonedObject);
-      }
-    }
-    
-    // Seleccionar todos los objetos pegados
-    if (pastedObjects.length > 1) {
-      const selection = new fabric.ActiveSelection(pastedObjects, {
-        canvas: canvas,
-      });
-      canvas.setActiveObject(selection);
-    } else if (pastedObjects.length === 1) {
-      canvas.setActiveObject(pastedObjects[0]);
-    }
-
+    const pastedObjects = await createAndPositionObjects(canvas, clipboardData.objects, marginRect);
+    selectPastedObjects(canvas, pastedObjects);
     canvas.renderAll();
+    
     console.log(`${pastedObjects.length} objetos pegados desde el portapapeles interno`);
 
   } catch (error) {
