@@ -1,4 +1,8 @@
-import { jsPDF } from '../utils/globals.js';
+import { jsPDF } from 'jspdf';
+
+const PRINT_RESOLUTION_DPI = 300;
+const SCREEN_DPI = 96;
+const SCALE_FACTOR = PRINT_RESOLUTION_DPI / SCREEN_DPI;
 
 export function downloadAsPDF(canvas, marginRect) {
   // Store original opacity
@@ -11,7 +15,7 @@ export function downloadAsPDF(canvas, marginRect) {
   const dataUrl = canvas.toDataURL({
     format: "png",
     quality: 1,
-    multiplier: 1 / canvas.getZoom(),
+    multiplier: SCALE_FACTOR / canvas.getZoom(),
   });
 
     const orientation = canvas.width > canvas.height ? 'l' : 'p';

@@ -209,7 +209,7 @@ npx serve dist
 
 ### Uso
 
-1. Abrir `http://localhost:5173` (o el puerto que indique Vite) en el navegador.
+1. Abrir `http://localhost:3000` (o el puerto que indique Vite) en el navegador.
 2. Cargar imágenes usando el botón "Cargar imágenes" o arrastrándolas a la ventana.
 3. Manipular las imágenes usando las herramientas de la barra lateral.
 4. Configurar el tamaño de papel y orientación según necesites.
