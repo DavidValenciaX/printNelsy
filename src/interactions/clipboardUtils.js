@@ -336,7 +336,7 @@ async function pasteFromSystemClipboard(canvas, marginRect) {
           fabric.Image.fromURL(base64Data, function(img) {
             // Generar un ID único para la imagen pegada
             img.set({
-              id: 'pasted_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+              id: 'pasted_' + Date.now() + '_' + Math.random().toString(36).slice(2, 11),
               left: canvas.width / 2,
               top: canvas.height / 2,
               originX: 'center',
@@ -409,7 +409,7 @@ async function createObjectFromData(objData) {
         fabric.Image.fromURL(imageUrl, function(clonedObj) {
           if (clonedObj) {
             // Generar nuevo ID para evitar duplicados
-            const newId = (objData.id || 'unknown') + '_copy_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            const newId = (objData.id || 'unknown') + '_copy_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
             
             // Aplicar solo las propiedades seguras y necesarias
             const safeProps = {
@@ -450,7 +450,7 @@ async function createObjectFromData(objData) {
           const clonedObj = clonedObjects[0];
           if (clonedObj) {
             // Generar nuevo ID para evitar duplicados
-            const newId = (objData.id || 'unknown') + '_copy_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            const newId = (objData.id || 'unknown') + '_copy_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
             clonedObj.set({ id: newId });
             resolve(clonedObj);
           } else {
