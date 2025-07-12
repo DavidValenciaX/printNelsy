@@ -27,15 +27,12 @@ export function selectArrangeImageLayout(canvas, marginWidth, Swal) {
     "rows-forward": { layout: "rows", direction: "reverse" },
     "rows-reverse": { layout: "cols", direction: "forward" },
     "cols-forward": { layout: "cols", direction: "reverse" },
-    "cols-reverse": { layout: "single-column", direction: "forward" },
-    "single-column-forward": { layout: "single-column", direction: "reverse" },
-    "single-column-reverse": { layout: "single-row", direction: "forward" },
-    "single-row-forward": { layout: "single-row", direction: "reverse" },
-    "single-row-reverse": { layout: "rows", direction: "forward" }
+    "cols-reverse": { layout: "rows", direction: "forward" },
   };
 
   const currentState = `${imageState.lastLayout}-${imageState.lastDirection}`;
-  const nextState = stateTransitions[currentState] || { layout: "rows", direction: "forward" };
+  const nextState =
+    stateTransitions[currentState] || { layout: "rows", direction: "forward" };
 
   // Reset custom grid dimensions when changing layout
   resetCustomGridDimensions();

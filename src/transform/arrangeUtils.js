@@ -12,14 +12,7 @@ export function arrangeImages(canvas, images, orientation, marginWidth, order = 
   }
 
   let cols, rows;
-  // Add single-column and single-row layout options
-  if (orientation === "single-column") {
-    cols = 1;
-    rows = count;
-  } else if (orientation === "single-row") {
-    cols = count;
-    rows = 1;
-  } else if (orientation === "rows") {
+  if (orientation === "rows") {
     if (customRows !== null && customCols !== null) {
       rows = customRows;
       cols = customCols;
@@ -38,15 +31,9 @@ export function arrangeImages(canvas, images, orientation, marginWidth, order = 
   }
 
   // Adjust cell dimensions based on orientation
-  const cellWidth =
-    orientation === "single-row"
-      ? (canvas.width - margin * 2) / count
-      : (canvas.width - margin * 2) / cols;
+  const cellWidth = (canvas.width - margin * 2) / cols;
 
-  const cellHeight =
-    orientation === "single-column"
-      ? (canvas.height - margin * 2) / count
-      : (canvas.height - margin * 2) / rows;
+  const cellHeight = (canvas.height - margin * 2) / rows;
 
   sortedImages.forEach((img, index) => {
     // Determine row and column without altering permanent id
@@ -57,12 +44,6 @@ export function arrangeImages(canvas, images, orientation, marginWidth, order = 
     } else if (orientation === "cols") {
       col = Math.floor(index / rows);
       row = index % rows;
-    } else if (orientation === "single-column") {
-      col = 0;
-      row = index;
-    } else if (orientation === "single-row") {
-      col = index;
-      row = 0;
     }
 
     let realImageWidth = img.width * img.scaleX;
@@ -107,21 +88,15 @@ export function arrangeImages(canvas, images, orientation, marginWidth, order = 
 // Nueva función para obtener las dimensiones actuales del grid
 export function getCurrentGridDimensions(images, orientation) {
   const count = images.length;
-  
+
   let cols, rows;
-  if (orientation === "single-column") {
-    cols = 1;
-    rows = count;
-  } else if (orientation === "single-row") {
-    cols = count;
-    rows = 1;
-  } else if (orientation === "rows") {
+  if (orientation === "rows") {
     cols = Math.ceil(Math.sqrt(count));
     rows = Math.ceil(count / cols);
   } else if (orientation === "cols") {
     rows = Math.ceil(Math.sqrt(count));
     cols = Math.ceil(count / rows);
   }
-  
+
   return { rows, cols };
 } 
