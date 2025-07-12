@@ -56,7 +56,16 @@ export class DOMManager {
       columnsCollageButton: document.getElementById("columnsCollageButton"),
       rowsCollageButton: document.getElementById("rowsCollageButton"),
       collageButton: document.getElementById("collageButton"),
-      maintainAspectCheckbox: document.getElementById("maintainAspectCheckbox")
+      maintainAspectCheckbox: document.getElementById("maintainAspectCheckbox"),
+      
+      // Grid controls
+      gridControlsGroup: document.getElementById("gridControlsGroup"),
+      increaseRowsButton: document.getElementById("increaseRowsButton"),
+      decreaseRowsButton: document.getElementById("decreaseRowsButton"),
+      increaseColsButton: document.getElementById("increaseColsButton"),
+      decreaseColsButton: document.getElementById("decreaseColsButton"),
+      rowsDisplay: document.getElementById("rowsDisplay"),
+      colsDisplay: document.getElementById("colsDisplay")
     };
   }
 

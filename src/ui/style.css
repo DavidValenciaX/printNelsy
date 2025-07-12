@@ -248,3 +248,72 @@ body.drag-over {
 .orientation-button.active:hover {
   background-color: #45a049; /* Un poco más oscuro en hover */
 }
+
+/* Estilos para controles de grid */
+.grid-control-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: white;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.grid-control-row label {
+  font-size: 0.875rem;
+  color: #333;
+  min-width: 4rem;
+  font-weight: 500;
+}
+
+.grid-control-button {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.25rem;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 0.75rem;
+}
+
+.grid-control-button:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+.grid-control-button:active {
+  background-color: #495057;
+  transform: translateY(0);
+}
+
+.grid-control-button:focus {
+  outline: 2px solid #ff0;
+}
+
+.grid-control-button:disabled {
+  background-color: #dee2e6;
+  color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.grid-display {
+  min-width: 2rem;
+  text-align: center;
+  font-weight: 600;
+  color: #333;
+  background-color: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid #dee2e6;
+}
+
+#gridControlsGroup {
+  display: none; /* Oculto por defecto, se mostrará cuando sea grid */
+}

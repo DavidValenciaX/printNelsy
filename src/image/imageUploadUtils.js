@@ -1,5 +1,6 @@
 import { fabric } from 'fabric';
 import { arrangeImages } from '../transform/arrangeUtils.js';
+import { resetCustomGridDimensions } from '../layout/gridControls.js';
 
 // Variables exportadas para gestión de imágenes
 export const originalImages = {};
@@ -57,6 +58,9 @@ function _processFilesForCanvas(files, canvas, marginWidth, rotateCheckbox) {
         processedCount++;
 
         if (processedCount === numFilesToProcess) {
+          // Reset custom grid dimensions when loading new images
+          resetCustomGridDimensions();
+          
           // Primero, se organiza el layout de las imágenes
           if (numFilesToProcess <= 2) {
             imageState.arrangementStatus = arrangeImages(canvas, loadedImages, "cols", marginWidth, "forward");

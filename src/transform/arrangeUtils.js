@@ -1,6 +1,6 @@
 import { roundToDecimals } from './../utils/mathUtils.js';
 
-export function arrangeImages(canvas, images, orientation, marginWidth, order = "forward") {
+export function arrangeImages(canvas, images, orientation, marginWidth, order = "forward", customRows = null, customCols = null) {
   const count = images.length;
   let marginAdjustment = count <= 2 ? 100 : 20;
   const margin = marginWidth + marginAdjustment;
@@ -20,11 +20,21 @@ export function arrangeImages(canvas, images, orientation, marginWidth, order = 
     cols = count;
     rows = 1;
   } else if (orientation === "rows") {
-    cols = Math.ceil(Math.sqrt(count));
-    rows = Math.ceil(count / cols);
+    if (customRows !== null && customCols !== null) {
+      rows = customRows;
+      cols = customCols;
+    } else {
+      cols = Math.ceil(Math.sqrt(count));
+      rows = Math.ceil(count / cols);
+    }
   } else if (orientation === "cols") {
-    rows = Math.ceil(Math.sqrt(count));
-    cols = Math.ceil(count / rows);
+    if (customRows !== null && customCols !== null) {
+      rows = customRows;
+      cols = customCols;
+    } else {
+      rows = Math.ceil(Math.sqrt(count));
+      cols = Math.ceil(count / rows);
+    }
   }
 
   // Adjust cell dimensions based on orientation
@@ -92,4 +102,26 @@ export function arrangeImages(canvas, images, orientation, marginWidth, order = 
 
   canvas.renderAll();
   return "grid"; // Return the arrangement status
+}
+
+// Nueva función para obtener las dimensiones actuales del grid
+export function getCurrentGridDimensions(images, orientation) {
+  const count = images.length;
+  
+  let cols, rows;
+  if (orientation === "single-column") {
+    cols = 1;
+    rows = count;
+  } else if (orientation === "single-row") {
+    cols = count;
+    rows = 1;
+  } else if (orientation === "rows") {
+    cols = Math.ceil(Math.sqrt(count));
+    rows = Math.ceil(count / cols);
+  } else if (orientation === "cols") {
+    rows = Math.ceil(Math.sqrt(count));
+    cols = Math.ceil(count / rows);
+  }
+  
+  return { rows, cols };
 } 

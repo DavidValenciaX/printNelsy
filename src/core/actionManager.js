@@ -36,6 +36,15 @@ import {
   setupClipboardEvents, 
   clearClipboard 
 } from '../interactions/clipboardUtils.js';
+import {
+  initializeGridControls,
+  increaseRows,
+  decreaseRows,
+  increaseCols,
+  decreaseCols,
+  resetCustomGridDimensions,
+  toggleGridControlsVisibility
+} from '../layout/gridControls.js';
 
 /**
  * Centraliza todas las acciones de la aplicación
@@ -104,6 +113,15 @@ export class ActionManager {
   pasteFromSystemOnly = pasteFromSystemOnly;
   setupClipboardEvents = setupClipboardEvents;
   clearClipboard = clearClipboard;
+
+  // Grid control actions
+  initializeGridControls = initializeGridControls;
+  increaseRows = increaseRows;
+  decreaseRows = decreaseRows;
+  increaseCols = increaseCols;
+  decreaseCols = decreaseCols;
+  resetCustomGridDimensions = resetCustomGridDimensions;
+  toggleGridControlsVisibility = toggleGridControlsVisibility;
 
   // Global window actions for zoom (backwards compatibility)
   exposeGlobalZoomActions() {

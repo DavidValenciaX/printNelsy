@@ -27,6 +27,10 @@ export function setupAccessibility() {
   const columnsCollageButton = document.getElementById("columnsCollageButton");
   const rowsCollageButton = document.getElementById("rowsCollageButton");
   const collageButton = document.getElementById("collageButton");
+  const increaseRowsButton = document.getElementById("increaseRowsButton");
+  const decreaseRowsButton = document.getElementById("decreaseRowsButton");
+  const increaseColsButton = document.getElementById("increaseColsButton");
+  const decreaseColsButton = document.getElementById("decreaseColsButton");
 
   // List all interactive elements
   const elements = [
@@ -55,7 +59,11 @@ export function setupAccessibility() {
     setSizeButton,
     columnsCollageButton,
     rowsCollageButton,
-    collageButton
+    collageButton,
+    increaseRowsButton,
+    decreaseRowsButton,
+    increaseColsButton,
+    decreaseColsButton
   ];
 
   elements.forEach((el) => {

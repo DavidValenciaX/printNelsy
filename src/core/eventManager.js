@@ -23,14 +23,19 @@ export class EventManager {
     this.initializeClipboardEvents();
     this.initializeCropEvents();
     this.initializeCollageEvents();
+    this.initializeGridControlEvents();
     this.initializeGlobalEvents();
     this.initializeKeyboardEvents();
   }
 
   initializeFileEvents() {
-    this.addEventBinding('imageLoader', 'change', (e) => 
-      this.actions.handleImageUpload(e, this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom.get('rotateCheckbox'))
-    );
+    this.addEventBinding('imageLoader', 'change', (e) => {
+      this.actions.handleImageUpload(e, this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom.get('rotateCheckbox'));
+      // Inicializar controles de grid después de cargar imágenes
+      setTimeout(() => {
+        this.actions.initializeGridControls(this.canvasManager.getCanvas(), this.dom);
+      }, 100);
+    });
     
     this.addEventBinding('downloadPdfButton', 'click', () =>
       this.actions.downloadAsPDF(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect())
@@ -147,9 +152,10 @@ export class EventManager {
       this.actions.centerHorizontally(this.canvasManager.getCanvas())
     );
     
-    this.addEventBinding('arrangeButton', 'click', () => 
-      this.actions.selectArrangeImageLayout(this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), Swal)
-    );
+    this.addEventBinding('arrangeButton', 'click', () => {
+      this.actions.selectArrangeImageLayout(this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), Swal);
+      this.actions.initializeGridControls(this.canvasManager.getCanvas(), this.dom);
+    });
   }
 
   initializeSizeEvents() {
@@ -231,16 +237,37 @@ export class EventManager {
     this.addEventBinding('columnsCollageButton', 'click', () => {
       const newStatus = this.actions.createMasonryColumnsCollage(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
       if (newStatus) this.actions.setArrangementStatus(newStatus);
+      this.actions.toggleGridControlsVisibility(this.dom);
     });
 
     this.addEventBinding('rowsCollageButton', 'click', () => {
       const newStatus = this.actions.createMasonryRowsCollage(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
       if (newStatus) this.actions.setArrangementStatus(newStatus);
+      this.actions.toggleGridControlsVisibility(this.dom);
     });
 
     this.addEventBinding('collageButton', 'click', () => {
       const newStatus = this.actions.collageArrange(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
       if (newStatus) this.actions.setArrangementStatus(newStatus);
+      this.actions.toggleGridControlsVisibility(this.dom);
+    });
+  }
+
+  initializeGridControlEvents() {
+    this.addEventBinding('increaseRowsButton', 'click', () => {
+      this.actions.increaseRows(this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom);
+    });
+
+    this.addEventBinding('decreaseRowsButton', 'click', () => {
+      this.actions.decreaseRows(this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom);
+    });
+
+    this.addEventBinding('increaseColsButton', 'click', () => {
+      this.actions.increaseCols(this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom);
+    });
+
+    this.addEventBinding('decreaseColsButton', 'click', () => {
+      this.actions.decreaseCols(this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom);
     });
   }
 
@@ -261,9 +288,13 @@ export class EventManager {
       document.body.classList.remove('drag-over');
     });
 
-    document.body.addEventListener('drop', (e) => 
-      this.actions.handleImageDrop(e, this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom.get('rotateCheckbox'))
-    );
+    document.body.addEventListener('drop', (e) => {
+      this.actions.handleImageDrop(e, this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom.get('rotateCheckbox'));
+      // Inicializar controles de grid después de hacer drop de imágenes
+      setTimeout(() => {
+        this.actions.initializeGridControls(this.canvasManager.getCanvas(), this.dom);
+      }, 100);
+    });
 
     // Keyboard events
     document.addEventListener("keydown", (event) => {

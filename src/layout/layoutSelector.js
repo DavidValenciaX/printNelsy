@@ -5,6 +5,7 @@ import {
   setLastLayout,
   setLastDirection
 } from '../image/imageUploadUtils.js';
+import { resetCustomGridDimensions } from './gridControls.js';
 
 export function selectArrangeImageLayout(canvas, marginWidth, Swal) {
   // 1. Get all current images
@@ -35,6 +36,9 @@ export function selectArrangeImageLayout(canvas, marginWidth, Swal) {
 
   const currentState = `${imageState.lastLayout}-${imageState.lastDirection}`;
   const nextState = stateTransitions[currentState] || { layout: "rows", direction: "forward" };
+
+  // Reset custom grid dimensions when changing layout
+  resetCustomGridDimensions();
 
   setArrangementStatus(arrangeImages(canvas, images, nextState.layout, marginWidth, nextState.direction));
   setLastLayout(nextState.layout);

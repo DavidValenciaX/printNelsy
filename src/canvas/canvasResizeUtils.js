@@ -8,6 +8,7 @@ import {
   imageState,
   setArrangementStatus
 } from '../image/imageUploadUtils.js';
+import { resetCustomGridDimensions } from '../layout/gridControls.js';
 
 // Constantes de configuración del papel
 const dpi = 300;
@@ -71,6 +72,9 @@ export function resizeCanvas(size, canvas, marginRect, orientation = isVertical)
   const images = canvas.getObjects().filter((obj) => obj.type === "image");
   const currentLayout = imageState.lastLayout || (images.length <= 2 ? "cols" : "rows");
   const currentDirection = "forward";
+
+  // Reset custom grid dimensions when resizing canvas
+  resetCustomGridDimensions();
 
   // Remove all images from canvas
   images.forEach((img) => canvas.remove(img));
