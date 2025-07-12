@@ -226,6 +226,117 @@ export async function pasteSelection(canvas, marginRect) {
   }
 }
 
+// Constants for clipboard timeouts
+const CLIPBOARD_TIMEOUTS = {
+  INTERNAL_COPY_THRESHOLD: 5000,
+  CLIPBOARD_RECHECK_THRESHOLD: 3000
+};
+
+/**
+ * Creates a standardized clipboard result object
+ * @param {boolean} hasContent - Whether clipboard has content
+ * @param {number} timestamp - Timestamp of the content
+ * @returns {Object} Clipboard result object
+ */
+function createClipboardResult(hasContent, timestamp = 0) {
+  return { hasContent, estimatedTimestamp: timestamp };
+}
+
+/**
+ * Searches for image content in system clipboard
+ * @returns {Promise<Object>} Object with found status and clipboard item info
+ */
+async function findImageInClipboard() {
+  const clipboardItems = await navigator.clipboard.read();
+  
+  for (const clipboardItem of clipboardItems) {
+    for (const type of clipboardItem.types) {
+      if (type.startsWith('image/')) {
+        return { found: true, item: clipboardItem, type };
+      }
+    }
+  }
+  
+  return { found: false };
+}
+
+/**
+ * Handles first-time clipboard content detection
+ * @param {number} currentTime - Current timestamp
+ * @returns {Object} Clipboard result for first-time detection
+ */
+function handleFirstTimeDetection(currentTime) {
+  lastSystemClipboardCheck = {
+    hasContent: true,
+    timestamp: currentTime
+  };
+  return createClipboardResult(true, currentTime);
+}
+
+/**
+ * Generates a content hash for clipboard content
+ * @param {Blob} blob - Blob content from clipboard
+ * @returns {string} Content hash
+ */
+function generateContentHash(blob) {
+  return `${blob.size}_${blob.type}_${blob.lastModified}`;
+}
+
+/**
+ * Determines if timestamp should be updated based on time thresholds
+ * @param {number} timeSinceLastClipboard - Time since last clipboard check
+ * @param {number} timeSinceInternalCopy - Time since last internal copy
+ * @returns {boolean} Whether to update timestamp
+ */
+function shouldUpdateTimestamp(timeSinceLastClipboard, timeSinceInternalCopy) {
+  return timeSinceInternalCopy > CLIPBOARD_TIMEOUTS.INTERNAL_COPY_THRESHOLD && 
+         timeSinceLastClipboard > CLIPBOARD_TIMEOUTS.CLIPBOARD_RECHECK_THRESHOLD;
+}
+
+/**
+ * Processes clipboard content and determines if it's new
+ * @param {ClipboardItem} clipboardItem - Clipboard item to process
+ * @param {string} type - MIME type of the content
+ * @param {number} currentTime - Current timestamp
+ * @returns {Promise<Object>} Clipboard result after processing
+ */
+async function processClipboardContent(clipboardItem, type, currentTime) {
+  try {
+    const blob = await clipboardItem.getType(type);
+    const contentHash = generateContentHash(blob);
+    
+    // Check if content changed
+    if (lastSystemClipboardCheck.contentHash !== contentHash) {
+      lastSystemClipboardCheck = {
+        hasContent: true,
+        timestamp: currentTime,
+        contentHash: contentHash
+      };
+      return createClipboardResult(true, currentTime);
+    }
+    
+    // Check if enough time has passed to consider it new
+    const timeSinceLastClipboard = currentTime - lastSystemClipboardCheck.timestamp;
+    const timeSinceInternalCopy = currentTime - lastInternalCopy;
+    
+    if (shouldUpdateTimestamp(timeSinceLastClipboard, timeSinceInternalCopy)) {
+      console.log('Detectando posible recopiado del mismo contenido (sin actividad interna reciente)');
+      lastSystemClipboardCheck = {
+        hasContent: true,
+        timestamp: currentTime,
+        contentHash: contentHash
+      };
+      return createClipboardResult(true, currentTime);
+    }
+    
+    return createClipboardResult(true, lastSystemClipboardCheck.timestamp);
+    
+  } catch (error) {
+    console.error('Error leyendo el contenido del portapapeles:', error);
+    return createClipboardResult(true, currentTime);
+  }
+}
+
 /**
  * Verifica el contenido del portapapeles del sistema y estima si es más reciente
  * @returns {Promise<Object>} Información sobre el contenido del sistema
@@ -233,85 +344,28 @@ export async function pasteSelection(canvas, marginRect) {
 async function checkSystemClipboardContent() {
   try {
     if (!navigator.clipboard?.read) {
-      return { hasContent: false, estimatedTimestamp: 0 };
+      return createClipboardResult(false);
     }
 
-    const clipboardItems = await navigator.clipboard.read();
+    const imageSearch = await findImageInClipboard();
     
-    for (const clipboardItem of clipboardItems) {
-      for (const type of clipboardItem.types) {
-        if (type.startsWith('image/')) {
-          // Hay una imagen en el portapapeles del sistema
-          const currentTime = Date.now();
-          
-          if (!lastSystemClipboardCheck) {
-            // Primera vez que detectamos contenido, asumir que es reciente
-            lastSystemClipboardCheck = {
-              hasContent: true,
-              timestamp: currentTime
-            };
-            return { hasContent: true, estimatedTimestamp: currentTime };
-          }
-          
-          // Verificar si el contenido cambió o si ha pasado suficiente tiempo
-          // para considerar que es una nueva acción de copiado
-          try {
-            const blob = await clipboardItem.getType(type);
-            const contentHash = blob.size + '_' + blob.type + '_' + blob.lastModified;
-            
-            // Si el contenido es diferente, definitivamente es nuevo
-            if (lastSystemClipboardCheck.contentHash !== contentHash) {
-              lastSystemClipboardCheck = {
-                hasContent: true,
-                timestamp: currentTime,
-                contentHash: contentHash
-              };
-              return { hasContent: true, estimatedTimestamp: currentTime };
-            }
-            
-            // Si es el mismo contenido, verificar si ha pasado tiempo significativo
-            // desde la última verificación o si detectamos un evento de copiado reciente
-            const timeSinceLastClipboard = currentTime - lastSystemClipboardCheck.timestamp;
-            
-            // Solo considerar como nueva acción de copiado si ha pasado mucho tiempo
-            // y no hay copias internas recientes (ser muy conservador)
-            const timeSinceInternalCopy = currentTime - lastInternalCopy;
-            
-            // Solo actualizar timestamp si no hay copias internas recientes (más de 5 segundos)
-            // y ha pasado tiempo suficiente desde la última detección
-            if (timeSinceInternalCopy > 5000 && timeSinceLastClipboard > 3000) {
-              console.log('Detectando posible recopiado del mismo contenido (sin actividad interna reciente)');
-              lastSystemClipboardCheck = {
-                hasContent: true,
-                timestamp: currentTime,
-                contentHash: contentHash
-              };
-              return { hasContent: true, estimatedTimestamp: currentTime };
-            }
-            
-            // Mismo contenido y poco tiempo, usar timestamp anterior
-            return { 
-              hasContent: true, 
-              estimatedTimestamp: lastSystemClipboardCheck.timestamp 
-            };
-          } catch (error) {
-            console.error('Error leyendo el contenido del portapapeles:', error);
-            // Si no podemos leer el contenido, asumir que hay contenido reciente
-            return { hasContent: true, estimatedTimestamp: currentTime };
-          }
-        }
-      }
+    if (!imageSearch.found) {
+      lastSystemClipboardCheck = { hasContent: false, timestamp: Date.now() };
+      return createClipboardResult(false);
+    }
+
+    const currentTime = Date.now();
+    
+    if (!lastSystemClipboardCheck) {
+      return handleFirstTimeDetection(currentTime);
     }
     
-    // No hay imágenes en el portapapeles del sistema
-    lastSystemClipboardCheck = { hasContent: false, timestamp: Date.now() };
-    return { hasContent: false, estimatedTimestamp: 0 };
+    return await processClipboardContent(imageSearch.item, imageSearch.type, currentTime);
     
   } catch (error) {
     console.log('No se pudo verificar el portapapeles del sistema:', error);
-    return { hasContent: false, estimatedTimestamp: 0 };
+    return createClipboardResult(false);
   } finally {
-    // Actualizar el timestamp de acceso
     lastClipboardAccess = Date.now();
   }
 }
