@@ -1,6 +1,36 @@
 import { roundToDecimals } from './../utils/mathUtils.js';
 
-export function arrangeImages(canvas, images, orientation, marginWidth, order = "forward", customRows = null, customCols = null) {
+export function calculateGridDimensions(
+  count,
+  orientation,
+  customRows = null,
+  customCols = null
+) {
+  if (customRows !== null && customCols !== null) {
+    return { rows: customRows, cols: customCols };
+  }
+
+  let cols, rows;
+  if (orientation === "rows") {
+    cols = Math.ceil(Math.sqrt(count));
+    rows = Math.ceil(count / cols);
+  } else if (orientation === "cols") {
+    rows = Math.ceil(Math.sqrt(count));
+    cols = Math.ceil(count / rows);
+  }
+
+  return { rows, cols };
+}
+
+export function arrangeImages(
+  canvas,
+  images,
+  orientation,
+  marginWidth,
+  order = "forward",
+  customRows = null,
+  customCols = null
+) {
   const count = images.length;
   let marginAdjustment = count <= 2 ? 100 : 20;
   const margin = marginWidth + marginAdjustment;
@@ -11,24 +41,12 @@ export function arrangeImages(canvas, images, orientation, marginWidth, order = 
     sortedImages.reverse();
   }
 
-  let cols, rows;
-  if (orientation === "rows") {
-    if (customRows !== null && customCols !== null) {
-      rows = customRows;
-      cols = customCols;
-    } else {
-      cols = Math.ceil(Math.sqrt(count));
-      rows = Math.ceil(count / cols);
-    }
-  } else if (orientation === "cols") {
-    if (customRows !== null && customCols !== null) {
-      rows = customRows;
-      cols = customCols;
-    } else {
-      rows = Math.ceil(Math.sqrt(count));
-      cols = Math.ceil(count / rows);
-    }
-  }
+  const { rows, cols } = calculateGridDimensions(
+    count,
+    orientation,
+    customRows,
+    customCols
+  );
 
   // Adjust cell dimensions based on orientation
   const cellWidth = (canvas.width - margin * 2) / cols;
@@ -88,15 +106,5 @@ export function arrangeImages(canvas, images, orientation, marginWidth, order = 
 // Nueva función para obtener las dimensiones actuales del grid
 export function getCurrentGridDimensions(images, orientation) {
   const count = images.length;
-
-  let cols, rows;
-  if (orientation === "rows") {
-    cols = Math.ceil(Math.sqrt(count));
-    rows = Math.ceil(count / cols);
-  } else if (orientation === "cols") {
-    rows = Math.ceil(Math.sqrt(count));
-    cols = Math.ceil(count / rows);
-  }
-
-  return { rows, cols };
+  return calculateGridDimensions(count, orientation);
 } 
