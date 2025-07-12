@@ -4,8 +4,8 @@ import { imageState, setArrangementStatus } from '../image/imageUploadUtils.js';
 // Constantes para los límites del grid
 const MIN_ROWS = 1;
 const MIN_COLS = 1;
-const MAX_ROWS = 10;
-const MAX_COLS = 10;
+const MAX_ROWS = 20;
+const MAX_COLS = 20;
 
 // Estado actual del grid personalizado
 let currentCustomRows = null;
@@ -33,13 +33,13 @@ export function updateGridControlButtons(rows, cols, imageCount, domManager) {
   
   // Deshabilitar botones según los límites y la cantidad de imágenes
   if (increaseRowsButton) {
-    increaseRowsButton.disabled = rows >= MAX_ROWS || (rows * cols >= imageCount * 2);
+    increaseRowsButton.disabled = rows >= MAX_ROWS || (rows >= imageCount);
   }
   if (decreaseRowsButton) {
     decreaseRowsButton.disabled = rows <= MIN_ROWS || ((rows - 1) * cols < imageCount);
   }
   if (increaseColsButton) {
-    increaseColsButton.disabled = cols >= MAX_COLS || (rows * cols >= imageCount * 2);
+    increaseColsButton.disabled = cols >= MAX_COLS || (cols >= imageCount);
   }
   if (decreaseColsButton) {
     decreaseColsButton.disabled = cols <= MIN_COLS || (rows * (cols - 1) < imageCount);
