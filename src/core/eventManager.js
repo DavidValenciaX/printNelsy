@@ -30,7 +30,7 @@ export class EventManager {
 
   initializeFileEvents() {
     this.addEventBinding('imageLoader', 'change', (e) => {
-      this.actions.handleImageUpload(e, this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom.get('rotateCheckbox'));
+      this.actions.handleImageUpload(e, this.canvasManager.getCanvas(), this.dom.get('rotateCheckbox'));
       // Inicializar controles de grid después de cargar imágenes
       setTimeout(() => {
         this.actions.initializeGridControls(this.canvasManager.getCanvas(), this.dom);
@@ -153,7 +153,7 @@ export class EventManager {
     );
     
     this.addEventBinding('arrangeButton', 'click', () => {
-      this.actions.selectArrangeImageLayout(this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), Swal);
+      this.actions.selectArrangeImageLayout(this.canvasManager.getCanvas(), Swal);
       this.actions.initializeGridControls(this.canvasManager.getCanvas(), this.dom);
     });
   }
@@ -255,19 +255,19 @@ export class EventManager {
 
   initializeGridControlEvents() {
     this.addEventBinding('increaseRowsButton', 'click', () => {
-      this.actions.increaseRows(this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom);
+      this.actions.increaseRows(this.canvasManager.getCanvas(), this.dom);
     });
 
     this.addEventBinding('decreaseRowsButton', 'click', () => {
-      this.actions.decreaseRows(this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom);
+      this.actions.decreaseRows(this.canvasManager.getCanvas(), this.dom);
     });
 
     this.addEventBinding('increaseColsButton', 'click', () => {
-      this.actions.increaseCols(this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom);
+      this.actions.increaseCols(this.canvasManager.getCanvas(), this.dom);
     });
 
     this.addEventBinding('decreaseColsButton', 'click', () => {
-      this.actions.decreaseCols(this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom);
+      this.actions.decreaseCols(this.canvasManager.getCanvas(), this.dom);
     });
   }
 
@@ -289,7 +289,7 @@ export class EventManager {
     });
 
     document.body.addEventListener('drop', (e) => {
-      this.actions.handleImageDrop(e, this.canvasManager.getCanvas(), this.canvasManager.getMarginWidth(), this.dom.get('rotateCheckbox'));
+      this.actions.handleImageDrop(e, this.canvasManager.getCanvas(), this.dom.get('rotateCheckbox'));
       // Inicializar controles de grid después de hacer drop de imágenes
       setTimeout(() => {
         this.actions.initializeGridControls(this.canvasManager.getCanvas(), this.dom);
