@@ -1,5 +1,7 @@
 import { arrangeImages, getCurrentGridDimensions } from '../transform/arrangeUtils.js';
 import { imageState, setArrangementStatus } from '../image/imageUploadUtils.js';
+import { fabric } from 'fabric';
+import { getCurrentMarginRect } from '../canvas/marginRectManager.js';
 
 // Constantes para los límites del grid
 const MIN_ROWS = 1;
@@ -63,6 +65,7 @@ export function toggleGridControlsVisibility(canvas, domManager) {
   if (gridControlsGroup) {
     gridControlsGroup.style.display = shouldShow ? 'flex' : 'none';
   }
+  updateGridVisualization(canvas);
 }
 
 /**
@@ -121,6 +124,7 @@ export function increaseRows(canvas, marginWidth, domManager) {
     currentCustomCols
   ));
   
+  updateGridVisualization(canvas);
   updateGridDisplays(currentCustomRows, currentCustomCols, domManager);
   updateGridControlButtons(currentCustomRows, currentCustomCols, images.length, domManager);
 }
@@ -151,6 +155,7 @@ export function decreaseRows(canvas, marginWidth, domManager) {
     currentCustomCols
   ));
   
+  updateGridVisualization(canvas);
   updateGridDisplays(currentCustomRows, currentCustomCols, domManager);
   updateGridControlButtons(currentCustomRows, currentCustomCols, images.length, domManager);
 }
@@ -181,6 +186,7 @@ export function increaseCols(canvas, marginWidth, domManager) {
     currentCustomCols
   ));
   
+  updateGridVisualization(canvas);
   updateGridDisplays(currentCustomRows, currentCustomCols, domManager);
   updateGridControlButtons(currentCustomRows, currentCustomCols, images.length, domManager);
 }
@@ -211,6 +217,7 @@ export function decreaseCols(canvas, marginWidth, domManager) {
     currentCustomCols
   ));
   
+  updateGridVisualization(canvas);
   updateGridDisplays(currentCustomRows, currentCustomCols, domManager);
   updateGridControlButtons(currentCustomRows, currentCustomCols, images.length, domManager);
 }
@@ -231,4 +238,89 @@ export function getCustomGridDimensions() {
     rows: currentCustomRows,
     cols: currentCustomCols
   };
+} 
+
+// --- Grid Visualization Logic ---
+
+/**
+ * Removes the grid lines from the canvas.
+ * @param {fabric.Canvas} canvas The canvas instance.
+ */
+function removeGrid(canvas) {
+  const gridLines = canvas.getObjects('line').filter(obj => obj.isGridLine);
+  gridLines.forEach(line => canvas.remove(line));
+}
+
+/**
+ * Draws a grid on the canvas based on the specified rows and columns.
+ * @param {fabric.Canvas} canvas The canvas instance.
+ * @param {number} rows The number of rows.
+ * @param {number} cols The number of columns.
+ * @param {fabric.Rect} marginRect The margin rectangle defining the grid area.
+ */
+function drawGrid(canvas, rows, cols, marginRect) {
+  if (!marginRect || (rows <= 1 && cols <= 1)) {
+    return;
+  }
+
+  const cellWidth = marginRect.width / cols;
+  const cellHeight = marginRect.height / rows;
+
+  // Draw vertical lines
+  for (let i = 1; i < cols; i++) {
+    const x = marginRect.left + i * cellWidth;
+    const line = new fabric.Line([x, marginRect.top, x, marginRect.top + marginRect.height], {
+      stroke: 'gray',
+      strokeWidth: 1,
+      strokeDashArray: [5, 5],
+      selectable: false,
+      evented: false,
+      excludeFromExport: true,
+      isGridLine: true
+    });
+    canvas.add(line);
+  }
+
+  // Draw horizontal lines
+  for (let i = 1; i < rows; i++) {
+    const y = marginRect.top + i * cellHeight;
+    const line = new fabric.Line([marginRect.left, y, marginRect.left + marginRect.width, y], {
+      stroke: 'gray',
+      strokeWidth: 1,
+      strokeDashArray: [5, 5],
+      selectable: false,
+      evented: false,
+      excludeFromExport: true,
+      isGridLine: true
+    });
+    canvas.add(line);
+  }
+}
+
+/**
+ * Updates the grid visualization on the canvas based on the current arrangement state.
+ * @param {fabric.Canvas} canvas The canvas instance.
+ */
+export function updateGridVisualization(canvas) {
+  removeGrid(canvas);
+
+  const marginRect = getCurrentMarginRect();
+  if (!marginRect) return;
+
+  const images = canvas.getObjects().filter(obj => obj.type === 'image');
+  const isGridArrangement = imageState.arrangementStatus === 'grid' &&
+                           (imageState.lastLayout === 'rows' || imageState.lastLayout === 'cols');
+
+  if (isGridArrangement && images.length > 0) {
+    const customDimensions = getCustomGridDimensions();
+    let dims;
+    if (customDimensions.rows !== null && customDimensions.cols !== null) {
+      dims = { rows: customDimensions.rows, cols: customDimensions.cols };
+    } else {
+      dims = getCurrentGridDimensions(images, imageState.lastLayout);
+    }
+    drawGrid(canvas, dims.rows, dims.cols, marginRect);
+  }
+
+  canvas.renderAll();
 } 

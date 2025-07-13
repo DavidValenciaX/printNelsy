@@ -99,7 +99,7 @@ export function arrangeImages(
     canvas.add(img);
   });
 
-  canvas.renderAll();
+  // canvas.renderAll();
   return "grid"; // Return the arrangement status
 }
 

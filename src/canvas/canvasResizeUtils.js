@@ -4,11 +4,11 @@ import { arrangeImages } from '../transform/arrangeUtils.js';
 import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from '../layout/collageUtils.js';
 import { constrainObjectToMargin } from './constraintUtils.js';
 import { updateMarginRect } from './marginRectManager.js';
+import { getCustomGridDimensions, updateGridVisualization } from '../layout/gridControls.js';
 import { 
   imageState,
   setArrangementStatus
 } from '../image/imageUploadUtils.js';
-import { getCustomGridDimensions } from '../layout/gridControls.js';
 
 // Constantes de configuración del papel
 const dpi = 300;
@@ -34,7 +34,10 @@ export function getIsVertical() {
 }
 
 function reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, marginRect, marginWidth) {
-  if (images.length === 0) return;
+  if (images.length === 0) {
+    updateGridVisualization(canvas);
+    return;
+  }
 
   // Obtener dimensiones personalizadas de los grid controls si están disponibles
   const customDimensions = getCustomGridDimensions();
@@ -76,6 +79,8 @@ function reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, 
 
   const strategy = arrangementStrategies[imageState.arrangementStatus];
   if (strategy) strategy();
+
+  updateGridVisualization(canvas);
 }
 
 export function resizeCanvas(size, canvas, marginRect, orientation = isVertical) {
@@ -130,7 +135,7 @@ export function resizeCanvas(size, canvas, marginRect, orientation = isVertical)
   // Re-add and re-arrange images using the new function
   reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, marginRect, marginWidth);
 
-  canvas.renderAll();
+  // canvas.renderAll();
   
   return { marginRect, marginWidth };
 }
