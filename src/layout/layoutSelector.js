@@ -7,7 +7,7 @@ import {
 } from '../image/imageUploadUtils.js';
 import { resetCustomGridDimensions, getCustomGridDimensions } from './gridControls.js';
 
-export function selectArrangeImageLayout(canvas, marginWidth, Swal) {
+export function selectArrangeImageLayout(canvas, Swal) {
   // 1. Get all current images
   const images = canvas.getObjects().filter((obj) => obj.type === "image");
 
@@ -46,7 +46,6 @@ export function selectArrangeImageLayout(canvas, marginWidth, Swal) {
     canvas, 
     images, 
     nextState.layout, 
-    marginWidth, 
     nextState.direction,
     customDimensions.rows,
     customDimensions.cols

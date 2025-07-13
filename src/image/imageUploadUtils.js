@@ -38,7 +38,7 @@ function isCanvasEmpty(canvas) {
   return canvas.getObjects("image").length === 0;
 }
 
-function _processFilesForCanvas(files, canvas, marginWidth, rotateCheckbox) {
+function _processFilesForCanvas(files, canvas, rotateCheckbox) {
   const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
 
   if (imageFiles.length === 0) {
@@ -81,7 +81,7 @@ function _processFilesForCanvas(files, canvas, marginWidth, rotateCheckbox) {
           const direction = "forward";
 
           // Arrange the new images on the canvas. This function adds them.
-          arrangeImages(canvas, loadedImages, layout, marginWidth, direction);
+          arrangeImages(canvas, loadedImages, layout, direction);
 
           // Set the final arrangement status based on whether the canvas was initially empty.
           if (canvasWasEmpty) {
@@ -122,12 +122,12 @@ function _processFilesForCanvas(files, canvas, marginWidth, rotateCheckbox) {
 }
 
 // Función principal para manejar la subida de imágenes
-export function handleImageUpload(e, canvas, marginWidth, rotateCheckbox) {
+export function handleImageUpload(e, canvas, rotateCheckbox) {
   const files = e.target.files;
 
   // Es una buena práctica verificar si se seleccionaron archivos.
   if (files && files.length > 0) {
-    _processFilesForCanvas(files, canvas, marginWidth, rotateCheckbox);
+    _processFilesForCanvas(files, canvas, rotateCheckbox);
   }
 
   // Resetea el valor del input de archivo.
@@ -138,13 +138,13 @@ export function handleImageUpload(e, canvas, marginWidth, rotateCheckbox) {
 }
 
 // Nueva función para manejar el drop de imágenes
-export function handleImageDrop(e, canvas, marginWidth, rotateCheckbox) {
+export function handleImageDrop(e, canvas, rotateCheckbox) {
   e.preventDefault();
   e.stopPropagation();
   document.body.classList.remove('drag-over');
 
   const files = e.dataTransfer.files;
   if (files && files.length > 0) {
-    _processFilesForCanvas(files, canvas, marginWidth, rotateCheckbox);
+    _processFilesForCanvas(files, canvas, rotateCheckbox);
   }
 }

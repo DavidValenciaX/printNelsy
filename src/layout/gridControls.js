@@ -101,7 +101,7 @@ export function initializeGridControls(canvas, domManager) {
 /**
  * Incrementa el número de filas
  */
-export function increaseRows(canvas, marginWidth, domManager) {
+export function increaseRows(canvas, domManager) {
   const images = canvas.getObjects().filter(obj => obj.type === 'image');
   if (images.length === 0) return;
   
@@ -118,7 +118,6 @@ export function increaseRows(canvas, marginWidth, domManager) {
     canvas, 
     images, 
     imageState.lastLayout, 
-    marginWidth, 
     imageState.lastDirection,
     currentCustomRows,
     currentCustomCols
@@ -132,7 +131,7 @@ export function increaseRows(canvas, marginWidth, domManager) {
 /**
  * Decrementa el número de filas
  */
-export function decreaseRows(canvas, marginWidth, domManager) {
+export function decreaseRows(canvas, domManager) {
   const images = canvas.getObjects().filter(obj => obj.type === 'image');
   if (images.length === 0) return;
   
@@ -149,7 +148,6 @@ export function decreaseRows(canvas, marginWidth, domManager) {
     canvas, 
     images, 
     imageState.lastLayout, 
-    marginWidth, 
     imageState.lastDirection,
     currentCustomRows,
     currentCustomCols
@@ -163,7 +161,7 @@ export function decreaseRows(canvas, marginWidth, domManager) {
 /**
  * Incrementa el número de columnas
  */
-export function increaseCols(canvas, marginWidth, domManager) {
+export function increaseCols(canvas, domManager) {
   const images = canvas.getObjects().filter(obj => obj.type === 'image');
   if (images.length === 0) return;
   
@@ -180,7 +178,6 @@ export function increaseCols(canvas, marginWidth, domManager) {
     canvas, 
     images, 
     imageState.lastLayout, 
-    marginWidth, 
     imageState.lastDirection,
     currentCustomRows,
     currentCustomCols
@@ -194,7 +191,7 @@ export function increaseCols(canvas, marginWidth, domManager) {
 /**
  * Decrementa el número de columnas
  */
-export function decreaseCols(canvas, marginWidth, domManager) {
+export function decreaseCols(canvas, domManager) {
   const images = canvas.getObjects().filter(obj => obj.type === 'image');
   if (images.length === 0) return;
   
@@ -211,7 +208,6 @@ export function decreaseCols(canvas, marginWidth, domManager) {
     canvas, 
     images, 
     imageState.lastLayout, 
-    marginWidth, 
     imageState.lastDirection,
     currentCustomRows,
     currentCustomCols

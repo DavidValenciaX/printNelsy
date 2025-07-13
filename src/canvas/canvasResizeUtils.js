@@ -33,7 +33,7 @@ export function getIsVertical() {
   return isVertical;
 }
 
-function reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, marginRect, marginWidth) {
+function reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, marginRect) {
   if (images.length === 0) {
     updateGridVisualization(canvas);
     return;
@@ -48,7 +48,6 @@ function reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, 
         canvas, 
         images, 
         currentLayout, 
-        marginWidth, 
         currentDirection,
         customDimensions.rows,
         customDimensions.cols
@@ -133,9 +132,7 @@ export function resizeCanvas(size, canvas, marginRect, orientation = isVertical)
   const marginWidth = (canvas.width - marginRect.width) / 2;
 
   // Re-add and re-arrange images using the new function
-  reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, marginRect, marginWidth);
-
-  // canvas.renderAll();
+  reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, marginRect);
   
   return { marginRect, marginWidth };
 }

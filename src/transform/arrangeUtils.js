@@ -27,7 +27,6 @@ export function arrangeImages(
   canvas,
   images,
   orientation,
-  marginWidth,
   order = "forward",
   customRows = null,
   customCols = null
