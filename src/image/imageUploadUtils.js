@@ -29,6 +29,15 @@ export function setLastDirection(direction) {
   imageState.lastDirection = direction;
 }
 
+/**
+ * Checks if the canvas has any image objects.
+ * @param {fabric.Canvas} canvas The canvas instance.
+ * @returns {boolean} True if the canvas has no images, false otherwise.
+ */
+function isCanvasEmpty(canvas) {
+  return canvas.getObjects("image").length === 0;
+}
+
 function _processFilesForCanvas(files, canvas, marginWidth, rotateCheckbox) {
   const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
 
@@ -62,19 +71,28 @@ function _processFilesForCanvas(files, canvas, marginWidth, rotateCheckbox) {
         processedCount++;
 
         if (processedCount === numFilesToProcess) {
+          const canvasWasEmpty = isCanvasEmpty(canvas);
+
           // Reset custom grid dimensions when loading new images
           resetCustomGridDimensions();
-          
-          // Primero, se organiza el layout de las imágenes
-          if (numFilesToProcess <= 2) {
-            setArrangementStatus(arrangeImages(canvas, loadedImages, "cols", marginWidth, "forward"));
-            imageState.lastLayout = "cols";
-            imageState.lastDirection = "forward";
+
+          // Determine layout for the new images
+          const layout = numFilesToProcess <= 2 ? "cols" : "rows";
+          const direction = "forward";
+
+          // Arrange the new images on the canvas. This function adds them.
+          arrangeImages(canvas, loadedImages, layout, marginWidth, direction);
+
+          // Set the final arrangement status based on whether the canvas was initially empty.
+          if (canvasWasEmpty) {
+            setArrangementStatus("grid");
           } else {
-            setArrangementStatus(arrangeImages(canvas, loadedImages, "rows", marginWidth, "forward"));
-            imageState.lastLayout = "rows";
-            imageState.lastDirection = "forward";
+            setArrangementStatus("none");
           }
+
+          // Update the last layout properties regardless
+          imageState.lastLayout = layout;
+          imageState.lastDirection = direction;
 
           // Luego, se guardan los datos originales ya con sus valores de top, left, scaleX y scaleY actualizados
           loadedImages.forEach((loadedImgInstance) => { // Renombrado img a loadedImgInstance para evitar confusión de scope
