@@ -3,3 +3,6 @@
 
 /* Importar iconos de Bootstrap Icons */
 @import 'bootstrap-icons/font/bootstrap-icons.css'; 
+
+/* Importar iconos de Material Design Icons */
+@import '@mdi/font/css/materialdesignicons.min.css'; 

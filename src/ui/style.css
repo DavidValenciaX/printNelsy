@@ -219,6 +219,12 @@ input:focus {
   font-size: 1rem;
 }
 
+/* Tamaño específico para los iconos de Material Design */
+.button-icon.mdi {
+  font-size: 1.4rem;
+  vertical-align: middle; /* Mejora la alineación vertical */
+}
+
 body.drag-over {
   border: 4px dashed #007bff;
 }
