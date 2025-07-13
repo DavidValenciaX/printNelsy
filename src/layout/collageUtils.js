@@ -214,7 +214,7 @@ export function collageArrange(canvas, marginRect, Swal) {
   const images = canvas.getObjects('image');
   if (images.length === 0) {
     Swal.fire({ text: 'Debe haber al menos una imagen en el canvas.', icon: 'warning' });
-    return;
+    return null; // Return null to indicate error
   }
 
   const config = {
