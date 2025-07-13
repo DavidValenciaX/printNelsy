@@ -24,11 +24,17 @@ export function calculateGridDimensions(
 }
 
 export function sortImages(images, order = "forward") {
-  const sortedImages = [...images];
+  // Primero, ordena por un criterio estable como el ID para asegurar un orden canónico
+  const sortedById = [...images].sort((a, b) => {
+    if (a.id < b.id) return -1;
+    if (a.id > b.id) return 1;
+    return 0;
+  });
+
   if (order === "reverse") {
-    sortedImages.reverse();
+    sortedById.reverse();
   }
-  return sortedImages;
+  return sortedById;
 }
 
 export function arrangeImages(
