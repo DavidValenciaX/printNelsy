@@ -98,8 +98,6 @@ export function arrangeImages(
     // originalImages is kept intact with the original information
     canvas.add(img);
   });
-
-  // canvas.renderAll();
   return "grid"; // Return the arrangement status
 }
 

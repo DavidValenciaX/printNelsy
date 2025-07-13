@@ -45,11 +45,11 @@ export class CanvasManager {
     rotateControls.visible = false;
   }
 
-  setupCanvasEvents(setArrangementStatus) {
-    setupMovingEvents(this.canvas, this.marginRect);
-    setupScalingEvents(this.canvas, this.marginRect);
-    setupRotatingEvents(this.canvas, this.marginRect, setArrangementStatus);
-    setupSkewingEvents(this.canvas, this.marginRect);
+  setupCanvasEvents(updateArrangement) {
+    setupMovingEvents(this.canvas, this.marginRect, updateArrangement);
+    setupScalingEvents(this.canvas, this.marginRect, updateArrangement);
+    setupRotatingEvents(this.canvas, this.marginRect, updateArrangement);
+    setupSkewingEvents(this.canvas, this.marginRect, updateArrangement);
   }
 
   getCanvas() {

@@ -53,7 +53,6 @@ export function selectArrangeImageLayout(canvas, marginWidth, Swal) {
   ));
   setLastLayout(nextState.layout);
   setLastDirection(nextState.direction);
-
-  // updateGridVisualization(canvas);
+  
   canvas.renderAll();
 } 

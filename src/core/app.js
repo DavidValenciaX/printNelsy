@@ -58,9 +58,14 @@ export class PrintImageApp {
     );
   }
 
+  updateArrangement(status) {
+    this.modules.actions.setArrangementStatus(status);
+    this.modules.actions.toggleGridControlsVisibility(this.modules.canvas.getCanvas(), this.modules.dom);
+  }
+
   setupApplication() {
     // Setup canvas events that require setArrangementStatus
-    this.modules.canvas.setupCanvasEvents(this.modules.actions.setArrangementStatus);
+    this.modules.canvas.setupCanvasEvents(this.updateArrangement.bind(this));
     
     // Initialize arrangement indicator
     initializeArrangementIndicator(this.modules.dom);
