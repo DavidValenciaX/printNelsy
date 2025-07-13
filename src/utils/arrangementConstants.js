@@ -14,31 +14,31 @@ export const ARRANGEMENT_STATUS = {
  */
 export const ARRANGEMENT_DISPLAY_CONFIG = {
   [ARRANGEMENT_STATUS.NONE]: {
-    name: 'Sin arreglo',
+    name: 'Sin organizar',
     icon: 'fas fa-square',
     color: '#6c757d',
     description: 'Imágenes sin organizar'
   },
   [ARRANGEMENT_STATUS.GRID]: {
-    name: 'Cuadrícula',
+    name: 'En cuadrícula',
     icon: 'fas fa-th',
     color: '#28a745',
     description: 'Imágenes organizadas en cuadrícula'
   },
   [ARRANGEMENT_STATUS.COLUMNS_COLLAGE]: {
-    name: 'Collage de columnas',
+    name: 'En collage de columnas',
     icon: 'fas fa-columns',
     color: '#007bff',
     description: 'Collage organizado en columnas'
   },
   [ARRANGEMENT_STATUS.ROWS_COLLAGE]: {
-    name: 'Collage de filas',
+    name: 'En collage de filas',
     icon: 'fas fa-grip-lines',
     color: '#007bff',
     description: 'Collage organizado en filas'
   },
   [ARRANGEMENT_STATUS.COLLAGE]: {
-    name: 'Collage aleatorio',
+    name: 'En collage aleatorio',
     icon: 'fas fa-th-large',
     color: '#ffc107',
     description: 'Collage con disposición aleatoria'
