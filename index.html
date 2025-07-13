@@ -100,37 +100,37 @@
 
                 <!-- Position Controls -->
                 <div class="button-group">
-                    <div class="group-title">Posición</div>
+                    <div class="group-title">Transformar imágenes</div>
                     <button type="button" id="centerVerticallyButton" class="control-button">
                         <i class="fas fa-arrows-alt-v button-icon"></i> Centrar vertical
                     </button>
                     <button type="button" id="centerHorizontallyButton" class="control-button">
                         <i class="fas fa-arrows-alt-h button-icon"></i> Centrar horizontal
                     </button>
-                    <button type="button" id="arrangeButton" class="control-button">
-                        <i class="fas fa-th button-icon"></i> Re-Ordenar imágenes
+                    <button type="button" id="flipVerticalButton" class="control-button">
+                        <i class="bi bi-symmetry-vertical button-icon"></i> Voltear Vertical
                     </button>
-                </div>
-
-                <!-- Transform Controls -->
-                <div class="button-group">
-                    <div class="group-title">Transformación</div>
+                    <button type="button" id="flipHorizontalButton" class="control-button">
+                        <i class="bi bi-symmetry-horizontal button-icon"></i> Voltear Horizontal
+                    </button>
                     <button type="button" id="rotateButton+90" class="control-button">
                         <i class="fas fa-redo button-icon"></i> Girar 90° derecha
                     </button>
                     <button type="button" id="rotateButton-90" class="control-button">
                         <i class="fas fa-undo button-icon"></i> Girar 90° izquierda
                     </button>
-                    <button type="button" id="flipHorizontalButton" class="control-button">
-                        <i class="bi bi-symmetry-horizontal button-icon"></i> Voltear Horizontal
-                    </button>
-                    <button type="button" id="flipVerticalButton" class="control-button">
-                        <i class="bi bi-symmetry-vertical button-icon"></i> Voltear Vertical
-                    </button>
                     <div class="control-group">
                         <input type="checkbox" id="rotateControl" />
                         <label for="rotateControl">Permitir rotación libre</label>
                     </div>
+                </div>
+
+                <!-- Arrange Controls -->
+                <div class="button-group">
+                    <div class="group-title">Organizar imágenes</div>
+                    <button type="button" id="arrangeButton" class="control-button">
+                        <i class="fas fa-th button-icon"></i> Re-Ordenar imágenes
+                    </button>
                 </div>
 
                 <!-- Grid Controls -->
@@ -158,25 +158,25 @@
                     </div>
                 </div>
 
-                <!-- Otras Operaciones de Imagen -->
+                <!-- Color de Imagen -->
                 <div class="button-group">
-                    <div class="group-title">Operaciones de Imagen</div>
+                    <div class="group-title">Color de Imagen</div>
                     <button type="button" id="grayScaleButton" class="control-button">
                         <i class="fas fa-adjust button-icon"></i> Convertir a B/N
                     </button>
-                    <button type="button" id="resetImageButton" class="control-button">
-                        <i class="fas fa-undo button-icon"></i> Restablecer imagen
-                    </button>
                 </div>
 
-                <!-- Copiar y Pegar -->
+                <!-- Collage -->
                 <div class="button-group">
-                    <div class="group-title">Copiar/Pegar</div>
-                    <button type="button" id="copyButton" class="control-button">
-                        <i class="fas fa-copy button-icon"></i> Copiar (Ctrl+C)
+                    <div class="group-title">Collage de imágenes</div>
+                    <button type="button" id="columnsCollageButton" class="control-button">
+                        <i class="fas fa-th-large button-icon"></i> Crear Collage de Columnas
                     </button>
-                    <button type="button" id="pasteButton" class="control-button">
-                        <i class="fas fa-paste button-icon"></i> Pegar (Ctrl+V)
+                    <button type="button" id="rowsCollageButton" class="control-button">
+                        <i class="fas fa-th-large button-icon"></i> Crear Collage de Filas
+                    </button>
+                    <button type="button" id="collageButton" class="control-button">
+                        <i class="fas fa-th-large button-icon"></i> Crear Collage Aleatorio
                     </button>
                 </div>
 
@@ -194,23 +194,23 @@
                     </button>
                 </div>
 
-                <!-- Collage -->
+                <!-- Copiar y Pegar -->
                 <div class="button-group">
-                    <div class="group-title">Collage</div>
-                    <button type="button" id="columnsCollageButton" class="control-button">
-                        <i class="fas fa-th-large button-icon"></i> Crear Collage de Columnas
+                    <div class="group-title">Copiar/Pegar imágenes</div>
+                    <button type="button" id="copyButton" class="control-button">
+                        <i class="fas fa-copy button-icon"></i> Copiar (Ctrl+C)
                     </button>
-                    <button type="button" id="rowsCollageButton" class="control-button">
-                        <i class="fas fa-th-large button-icon"></i> Crear Collage de Filas
-                    </button>
-                    <button type="button" id="collageButton" class="control-button">
-                        <i class="fas fa-th-large button-icon"></i> Crear Collage Aleatorio
+                    <button type="button" id="pasteButton" class="control-button">
+                        <i class="fas fa-paste button-icon"></i> Pegar (Ctrl+V)
                     </button>
                 </div>
 
                 <!-- Danger Zone -->
                 <div class="button-group">
-                    <div class="group-title">Eliminar</div>
+                    <div class="group-title">Operaciones de Imagen</div>
+                    <button type="button" id="resetImageButton" class="control-button">
+                        <i class="fas fa-undo button-icon"></i> Restablecer imagen
+                    </button>
                     <button type="button" id="deleteButton" class="control-button danger-button">
                         <i class="fas fa-trash button-icon"></i> Eliminar imagen
                     </button>
