@@ -4,9 +4,16 @@
  */
 import Swal from 'sweetalert2';
 import { initializeApp, getAppInstance } from './app.js';
+import favicon from '@fortawesome/fontawesome-free/svgs/solid/print.svg';
 
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', async () => {
+  const faviconLink = document.createElement('link');
+  faviconLink.rel = 'icon';
+  faviconLink.href = favicon;
+  faviconLink.type = 'image/svg+xml';
+  document.head.appendChild(faviconLink);
+
   try {
     // Inicializar la aplicación principal
     const app = await initializeApp();
