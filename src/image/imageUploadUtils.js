@@ -1,6 +1,7 @@
 import { fabric } from 'fabric';
 import { arrangeImages } from '../transform/arrangeUtils.js';
 import { resetCustomGridDimensions } from '../layout/gridControls.js';
+import { updateArrangementIndicator } from '../utils/arrangementIndicator.js';
 
 // Variables exportadas para gestión de imágenes
 export const originalImages = {};
@@ -13,6 +14,9 @@ export const imageState = {
 // Función para actualizar el estado de arreglo
 export function setArrangementStatus(status) {
   imageState.arrangementStatus = status;
+  
+  // Actualizar el indicador visual
+  updateArrangementIndicator(status);
 }
 
 // Función para actualizar el layout
@@ -63,11 +67,11 @@ function _processFilesForCanvas(files, canvas, marginWidth, rotateCheckbox) {
           
           // Primero, se organiza el layout de las imágenes
           if (numFilesToProcess <= 2) {
-            imageState.arrangementStatus = arrangeImages(canvas, loadedImages, "cols", marginWidth, "forward");
+            setArrangementStatus(arrangeImages(canvas, loadedImages, "cols", marginWidth, "forward"));
             imageState.lastLayout = "cols";
             imageState.lastDirection = "forward";
           } else {
-            imageState.arrangementStatus = arrangeImages(canvas, loadedImages, "rows", marginWidth, "forward");
+            setArrangementStatus(arrangeImages(canvas, loadedImages, "rows", marginWidth, "forward"));
             imageState.lastLayout = "rows";
             imageState.lastDirection = "forward";
           }

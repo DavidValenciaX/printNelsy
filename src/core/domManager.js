@@ -7,6 +7,11 @@ export class DOMManager {
 
       // Canvas
       canvas: document.getElementById("canvas"),
+      
+      // Arrangement indicator
+      arrangementIndicator: document.getElementById("arrangementIndicator"),
+      arrangementIcon: document.getElementById("arrangementIcon"),
+      arrangementText: document.getElementById("arrangementText"),
 
       // File operations
       imageLoader: document.getElementById("imageLoader"),

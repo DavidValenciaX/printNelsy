@@ -34,6 +34,7 @@ body {
 }
 
 #canvas-container {
+  position: relative;
   border: 1px solid #e0e0e0;
   border-radius: 0.25rem;
 }
@@ -316,4 +317,54 @@ body.drag-over {
 
 #gridControlsGroup {
   display: none; /* Oculto por defecto, se mostrará cuando sea grid */
+}
+
+/* Estilos para el indicador visual de arreglo */
+.arrangement-indicator {
+  --indicator-color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--indicator-color);
+  color: white;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  text-align: left;
+}
+
+.arrangement-indicator:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.indicator-icon {
+  font-size: 1rem;
+  min-width: 1rem;
+  text-align: center;
+}
+
+/* Estados específicos del indicador */
+.arrangement-none {
+  --indicator-color: #6c757d;
+}
+
+.arrangement-grid {
+  --indicator-color: #28a745;
+}
+
+.arrangement-columns-collage,
+.arrangement-rows-collage {
+  --indicator-color: #007bff;
+}
+
+.arrangement-collage {
+  --indicator-color: #ffc107;
+  color: #212529; /* Texto oscuro para fondo amarillo */
 }

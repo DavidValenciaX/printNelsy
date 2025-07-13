@@ -3,6 +3,7 @@ import { CanvasManager } from './canvasManager.js';
 import { ActionManager } from './actionManager.js';
 import { EventManager } from './eventManager.js';
 import { setupAccessibility } from '../utils/accessibilityUtils.js';
+import { initializeArrangementIndicator } from '../utils/arrangementIndicator.js';
 
 /**
  * Clase principal de la aplicación que orquesta todos los módulos
@@ -60,6 +61,9 @@ export class PrintImageApp {
   setupApplication() {
     // Setup canvas events that require setArrangementStatus
     this.modules.canvas.setupCanvasEvents(this.modules.actions.setArrangementStatus);
+    
+    // Initialize arrangement indicator
+    initializeArrangementIndicator(this.modules.dom);
     
     // Expose global zoom actions for backwards compatibility
     this.modules.actions.exposeGlobalZoomActions();
