@@ -1,4 +1,5 @@
 import { roundToDecimals } from './../utils/mathUtils.js';
+import { getCurrentMarginRect } from '../canvas/marginRectManager.js';
 
 export function calculateGridDimensions(
   count,
@@ -32,14 +33,18 @@ export function arrangeImages(
   customCols = null
 ) {
   const count = images.length;
-  let marginAdjustment = count <= 2 ? 100 : 20;
-  const margin = marginWidth + marginAdjustment;
-
-  // Create copy and sort according to order
   const sortedImages = [...images];
   if (order === "reverse") {
     sortedImages.reverse();
   }
+
+  const marginRect = getCurrentMarginRect();
+  if (!marginRect) {
+    console.error("Margin rect not found for arranging images. Layout may be incorrect.");
+    return "grid"; 
+  }
+
+  const imageSpacing = 20;
 
   const { rows, cols } = calculateGridDimensions(
     count,
@@ -48,13 +53,10 @@ export function arrangeImages(
     customCols
   );
 
-  // Adjust cell dimensions based on orientation
-  const cellWidth = (canvas.width - margin * 2) / cols;
-
-  const cellHeight = (canvas.height - margin * 2) / rows;
+  const cellWidth = marginRect.width / cols;
+  const cellHeight = marginRect.height / rows;
 
   sortedImages.forEach((img, index) => {
-    // Determine row and column without altering permanent id
     let row, col;
     if (orientation === "rows") {
       row = Math.floor(index / cols);
@@ -82,20 +84,24 @@ export function arrangeImages(
       2
     );
 
+    const availableWidth = cellWidth - imageSpacing - offsetWidthImageBound;
+    const availableHeight = cellHeight - imageSpacing - offsetHeightImageBound;
+
+    // We need to check against the original image dimensions, not the scaled ones
     const scaleFactor = Math.min(
-      (cellWidth - margin - offsetWidthImageBound) / img.width,
-      (cellHeight - margin - offsetHeightImageBound) / img.height
+      availableWidth / img.width,
+      availableHeight / img.height
     );
 
     img.scale(scaleFactor);
+
     img.set({
-      left: margin + col * cellWidth + cellWidth / 2,
-      top: margin + row * cellHeight + cellHeight / 2,
+      left: marginRect.left + col * cellWidth + cellWidth / 2,
+      top: marginRect.top + row * cellHeight + cellHeight / 2,
       originX: "center",
       originY: "center",
     });
 
-    // originalImages is kept intact with the original information
     canvas.add(img);
   });
   return "grid"; // Return the arrangement status
