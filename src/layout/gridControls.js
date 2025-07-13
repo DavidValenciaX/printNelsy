@@ -324,3 +324,43 @@ export function updateGridVisualization(canvas) {
 
   canvas.renderAll();
 } 
+
+/**
+ * Gets all grid lines from the canvas
+ * @param {fabric.Canvas} canvas The canvas instance.
+ * @returns {fabric.Line[]} Array of grid line objects
+ */
+export function getGridLines(canvas) {
+  return canvas.getObjects('line').filter(obj => obj.isGridLine);
+}
+
+/**
+ * Hides grid lines temporarily by setting their opacity to 0
+ * @param {fabric.Canvas} canvas The canvas instance.
+ * @returns {Object[]} Array of objects with line reference and original opacity
+ */
+export function hideGridLines(canvas) {
+  const gridLines = getGridLines(canvas);
+  const originalOpacities = [];
+  
+  gridLines.forEach(line => {
+    originalOpacities.push({
+      line: line,
+      opacity: line.opacity
+    });
+    line.opacity = 0;
+  });
+  
+  return originalOpacities;
+}
+
+/**
+ * Restores grid lines opacity to their original values
+ * @param {fabric.Canvas} canvas The canvas instance.
+ * @param {Object[]} originalOpacities Array of objects with line reference and original opacity
+ */
+export function restoreGridLines(canvas, originalOpacities) {
+  originalOpacities.forEach(({ line, opacity }) => {
+    line.opacity = opacity;
+  });
+} 
