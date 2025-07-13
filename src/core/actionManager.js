@@ -28,7 +28,7 @@ import {
   resizeCanvas, 
   changeOrientation
 } from '../canvas/canvasResizeUtils.js';
-import { selectArrangeImageLayout } from '../layout/layoutSelector.js';
+import { changeOrientationLayout, changeOrderLayout } from '../layout/layoutSelector.js';
 import { 
   copySelection, 
   pasteSelection, 
@@ -102,7 +102,8 @@ export class ActionManager {
   changeOrientation = changeOrientation;
 
   // Layout actions
-  selectArrangeImageLayout = selectArrangeImageLayout;
+  changeOrientationLayout = changeOrientationLayout;
+  changeOrderLayout = changeOrderLayout;
 
   // Status management
   setArrangementStatus = setArrangementStatus;

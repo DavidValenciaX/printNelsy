@@ -152,9 +152,12 @@ export class EventManager {
       this.actions.centerHorizontally(this.canvasManager.getCanvas())
     );
     
-    this.addEventBinding('arrangeButton', 'click', () => {
-      this.actions.selectArrangeImageLayout(this.canvasManager.getCanvas(), Swal);
-      this.actions.initializeGridControls(this.canvasManager.getCanvas(), this.dom);
+    this.addEventBinding('changeOrientationButton', 'click', () => {
+      this.actions.changeOrientationLayout(this.canvasManager.getCanvas(), this.dom);
+    });
+
+    this.addEventBinding('changeOrderButton', 'click', () => {
+      this.actions.changeOrderLayout(this.canvasManager.getCanvas(), this.dom);
     });
   }
 

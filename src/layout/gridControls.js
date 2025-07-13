@@ -1,4 +1,4 @@
-import { arrangeImages, getCurrentGridDimensions } from '../transform/arrangeUtils.js';
+import { arrangeImages, getCurrentGridDimensions, sortImages } from '../transform/arrangeUtils.js';
 import { imageState, setArrangementStatus } from '../image/imageUploadUtils.js';
 import { fabric } from 'fabric';
 import { getCurrentMarginRect } from '../canvas/marginRectManager.js';
@@ -58,7 +58,7 @@ export function toggleGridControlsVisibility(canvas, domManager) {
   const imageCount = images.length;
 
   const isGridArrangement = imageState.arrangementStatus === 'grid' && 
-                           (imageState.lastLayout === 'rows' || imageState.lastLayout === 'cols');
+                           (imageState.orientation === 'rows' || imageState.orientation === 'cols');
   
   const shouldShow = isGridArrangement && imageCount > 1;
 
@@ -80,12 +80,12 @@ export function initializeGridControls(canvas, domManager) {
   }
   
   const isGridArrangement = imageState.arrangementStatus === 'grid' && 
-                           (imageState.lastLayout === 'rows' || imageState.lastLayout === 'cols');
+                           (imageState.orientation === 'rows' || imageState.orientation === 'cols');
   
   if (isGridArrangement) {
     // Si no tenemos dimensiones personalizadas, calcular las actuales y guardarlas
     if (currentCustomRows === null && currentCustomCols === null) {
-      const dimensions = getCurrentGridDimensions(images, imageState.lastLayout);
+      const dimensions = getCurrentGridDimensions(images, imageState.orientation);
       currentCustomRows = dimensions.rows;
       currentCustomCols = dimensions.cols;
     }
@@ -114,11 +114,11 @@ export function increaseRows(canvas, domManager) {
   images.forEach(img => canvas.remove(img));
   
   // Reorganizar con las nuevas dimensiones
+  const sortedImages = sortImages(images, imageState.order);
   setArrangementStatus(arrangeImages(
     canvas, 
-    images, 
-    imageState.lastLayout, 
-    imageState.lastDirection,
+    sortedImages, 
+    imageState.orientation, 
     currentCustomRows,
     currentCustomCols
   ));
@@ -144,11 +144,11 @@ export function decreaseRows(canvas, domManager) {
   images.forEach(img => canvas.remove(img));
   
   // Reorganizar con las nuevas dimensiones
+  const sortedImages = sortImages(images, imageState.order);
   setArrangementStatus(arrangeImages(
     canvas, 
-    images, 
-    imageState.lastLayout, 
-    imageState.lastDirection,
+    sortedImages, 
+    imageState.orientation, 
     currentCustomRows,
     currentCustomCols
   ));
@@ -174,11 +174,11 @@ export function increaseCols(canvas, domManager) {
   images.forEach(img => canvas.remove(img));
   
   // Reorganizar con las nuevas dimensiones
+  const sortedImages = sortImages(images, imageState.order);
   setArrangementStatus(arrangeImages(
     canvas, 
-    images, 
-    imageState.lastLayout, 
-    imageState.lastDirection,
+    sortedImages, 
+    imageState.orientation, 
     currentCustomRows,
     currentCustomCols
   ));
@@ -204,11 +204,11 @@ export function decreaseCols(canvas, domManager) {
   images.forEach(img => canvas.remove(img));
   
   // Reorganizar con las nuevas dimensiones
+  const sortedImages = sortImages(images, imageState.order);
   setArrangementStatus(arrangeImages(
     canvas, 
-    images, 
-    imageState.lastLayout, 
-    imageState.lastDirection,
+    sortedImages, 
+    imageState.orientation, 
     currentCustomRows,
     currentCustomCols
   ));
@@ -305,7 +305,7 @@ export function updateGridVisualization(canvas) {
 
   const images = canvas.getObjects().filter(obj => obj.type === 'image');
   const isGridArrangement = imageState.arrangementStatus === 'grid' &&
-                           (imageState.lastLayout === 'rows' || imageState.lastLayout === 'cols');
+                           (imageState.orientation === 'rows' || imageState.orientation === 'cols');
 
   if (isGridArrangement && images.length > 0) {
     const customDimensions = getCustomGridDimensions();
@@ -313,7 +313,7 @@ export function updateGridVisualization(canvas) {
     if (customDimensions.rows !== null && customDimensions.cols !== null) {
       dims = { rows: customDimensions.rows, cols: customDimensions.cols };
     } else {
-      dims = getCurrentGridDimensions(images, imageState.lastLayout);
+      dims = getCurrentGridDimensions(images, imageState.orientation);
     }
     drawGrid(canvas, dims.rows, dims.cols, marginRect);
   }

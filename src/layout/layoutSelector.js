@@ -1,57 +1,43 @@
-import { arrangeImages } from './../transform/arrangeUtils.js';
+import { arrangeImages, sortImages } from './../transform/arrangeUtils.js';
 import { 
   imageState,
   setArrangementStatus,
-  setLastLayout,
-  setLastDirection
+  setOrientation,
+  setOrder
 } from '../image/imageUploadUtils.js';
-import { resetCustomGridDimensions, getCustomGridDimensions } from './gridControls.js';
+import { getCustomGridDimensions, initializeGridControls } from './gridControls.js';
 
-export function selectArrangeImageLayout(canvas, Swal) {
-  // 1. Get all current images
+function reapplyGridArrangement(canvas, domManager) {
   const images = canvas.getObjects().filter((obj) => obj.type === "image");
-
   if (images.length === 0) {
-    Swal.fire({
-      text: "Debe haber al menos una imagen en el canvas.",
-      icon: "warning",
-    });
     return;
   }
 
-  // 2. Remove existing images from canvas
   images.forEach((img) => canvas.remove(img));
 
-  // 3. Define state transitions
-  const stateTransitions = {
-    "rows-forward": { layout: "rows", direction: "reverse" },
-    "rows-reverse": { layout: "cols", direction: "forward" },
-    "cols-forward": { layout: "cols", direction: "reverse" },
-    "cols-reverse": { layout: "rows", direction: "forward" },
-  };
-
-  const currentState = `${imageState.lastLayout}-${imageState.lastDirection}`;
-  const nextState =
-    stateTransitions[currentState] || { layout: "rows", direction: "forward" };
-
-  // Obtener dimensiones personalizadas de los grid controls si están disponibles
   const customDimensions = getCustomGridDimensions();
-
-  // Solo resetear dimensiones personalizadas si no están definidas
-  if (customDimensions.rows === null && customDimensions.cols === null) {
-    resetCustomGridDimensions();
-  }
+  const sortedImages = sortImages(images, imageState.order);
 
   setArrangementStatus(arrangeImages(
     canvas, 
-    images, 
-    nextState.layout, 
-    nextState.direction,
+    sortedImages, 
+    imageState.orientation,
     customDimensions.rows,
     customDimensions.cols
   ));
-  setLastLayout(nextState.layout);
-  setLastDirection(nextState.direction);
   
+  initializeGridControls(canvas, domManager);
   canvas.renderAll();
+}
+
+export function changeOrientationLayout(canvas, domManager) {
+  const nextOrientation = imageState.orientation === 'rows' ? 'cols' : 'rows';
+  setOrientation(nextOrientation);
+  reapplyGridArrangement(canvas, domManager);
+}
+
+export function changeOrderLayout(canvas, domManager) {
+  const nextOrder = imageState.order === 'forward' ? 'reverse' : 'forward';
+  setOrder(nextOrder);
+  reapplyGridArrangement(canvas, domManager);
 } 

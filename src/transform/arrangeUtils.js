@@ -23,19 +23,22 @@ export function calculateGridDimensions(
   return { rows, cols };
 }
 
-export function arrangeImages(
-  canvas,
-  images,
-  orientation,
-  order = "forward",
-  customRows = null,
-  customCols = null
-) {
-  const count = images.length;
+export function sortImages(images, order = "forward") {
   const sortedImages = [...images];
   if (order === "reverse") {
     sortedImages.reverse();
   }
+  return sortedImages;
+}
+
+export function arrangeImages(
+  canvas,
+  images,
+  orientation,
+  customRows = null,
+  customCols = null
+) {
+  const count = images.length;
 
   const marginRect = getCurrentMarginRect();
   if (!marginRect) {
@@ -55,7 +58,7 @@ export function arrangeImages(
   const cellWidth = marginRect.width / cols;
   const cellHeight = marginRect.height / rows;
 
-  sortedImages.forEach((img, index) => {
+  images.forEach((img, index) => {
     let row, col;
     if (orientation === "rows") {
       row = Math.floor(index / cols);

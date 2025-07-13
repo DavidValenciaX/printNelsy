@@ -1,6 +1,6 @@
 import { fabric } from 'fabric';
 import Swal from 'sweetalert2';
-import { arrangeImages } from '../transform/arrangeUtils.js';
+import { arrangeImages, sortImages } from '../transform/arrangeUtils.js';
 import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from '../layout/collageUtils.js';
 import { constrainObjectToMargin } from './constraintUtils.js';
 import { updateMarginRect } from './marginRectManager.js';
@@ -33,7 +33,7 @@ export function getIsVertical() {
   return isVertical;
 }
 
-function reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, marginRect) {
+function reAddAndArrangeImages(images, currentOrientation, currentOrder, canvas, marginRect) {
   if (images.length === 0) {
     updateGridVisualization(canvas);
     return;
@@ -44,11 +44,11 @@ function reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, 
   
   const arrangementStrategies = {
     "grid": () => {
+      const sortedImages = sortImages(images, currentOrder);
       setArrangementStatus(arrangeImages(
         canvas, 
-        images, 
-        currentLayout, 
-        currentDirection,
+        sortedImages, 
+        currentOrientation, 
         customDimensions.rows,
         customDimensions.cols
       ));
@@ -85,8 +85,8 @@ function reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, 
 export function resizeCanvas(size, canvas, marginRect, orientation = isVertical) {
   // Store current canvas state
   const images = canvas.getObjects().filter((obj) => obj.type === "image");
-  const currentLayout = imageState.lastLayout || (images.length <= 2 ? "cols" : "rows");
-  const currentDirection = "forward";
+  const currentOrientation = imageState.orientation || (images.length <= 2 ? "cols" : "rows");
+  const currentOrder = "forward";
 
   // Remove all images from canvas
   images.forEach((img) => canvas.remove(img));
@@ -132,7 +132,7 @@ export function resizeCanvas(size, canvas, marginRect, orientation = isVertical)
   const marginWidth = (canvas.width - marginRect.width) / 2;
 
   // Re-add and re-arrange images using the new function
-  reAddAndArrangeImages(images, currentLayout, currentDirection, canvas, marginRect);
+  reAddAndArrangeImages(images, currentOrientation, currentOrder, canvas, marginRect);
   
   return { marginRect, marginWidth };
 }
