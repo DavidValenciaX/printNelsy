@@ -49,13 +49,19 @@ export function updateGridControlButtons(rows, cols, imageCount, domManager) {
 /**
  * Muestra u oculta los controles de grid según el estado de arreglo
  */
-export function toggleGridControlsVisibility(domManager) {
+export function toggleGridControlsVisibility(canvas, domManager) {
   const gridControlsGroup = domManager.get('gridControlsGroup');
+  
+  const images = canvas.getObjects().filter(obj => obj.type === 'image');
+  const imageCount = images.length;
+
   const isGridArrangement = imageState.arrangementStatus === 'grid' && 
                            (imageState.lastLayout === 'rows' || imageState.lastLayout === 'cols');
   
+  const shouldShow = isGridArrangement && imageCount > 1;
+
   if (gridControlsGroup) {
-    gridControlsGroup.style.display = isGridArrangement ? 'flex' : 'none';
+    gridControlsGroup.style.display = shouldShow ? 'flex' : 'none';
   }
 }
 
@@ -66,7 +72,7 @@ export function initializeGridControls(canvas, domManager) {
   const images = canvas.getObjects().filter(obj => obj.type === 'image');
   
   if (images.length === 0) {
-    toggleGridControlsVisibility(domManager);
+    toggleGridControlsVisibility(canvas, domManager);
     return;
   }
   
@@ -86,7 +92,7 @@ export function initializeGridControls(canvas, domManager) {
     updateGridControlButtons(currentCustomRows, currentCustomCols, images.length, domManager);
   }
   
-  toggleGridControlsVisibility(domManager);
+  toggleGridControlsVisibility(canvas, domManager);
 }
 
 /**

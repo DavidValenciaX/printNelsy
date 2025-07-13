@@ -1,7 +1,8 @@
 import { showNoObjectSelectedWarning } from "../utils/uiUtils.js";
 import Swal from 'sweetalert2';
+import { toggleGridControlsVisibility } from '../layout/gridControls.js';
 
-export function deleteActiveObject(canvas) {
+export function deleteActiveObject(canvas, domManager) {
   const activeObjects = canvas.getActiveObjects();
   if (activeObjects.length === 0) {
     showNoObjectSelectedWarning();
@@ -22,6 +23,7 @@ export function deleteActiveObject(canvas) {
       });
       canvas.discardActiveObject();
       canvas.renderAll();
+      toggleGridControlsVisibility(canvas, domManager);
     }
   });
 } 

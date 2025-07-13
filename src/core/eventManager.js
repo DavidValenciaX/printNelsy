@@ -184,7 +184,7 @@ export class EventManager {
     );
     
     this.addEventBinding('deleteButton', 'click', () => 
-      this.actions.deleteActiveObject(this.canvasManager.getCanvas())
+      this.actions.deleteActiveObject(this.canvasManager.getCanvas(), this.dom)
     );
   }
 
@@ -237,19 +237,19 @@ export class EventManager {
     this.addEventBinding('columnsCollageButton', 'click', () => {
       const newStatus = this.actions.createMasonryColumnsCollage(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
       if (newStatus) this.actions.setArrangementStatus(newStatus);
-      this.actions.toggleGridControlsVisibility(this.dom);
+      this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
     });
 
     this.addEventBinding('rowsCollageButton', 'click', () => {
       const newStatus = this.actions.createMasonryRowsCollage(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
       if (newStatus) this.actions.setArrangementStatus(newStatus);
-      this.actions.toggleGridControlsVisibility(this.dom);
+      this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
     });
 
     this.addEventBinding('collageButton', 'click', () => {
       const newStatus = this.actions.collageArrange(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
       if (newStatus) this.actions.setArrangementStatus(newStatus);
-      this.actions.toggleGridControlsVisibility(this.dom);
+      this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
     });
   }
 
@@ -299,7 +299,7 @@ export class EventManager {
     // Keyboard events
     document.addEventListener("keydown", (event) => {
       if (event.key === "Delete") {
-        this.actions.deleteActiveObject(this.canvasManager.getCanvas());
+        this.actions.deleteActiveObject(this.canvasManager.getCanvas(), this.dom);
       }
     });
 
