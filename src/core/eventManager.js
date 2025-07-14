@@ -1,5 +1,6 @@
 import { initializeKeyboardInteractions } from '../interactions/keyboardInteractions.js';
 import Swal from 'sweetalert2';
+import { imageState } from '../image/imageUploadUtils.js';
 
 /**
  * Gestiona todos los event listeners de la aplicación
@@ -34,6 +35,7 @@ export class EventManager {
       // Inicializar controles de grid después de cargar imágenes
       setTimeout(() => {
         this.actions.initializeGridControls(this.canvasManager.getCanvas(), this.dom);
+        this.updateLayoutOrientationButtons('rows');
       }, 100);
     });
     
@@ -109,6 +111,28 @@ export class EventManager {
     this.updateOrientationButtons(true);
   }
 
+  updateLayoutOrientationButtons(selectedOrientation) {
+    const rowsButton = this.dom.get('rowsLayoutButton');
+    const colsButton = this.dom.get('colsLayoutButton');
+
+    if (rowsButton && colsButton) {
+      // Si el arrangement no es 'grid', no mostrar ningún botón como activo
+      if (imageState.arrangementStatus !== 'grid') {
+        rowsButton.classList.remove('active');
+        colsButton.classList.remove('active');
+        return;
+      }
+
+      if (selectedOrientation === 'rows') {
+        rowsButton.classList.add('active');
+        colsButton.classList.remove('active');
+      } else {
+        rowsButton.classList.remove('active');
+        colsButton.classList.add('active');
+      }
+    }
+  }
+
   initializeTransformEvents() {
     this.addEventBinding('rotateButton_p90', 'click', () => 
       this.actions.rotateImage(this.canvasManager.getCanvas(), 90, this.canvasManager.getMarginRect())
@@ -152,13 +176,21 @@ export class EventManager {
       this.actions.centerHorizontally(this.canvasManager.getCanvas())
     );
     
-    this.addEventBinding('changeOrientationButton', 'click', () => {
-      this.actions.changeOrientationLayout(this.canvasManager.getCanvas(), this.dom);
+    this.addEventBinding('rowsLayoutButton', 'click', () => {
+      this.actions.setOrientationLayout(this.canvasManager.getCanvas(), this.dom, 'rows');
+      this.updateLayoutOrientationButtons('rows');
+    });
+
+    this.addEventBinding('colsLayoutButton', 'click', () => {
+      this.actions.setOrientationLayout(this.canvasManager.getCanvas(), this.dom, 'cols');
+      this.updateLayoutOrientationButtons('cols');
     });
 
     this.addEventBinding('changeOrderButton', 'click', () => {
       this.actions.changeOrderLayout(this.canvasManager.getCanvas(), this.dom);
     });
+
+    this.updateLayoutOrientationButtons('rows');
   }
 
   initializeSizeEvents() {
@@ -240,24 +272,28 @@ export class EventManager {
     this.addEventBinding('gridArrangeButton', 'click', () => {
       this.actions.applyGridArrangement(this.canvasManager.getCanvas(), this.dom);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
+      this.updateLayoutOrientationButtons('rows');
     });
 
     this.addEventBinding('columnsCollageButton', 'click', () => {
       const newStatus = this.actions.createMasonryColumnsCollage(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
       if (newStatus) this.actions.setArrangementStatus(newStatus);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
+      this.updateLayoutOrientationButtons();
     });
 
     this.addEventBinding('rowsCollageButton', 'click', () => {
       const newStatus = this.actions.createMasonryRowsCollage(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
       if (newStatus) this.actions.setArrangementStatus(newStatus);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
+      this.updateLayoutOrientationButtons();
     });
 
     this.addEventBinding('collageButton', 'click', () => {
       const newStatus = this.actions.collageArrange(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
       if (newStatus) this.actions.setArrangementStatus(newStatus);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
+      this.updateLayoutOrientationButtons();
     });
   }
 
@@ -301,6 +337,7 @@ export class EventManager {
       // Inicializar controles de grid después de hacer drop de imágenes
       setTimeout(() => {
         this.actions.initializeGridControls(this.canvasManager.getCanvas(), this.dom);
+        this.updateLayoutOrientationButtons('rows');
       }, 100);
     });
 

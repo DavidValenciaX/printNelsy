@@ -143,7 +143,7 @@ function constrainSkewToMargin(obj, marginRect) {
  * @param {fabric.Canvas} canvas The fabric canvas
  * @param {Object} marginRect The margin rectangle
  */
-export function setupSkewingEvents(canvas, marginRect, updateArrangementStatus = null) {
+export function setupSkewingEvents(canvas, marginRect, updateArrangementStatus = null, onArrangeUpdate = () => {}) {
   updateMarginRect(marginRect);
   
   canvas.on("object:skewing", function (e) {
@@ -167,6 +167,7 @@ export function setupSkewingEvents(canvas, marginRect, updateArrangementStatus =
     }
     if (updateArrangementStatus) {
       updateArrangementStatus('none');
+      onArrangeUpdate();
     }
   });
 }

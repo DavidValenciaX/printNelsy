@@ -30,9 +30,8 @@ export function applyGridArrangement(canvas, domManager) {
   canvas.renderAll();
 }
 
-export function changeOrientationLayout(canvas, domManager) {
-  const nextOrientation = imageState.orientation === 'rows' ? 'cols' : 'rows';
-  setOrientation(nextOrientation);
+export function setOrientationLayout(canvas, domManager, orientation) {
+  setOrientation(orientation);
   applyGridArrangement(canvas, domManager);
 }
 

@@ -45,11 +45,11 @@ export class CanvasManager {
     rotateControls.visible = false;
   }
 
-  setupCanvasEvents(updateArrangement) {
-    setupMovingEvents(this.canvas, this.marginRect, updateArrangement);
-    setupScalingEvents(this.canvas, this.marginRect, updateArrangement);
-    setupRotatingEvents(this.canvas, this.marginRect, updateArrangement);
-    setupSkewingEvents(this.canvas, this.marginRect, updateArrangement);
+  setupCanvasEvents(updateArrangement, onArrangeUpdate) {
+    setupMovingEvents(this.canvas, this.marginRect, updateArrangement, onArrangeUpdate);
+    setupScalingEvents(this.canvas, this.marginRect, updateArrangement, onArrangeUpdate);
+    setupRotatingEvents(this.canvas, this.marginRect, updateArrangement, onArrangeUpdate);
+    setupSkewingEvents(this.canvas, this.marginRect, updateArrangement, onArrangeUpdate);
   }
 
   getCanvas() {
@@ -71,10 +71,9 @@ export class CanvasManager {
 
   getPaperConfig() {
     return {
-      currentSize: getCurrentSize(),
+      size: getCurrentSize(),
       isVertical: getIsVertical(),
-      paperSizes,
-      dpi
+      dpi: dpi
     };
   }
 

@@ -1,6 +1,6 @@
 import { getCurrentMarginRect, updateMarginRect } from './../canvas/marginRectManager.js';
 
-export function setupScalingEvents(canvas, marginRect, updateArrangementStatus = null) {
+export function setupScalingEvents(canvas, marginRect, updateArrangementStatus = null, onArrangeUpdate = () => {}) {
   // Store the reference to marginRect in the centralized manager
   updateMarginRect(marginRect);
 
@@ -103,6 +103,7 @@ export function setupScalingEvents(canvas, marginRect, updateArrangementStatus =
   canvas.on('object:modified', () => {
     if (updateArrangementStatus) {
       updateArrangementStatus('none');
+      onArrangeUpdate();
     }
   });
 }

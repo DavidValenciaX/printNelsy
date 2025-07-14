@@ -31,7 +31,8 @@ export class DOMManager {
       centerHorizontallyButton: document.getElementById("centerHorizontallyButton"),
 
       // Positioning controls
-      changeOrientationButton: document.getElementById("changeOrientationButton"),
+      rowsLayoutButton: document.getElementById("rowsLayoutButton"),
+      colsLayoutButton: document.getElementById("colsLayoutButton"),
       changeOrderButton: document.getElementById("changeOrderButton"),
       "rotateButton_p90": document.getElementById("rotateButton+90"),
       "rotateButton_n90": document.getElementById("rotateButton-90"),

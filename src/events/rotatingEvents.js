@@ -160,7 +160,7 @@ function detectRotationDirection(obj) {
  * @param {Object}        marginRect                 `{left, top, width, height}` rect that defines printable area.
  * @param {Function?}     updateArrangementStatus    Optional callback to signal arrangement-UI state.
  */
-export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus = null) {
+export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus = null, onArrangeUpdate = () => {}) {
   // Make margin rect globally accessible for other helpers (moving/scaling).
   updateMarginRect(marginRect);
 
@@ -185,7 +185,10 @@ export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus 
       delete obj._directionHistory;
       delete obj._angleDeltaHistory;
     }
-    if (updateArrangementStatus) updateArrangementStatus('none');
+    if (updateArrangementStatus) {
+      updateArrangementStatus('none');
+      onArrangeUpdate();
+    }
   });
 }
 

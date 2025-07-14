@@ -64,8 +64,13 @@ export class PrintImageApp {
   }
 
   setupApplication() {
-    // Setup canvas events that require setArrangementStatus
-    this.modules.canvas.setupCanvasEvents(this.updateArrangement.bind(this));
+    // Setup canvas events that require setArrangementStatus and UI updates
+    const onArrangeUpdate = () => {
+      if (this.modules.events) {
+        this.modules.events.updateLayoutOrientationButtons();
+      }
+    };
+    this.modules.canvas.setupCanvasEvents(this.updateArrangement.bind(this), onArrangeUpdate);
     
     // Set the DOM manager instance for arrangement button updates
     setDOMManagerInstance(this.modules.dom);
