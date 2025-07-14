@@ -35,8 +35,7 @@ export function setOrientationLayout(canvas, domManager, orientation) {
   applyGridArrangement(canvas, domManager);
 }
 
-export function changeOrderLayout(canvas, domManager) {
-  const nextOrder = imageState.order === 'forward' ? 'reverse' : 'forward';
-  setOrder(nextOrder);
+export function setOrderLayout(canvas, domManager, order) {
+  setOrder(order);
   applyGridArrangement(canvas, domManager);
 } 

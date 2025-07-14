@@ -28,7 +28,7 @@ import {
   resizeCanvas, 
   changeOrientation
 } from '../canvas/canvasResizeUtils.js';
-import { applyGridArrangement, setOrientationLayout, changeOrderLayout } from '../layout/layoutSelector.js';
+import { applyGridArrangement, setOrientationLayout, setOrderLayout } from '../layout/layoutSelector.js';
 import { 
   copySelection, 
   pasteSelection, 
@@ -104,7 +104,7 @@ export class ActionManager {
   // Layout actions
   applyGridArrangement = applyGridArrangement;
   setOrientationLayout = setOrientationLayout;
-  changeOrderLayout = changeOrderLayout;
+  setOrderLayout = setOrderLayout;
 
   // Status management
   setArrangementStatus = setArrangementStatus;

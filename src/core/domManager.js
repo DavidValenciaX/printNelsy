@@ -33,7 +33,8 @@ export class DOMManager {
       // Positioning controls
       rowsLayoutButton: document.getElementById("rowsLayoutButton"),
       colsLayoutButton: document.getElementById("colsLayoutButton"),
-      changeOrderButton: document.getElementById("changeOrderButton"),
+      forwardOrderButton: document.getElementById("forwardOrderButton"),
+      reverseOrderButton: document.getElementById("reverseOrderButton"),
       "rotateButton_p90": document.getElementById("rotateButton+90"),
       "rotateButton_n90": document.getElementById("rotateButton-90"),
       flipHorizontalButton: document.getElementById("flipHorizontalButton"),
@@ -70,6 +71,11 @@ export class DOMManager {
       rowsDisplay: document.getElementById("rowsDisplay"),
       colsDisplay: document.getElementById("colsDisplay")
     };
+    this.eventManager = null;
+  }
+
+  setEventManager(eventManager) {
+    this.eventManager = eventManager;
   }
 
   get(elementKey) {

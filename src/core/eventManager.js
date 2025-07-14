@@ -81,6 +81,27 @@ export class EventManager {
     }
   }
 
+  updateOrderButtons(selectedOrder) {
+    const forwardButton = this.dom.get('forwardOrderButton');
+    const reverseButton = this.dom.get('reverseOrderButton');
+
+    if (forwardButton && reverseButton) {
+      if (imageState.arrangementStatus !== 'grid') {
+        forwardButton.classList.remove('active');
+        reverseButton.classList.remove('active');
+        return;
+      }
+
+      if (selectedOrder === 'forward') {
+        forwardButton.classList.add('active');
+        reverseButton.classList.remove('active');
+      } else {
+        forwardButton.classList.remove('active');
+        reverseButton.classList.add('active');
+      }
+    }
+  }
+
   initializePaperSizeEvents() {
     const paperSizes = ['carta', 'oficio', 'a4'];
     
@@ -186,11 +207,18 @@ export class EventManager {
       this.updateLayoutOrientationButtons('cols');
     });
 
-    this.addEventBinding('changeOrderButton', 'click', () => {
-      this.actions.changeOrderLayout(this.canvasManager.getCanvas(), this.dom);
+    this.addEventBinding('forwardOrderButton', 'click', () => {
+      this.actions.setOrderLayout(this.canvasManager.getCanvas(), this.dom, 'forward');
+      this.updateOrderButtons('forward');
+    });
+
+    this.addEventBinding('reverseOrderButton', 'click', () => {
+      this.actions.setOrderLayout(this.canvasManager.getCanvas(), this.dom, 'reverse');
+      this.updateOrderButtons('reverse');
     });
 
     this.updateLayoutOrientationButtons('rows');
+    this.updateOrderButtons(imageState.order);
   }
 
   initializeSizeEvents() {
@@ -273,6 +301,7 @@ export class EventManager {
       this.actions.applyGridArrangement(this.canvasManager.getCanvas(), this.dom);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
       this.updateLayoutOrientationButtons('rows');
+      this.updateOrderButtons(imageState.order);
     });
 
     this.addEventBinding('columnsCollageButton', 'click', () => {
@@ -280,6 +309,7 @@ export class EventManager {
       if (newStatus) this.actions.setArrangementStatus(newStatus);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
       this.updateLayoutOrientationButtons();
+      this.updateOrderButtons();
     });
 
     this.addEventBinding('rowsCollageButton', 'click', () => {
@@ -287,6 +317,7 @@ export class EventManager {
       if (newStatus) this.actions.setArrangementStatus(newStatus);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
       this.updateLayoutOrientationButtons();
+      this.updateOrderButtons();
     });
 
     this.addEventBinding('collageButton', 'click', () => {
@@ -294,6 +325,7 @@ export class EventManager {
       if (newStatus) this.actions.setArrangementStatus(newStatus);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
       this.updateLayoutOrientationButtons();
+      this.updateOrderButtons();
     });
   }
 

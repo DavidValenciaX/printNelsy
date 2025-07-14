@@ -56,6 +56,7 @@ export class PrintImageApp {
       this.modules.canvas,
       this.modules.actions
     );
+    this.modules.dom.setEventManager(this.modules.events);
   }
 
   updateArrangement(status) {
@@ -68,6 +69,7 @@ export class PrintImageApp {
     const onArrangeUpdate = () => {
       if (this.modules.events) {
         this.modules.events.updateLayoutOrientationButtons();
+        this.modules.events.updateOrderButtons();
       }
     };
     this.modules.canvas.setupCanvasEvents(this.updateArrangement.bind(this), onArrangeUpdate);

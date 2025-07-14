@@ -108,6 +108,11 @@ function _processFilesForCanvas(files, canvas, rotateCheckbox) {
           imageState.orientation = orientation;
           imageState.order = order;
 
+          // Update order buttons UI
+          if (domManagerInstance?.eventManager) {
+            domManagerInstance.eventManager.updateOrderButtons(imageState.order);
+          }
+
           // Luego, se guardan los datos originales ya con sus valores de top, left, scaleX y scaleY actualizados
           loadedImages.forEach((loadedImgInstance) => { // Renombrado img a loadedImgInstance para evitar confusión de scope
             originalImages[loadedImgInstance.id] = {
