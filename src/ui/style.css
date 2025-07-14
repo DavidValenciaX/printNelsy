@@ -231,28 +231,32 @@ body.drag-over {
 
 /* Estilos para botones de tamaño de papel y orientación */
 .size-button,
-.orientation-button {
+.orientation-button,
+.arrangement-button {
   background-color: transparent;
   border: 2px solid #4CAF50;
   color: #4CAF50;
 }
 
 .size-button:hover,
-.orientation-button:hover {
+.orientation-button:hover,
+.arrangement-button:hover {
   background-color: rgba(76, 175, 80, 0.1); /* Verde claro transparente */
   color: #4CAF50;
   transform: translateY(-1px);
 }
 
 .size-button.active,
-.orientation-button.active {
+.orientation-button.active,
+.arrangement-button.active {
   background-color: #4CAF50;
   color: white;
   border-color: #4CAF50;
 }
 
 .size-button.active:hover,
-.orientation-button.active:hover {
+.orientation-button.active:hover,
+.arrangement-button.active:hover {
   background-color: #45a049; /* Un poco más oscuro en hover */
 }
 
@@ -318,26 +322,4 @@ body.drag-over {
 
 #gridControlsGroup {
   display: none; /* Oculto por defecto */
-}
-
-/* --- Arrangement Button States --- */
-.arrangement-button {
-  position: relative;
-}
-
-.arrangement-button.active::after {
-  content: '✓';
-  position: absolute;
-  top: 0.25rem;
-  right: 0.25rem;
-  background-color: #28a745;
-  color: white;
-  border-radius: 50%;
-  width: 1.5rem;
-  height: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: bold;
 }
