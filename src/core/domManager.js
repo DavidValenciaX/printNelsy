@@ -57,6 +57,7 @@ export class DOMManager {
       cancelCropButton: document.getElementById("cancelCrop"),
       
       // Collage controls
+      gridArrangeButton: document.getElementById("gridArrangeButton"),
       columnsCollageButton: document.getElementById("columnsCollageButton"),
       rowsCollageButton: document.getElementById("rowsCollageButton"),
       collageButton: document.getElementById("collageButton"),

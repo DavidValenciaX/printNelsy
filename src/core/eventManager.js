@@ -237,6 +237,11 @@ export class EventManager {
   }
 
   initializeCollageEvents() {
+    this.addEventBinding('gridArrangeButton', 'click', () => {
+      this.actions.applyGridArrangement(this.canvasManager.getCanvas(), this.dom);
+      this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
+    });
+
     this.addEventBinding('columnsCollageButton', 'click', () => {
       const newStatus = this.actions.createMasonryColumnsCollage(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
       if (newStatus) this.actions.setArrangementStatus(newStatus);

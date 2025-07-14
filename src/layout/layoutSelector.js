@@ -7,7 +7,7 @@ import {
 } from '../image/imageUploadUtils.js';
 import { getCustomGridDimensions, initializeGridControls } from './gridControls.js';
 
-function reapplyGridArrangement(canvas, domManager) {
+export function applyGridArrangement(canvas, domManager) {
   const images = canvas.getObjects().filter((obj) => obj.type === "image");
   if (images.length === 0) {
     return;
@@ -33,11 +33,11 @@ function reapplyGridArrangement(canvas, domManager) {
 export function changeOrientationLayout(canvas, domManager) {
   const nextOrientation = imageState.orientation === 'rows' ? 'cols' : 'rows';
   setOrientation(nextOrientation);
-  reapplyGridArrangement(canvas, domManager);
+  applyGridArrangement(canvas, domManager);
 }
 
 export function changeOrderLayout(canvas, domManager) {
   const nextOrder = imageState.order === 'forward' ? 'reverse' : 'forward';
   setOrder(nextOrder);
-  reapplyGridArrangement(canvas, domManager);
+  applyGridArrangement(canvas, domManager);
 } 
