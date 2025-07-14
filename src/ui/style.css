@@ -311,49 +311,54 @@ body.drag-over {
 }
 
 .grid-display {
-  min-width: 2rem;
+  font-weight: bold;
+  min-width: 20px;
   text-align: center;
-  font-weight: 600;
-  color: #333;
-  background-color: #f8f9fa;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  border: 1px solid #dee2e6;
 }
 
 #gridControlsGroup {
-  display: none; /* Oculto por defecto, se mostrará cuando sea grid */
+  display: none; /* Oculto por defecto */
 }
 
-/* Estilos para el indicador visual de arreglo */
-.arrangement-indicator {
-  --indicator-color: #6c757d;
+/* --- Arrangement Indicators --- */
+.arrangement-indicators-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.arrangement-indicator-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background-color: var(--indicator-color);
-  color: white;
+  padding: 0.5rem;
   border-radius: 0.25rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-  text-align: left;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  cursor: default; /* No es clickeable por defecto */
 }
 
-.arrangement-indicator:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  border-color: rgba(255, 255, 255, 0.2);
+.arrangement-indicator-item.inactive {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.arrangement-indicator-item.active {
+  border-color: var(--indicator-color, #6c757d);
+  background-color: #e9ecef;
+  font-weight: bold;
+  color: var(--indicator-color, #212529);
 }
 
 .indicator-icon {
   font-size: 1rem;
-  min-width: 1rem;
+  width: 1.25em;
   text-align: center;
+  color: var(--indicator-color, #6c757d);
+}
+
+.arrangement-indicator-item .indicator-text {
+  font-size: 0.875rem;
 }
 
 /* Estados específicos del indicador */

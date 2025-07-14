@@ -1,9 +1,9 @@
-import { ARRANGEMENT_DISPLAY_CONFIG, ARRANGEMENT_STATUS } from './arrangementConstants.js';
+import { getArrangementDisplayConfig, ARRANGEMENT_DISPLAY_CONFIG, ARRANGEMENT_STATUS } from './arrangementConstants.js';
 
 /**
- * Manages the visual indicator for arrangement states.
+ * ArrangementIndicator class manages the visual representation of arrangement statuses.
  */
-export class ArrangementIndicator {
+class ArrangementIndicator {
   constructor(domManager) {
     this.domManager = domManager;
     this.currentStatus = ARRANGEMENT_STATUS.NONE;
@@ -60,7 +60,6 @@ export class ArrangementIndicator {
     item.appendChild(icon);
     item.appendChild(text);
 
-    // Set the color property once during creation
     item.style.setProperty('--indicator-color', config.color);
 
     return item;
@@ -80,30 +79,17 @@ export class ArrangementIndicator {
 
     for (const status in this.indicatorElements) {
       const element = this.indicatorElements[status];
+      const config = ARRANGEMENT_DISPLAY_CONFIG[status];
       
       if (status === newStatus) {
         element.classList.add('active');
         element.classList.remove('inactive');
+        element.style.setProperty('--indicator-color', config.color);
       } else {
         element.classList.add('inactive');
         element.classList.remove('active');
+        element.style.setProperty('--indicator-color', '#6c757d'); // Default color for inactive
       }
-    }
-  }
-
-  /**
-   * Sets all indicator items to an inactive state.
-   */
-  setAllInactive() {
-    if (!this.isInitialized) {
-      console.warn('ArrangementIndicator: Not initialized.');
-      return;
-    }
-
-    for (const status in this.indicatorElements) {
-      const element = this.indicatorElements[status];
-      element.classList.add('inactive');
-      element.classList.remove('active');
     }
   }
 
@@ -127,37 +113,19 @@ export class ArrangementIndicator {
   }
 }
 
-// Global instance of the indicator manager
-let indicatorInstance = null;
-
-/**
- * Gets the singleton instance of the ArrangementIndicator.
- * @returns {ArrangementIndicator|null} The indicator instance.
- */
-export function getIndicatorInstance() {
-  return indicatorInstance;
+.arrangement-indicator-item.active {
+  border-color: var(--indicator-color, #6c757d);
+  background-color: #e9ecef;
+  font-weight: bold;
+  color: var(--indicator-color, #212529);
 }
 
-/**
- * Initializes the global arrangement indicator manager.
- * @param {DOMManager} domManager - The application's DOM manager.
- */
-export function initializeArrangementIndicator(domManager) {
-  if (!indicatorInstance) {
-    indicatorInstance = new ArrangementIndicator(domManager);
-  }
-  indicatorInstance.initialize();
-  return indicatorInstance;
+.indicator-icon {
+  font-size: 1rem;
+  width: 1.25em;
+  text-align: center;
 }
 
-/**
- * Updates the state of the global arrangement indicator.
- * @param {string} status - The new arrangement status.
- */
-export function updateArrangementIndicator(status) {
-  if (indicatorInstance) {
-    indicatorInstance.updateStatus(status);
-  } else {
-    console.warn('ArrangementIndicator: Instance not available to update status.');
-  }
+.arrangement-indicator-item .indicator-text {
+  font-size: 0.875rem;
 } 

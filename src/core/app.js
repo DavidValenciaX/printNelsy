@@ -68,7 +68,11 @@ export class PrintImageApp {
     this.modules.canvas.setupCanvasEvents(this.updateArrangement.bind(this));
     
     // Initialize arrangement indicator
-    initializeArrangementIndicator(this.modules.dom);
+    const indicatorInstance = initializeArrangementIndicator(this.modules.dom);
+    if (indicatorInstance) {
+      // When the app starts, the canvas is empty, so all indicators should be inactive
+      indicatorInstance.setAllInactive();
+    }
     
     // Expose global zoom actions for backwards compatibility
     this.modules.actions.exposeGlobalZoomActions();

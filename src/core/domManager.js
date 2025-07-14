@@ -9,9 +9,7 @@ export class DOMManager {
       canvas: document.getElementById("canvas"),
       
       // Arrangement indicator
-      arrangementIndicator: document.getElementById("arrangementIndicator"),
-      arrangementIcon: document.getElementById("arrangementIcon"),
-      arrangementText: document.getElementById("arrangementText"),
+      arrangementIndicatorsContainer: document.getElementById("arrangementIndicatorsContainer"),
 
       // File operations
       imageLoader: document.getElementById("imageLoader"),
