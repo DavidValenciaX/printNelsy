@@ -27,19 +27,19 @@ export const ARRANGEMENT_DISPLAY_CONFIG = {
   },
   [ARRANGEMENT_STATUS.COLUMNS_COLLAGE]: {
     name: 'En collage de columnas',
-    icon: 'fas fa-columns',
+    icon: 'mdi mdi-view-dashboard',
     color: '#007bff',
     description: 'Collage organizado en columnas'
   },
   [ARRANGEMENT_STATUS.ROWS_COLLAGE]: {
     name: 'En collage de filas',
-    icon: 'fas fa-grip-lines',
+    icon: 'mdi mdi-view-compact',
     color: '#007bff',
     description: 'Collage organizado en filas'
   },
   [ARRANGEMENT_STATUS.COLLAGE]: {
     name: 'En collage aleatorio',
-    icon: 'fas fa-th-large',
+    icon: 'mdi mdi-view-quilt',
     color: '#ffc107',
     description: 'Collage con disposición aleatoria'
   }
