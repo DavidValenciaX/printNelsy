@@ -35,6 +35,7 @@ export function getIsVertical() {
 
 function reAddAndArrangeImages(images, currentOrientation, currentOrder, canvas, marginRect) {
   if (images.length === 0) {
+    setArrangementStatus('none');
     updateGridVisualization(canvas);
     return;
   }

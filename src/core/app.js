@@ -3,7 +3,7 @@ import { CanvasManager } from './canvasManager.js';
 import { ActionManager } from './actionManager.js';
 import { EventManager } from './eventManager.js';
 import { setupAccessibility } from '../utils/accessibilityUtils.js';
-import { initializeArrangementIndicator } from '../utils/arrangementIndicator.js';
+import { setDOMManagerInstance } from '../image/imageUploadUtils.js';
 
 /**
  * Clase principal de la aplicación que orquesta todos los módulos
@@ -67,15 +67,24 @@ export class PrintImageApp {
     // Setup canvas events that require setArrangementStatus
     this.modules.canvas.setupCanvasEvents(this.updateArrangement.bind(this));
     
-    // Initialize arrangement indicator
-    const indicatorInstance = initializeArrangementIndicator(this.modules.dom);
-    if (indicatorInstance) {
-      // When the app starts, the canvas is empty, so all indicators should be inactive
-      indicatorInstance.setAllInactive();
-    }
+    // Set the DOM manager instance for arrangement button updates
+    setDOMManagerInstance(this.modules.dom);
+    
+    // Initialize arrangement buttons to reflect the initial state
+    this.initializeArrangementButtons();
     
     // Expose global zoom actions for backwards compatibility
     this.modules.actions.exposeGlobalZoomActions();
+  }
+
+  async initializeArrangementButtons() {
+    try {
+      const { updateArrangementButtons } = await import('../utils/arrangementButtons.js');
+      const { imageState } = await import('../image/imageUploadUtils.js');
+      updateArrangementButtons(imageState.arrangementStatus, this.modules.dom);
+    } catch (error) {
+      console.warn('Error initializing arrangement buttons:', error);
+    }
   }
 
   setupEvents() {

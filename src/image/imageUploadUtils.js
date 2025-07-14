@@ -1,7 +1,6 @@
 import { fabric } from 'fabric';
 import { arrangeImages, sortImages } from '../transform/arrangeUtils.js';
 import { resetCustomGridDimensions } from '../layout/gridControls.js';
-import { updateArrangementIndicator } from '../utils/arrangementIndicator.js';
 
 // Variables exportadas para gestión de imágenes
 export const originalImages = {};
@@ -11,12 +10,26 @@ export const imageState = {
   order: "forward"
 };
 
+// Variable para almacenar la referencia al domManager
+let domManagerInstance = null;
+
+// Función para establecer la referencia al domManager
+export function setDOMManagerInstance(domManager) {
+  domManagerInstance = domManager;
+}
+
 // Función para actualizar el estado de arreglo
 export function setArrangementStatus(status) {
   imageState.arrangementStatus = status;
   
-  // Actualizar el indicador visual
-  updateArrangementIndicator(status);
+  // Actualizar los botones visuales si hay una instancia del domManager
+  if (domManagerInstance) {
+    import('../utils/arrangementButtons.js').then(({ updateArrangementButtons }) => {
+      updateArrangementButtons(status, domManagerInstance);
+    }).catch(error => {
+      console.warn('Error updating arrangement buttons:', error);
+    });
+  }
 }
 
 // Función para actualizar el layout
