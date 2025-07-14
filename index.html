@@ -68,67 +68,20 @@
             <!-- Right Sidebar -->
             <div class="button-container">
 
-                <!-- Size Controls -->
+                <!-- arrange images -->
                 <div class="button-group">
-                    <div class="group-title">Tamaño de imagen</div>
-                    <button type="button" id="scaleUpButton" class="control-button">
-                        <i class="fas fa-expand button-icon"></i> Ampliar imagen
+                    <div class="group-title">Organizar imágenes</div>
+                    <button type="button" id="gridArrangeButton" class="control-button arrangement-button">
+                        <i class="fas fa-th button-icon"></i> Organizar en Cuadrícula
                     </button>
-                    <button type="button" id="scaleDownButton" class="control-button">
-                        <i class="fas fa-compress button-icon"></i> Reducir imagen
+                    <button type="button" id="columnsCollageButton" class="control-button arrangement-button">
+                        <i class="mdi mdi-view-dashboard button-icon"></i> Crear Collage de Columnas
                     </button>
-                    <input type="number" id="widthInput" placeholder="Ancho en cm" step="0.1" />
-                    <input type="number" id="heightInput" placeholder="Alto en cm" step="0.1" />
-                    <!-- Nuevo checkbox para mantener la relación de aspecto -->
-                    <div class="control-group">
-                        <input type="checkbox" id="maintainAspectCheckbox" />
-                        <label for="maintainAspectCheckbox">Mantener relación de aspecto</label>
-                    </div>
-                    <button type="button" id="setSizeButton" class="control-button">
-                        <i class="fas fa-ruler button-icon"></i> Establecer tamaño
+                    <button type="button" id="rowsCollageButton" class="control-button arrangement-button">
+                        <i class="mdi mdi-view-compact button-icon"></i> Crear Collage de Filas
                     </button>
-                </div>
-
-                <!-- Position Controls -->
-                <div class="button-group">
-                    <div class="group-title">Transformar imágenes</div>
-                    <button type="button" id="centerVerticallyButton" class="control-button">
-                        <i class="fas fa-arrows-alt-v button-icon"></i> Centrar vertical
-                    </button>
-                    <button type="button" id="centerHorizontallyButton" class="control-button">
-                        <i class="fas fa-arrows-alt-h button-icon"></i> Centrar horizontal
-                    </button>
-                    <button type="button" id="flipVerticalButton" class="control-button">
-                        <i class="bi bi-symmetry-vertical button-icon"></i> Voltear Vertical
-                    </button>
-                    <button type="button" id="flipHorizontalButton" class="control-button">
-                        <i class="bi bi-symmetry-horizontal button-icon"></i> Voltear Horizontal
-                    </button>
-                    <button type="button" id="rotateButton+90" class="control-button">
-                        <i class="fas fa-redo button-icon"></i> Girar 90° derecha
-                    </button>
-                    <button type="button" id="rotateButton-90" class="control-button">
-                        <i class="fas fa-undo button-icon"></i> Girar 90° izquierda
-                    </button>
-                    <div class="control-group">
-                        <input type="checkbox" id="rotateControl" />
-                        <label for="rotateControl">Permitir rotación libre</label>
-                    </div>
-                </div>
-
-                <!-- Change Orientation Controls -->
-                <div class="button-group">
-                    <div class="group-title">Cambiar Orientación de imágenes</div>
-                    <button type="button" id="changeOrientationButton" class="control-button">
-                        <i class="mdi mdi-table-pivot button-icon"></i> Filas / Columnas
-                    </button>
-                </div>
-
-                <!-- Change Order Controls -->
-                <div class="button-group">
-                    <div class="group-title">Cambiar Orden de imágenes</div>
-                    <button type="button" id="changeOrderButton" class="control-button">
-                        <i class="fa-solid fa-arrow-right-arrow-left button-icon"></i> Hacia adelante / Hacia atrás
+                    <button type="button" id="collageButton" class="control-button arrangement-button">
+                        <i class="mdi mdi-view-quilt button-icon"></i> Crear Collage Aleatorio
                     </button>
                 </div>
 
@@ -157,32 +110,81 @@
                     </div>
                 </div>
 
-                <!-- Color de Imagen -->
+                <!-- Change Orientation Controls -->
                 <div class="button-group">
-                    <div class="group-title">Color de Imagen</div>
-                    <button type="button" id="grayScaleButton" class="control-button">
-                        <i class="fas fa-adjust button-icon"></i> Convertir a B/N
+                    <div class="group-title">Cambiar Orientación de imágenes</div>
+                    <button type="button" id="changeOrientationButton" class="control-button">
+                        <i class="mdi mdi-table-pivot button-icon"></i> Filas / Columnas
                     </button>
                 </div>
 
-                <!-- Collage -->
+                <!-- Change Order Controls -->
                 <div class="button-group">
-                    <div class="group-title">Organizar imágenes</div>
-                    <button type="button" id="gridArrangeButton" class="control-button arrangement-button">
-                        <i class="fas fa-th button-icon"></i> Organizar en Cuadrícula
-                    </button>
-                    <button type="button" id="columnsCollageButton" class="control-button arrangement-button">
-                        <i class="mdi mdi-view-dashboard button-icon"></i> Crear Collage de Columnas
-                    </button>
-                    <button type="button" id="rowsCollageButton" class="control-button arrangement-button">
-                        <i class="mdi mdi-view-compact button-icon"></i> Crear Collage de Filas
-                    </button>
-                    <button type="button" id="collageButton" class="control-button arrangement-button">
-                        <i class="mdi mdi-view-quilt button-icon"></i> Crear Collage Aleatorio
+                    <div class="group-title">Cambiar Orden de imágenes</div>
+                    <button type="button" id="changeOrderButton" class="control-button">
+                        <i class="fa-solid fa-arrow-right-arrow-left button-icon"></i> Hacia adelante / Hacia atrás
                     </button>
                 </div>
 
-                <!-- Recorte de Imagen -->
+                <!-- Scale Image -->
+                <div class="button-group">
+                    <div class="group-title">Escalar imágenes</div>
+                    <button type="button" id="scaleUpButton" class="control-button">
+                        <i class="fas fa-expand button-icon"></i> Ampliar imagen
+                    </button>
+                    <button type="button" id="scaleDownButton" class="control-button">
+                        <i class="fas fa-compress button-icon"></i> Reducir imagen
+                    </button>
+                </div>
+
+                <!-- Set Size in cm -->
+                <div class="button-group">
+                    <div class="group-title">Establecer tamaño en cm</div>
+                    <input type="number" id="widthInput" placeholder="Ancho en cm" step="0.1" />
+                    <input type="number" id="heightInput" placeholder="Alto en cm" step="0.1" />
+                    <!-- Nuevo checkbox para mantener la relación de aspecto -->
+                    <div class="control-group">
+                        <input type="checkbox" id="maintainAspectCheckbox" />
+                        <label for="maintainAspectCheckbox">Mantener relación de aspecto</label>
+                    </div>
+                    <button type="button" id="setSizeButton" class="control-button">
+                        <i class="fas fa-ruler button-icon"></i> Establecer tamaño
+                    </button>
+                </div>
+
+                <!-- transform images -->
+                <div class="button-group">
+                    <div class="group-title">Transformar imágenes</div>
+                    <button type="button" id="centerVerticallyButton" class="control-button">
+                        <i class="fas fa-arrows-alt-v button-icon"></i> Centrar vertical
+                    </button>
+                    <button type="button" id="centerHorizontallyButton" class="control-button">
+                        <i class="fas fa-arrows-alt-h button-icon"></i> Centrar horizontal
+                    </button>
+                    <button type="button" id="flipVerticalButton" class="control-button">
+                        <i class="bi bi-symmetry-vertical button-icon"></i> Voltear Vertical
+                    </button>
+                    <button type="button" id="flipHorizontalButton" class="control-button">
+                        <i class="bi bi-symmetry-horizontal button-icon"></i> Voltear Horizontal
+                    </button>
+                </div>
+
+                <!-- rotate images -->
+                <div class="button-group">
+                    <div class="group-title">Rotar imágenes</div>
+                    <button type="button" id="rotateButton+90" class="control-button">
+                        <i class="fas fa-redo button-icon"></i> Girar 90° derecha
+                    </button>
+                    <button type="button" id="rotateButton-90" class="control-button">
+                        <i class="fas fa-undo button-icon"></i> Girar 90° izquierda
+                    </button>
+                    <div class="control-group">
+                        <input type="checkbox" id="rotateControl" />
+                        <label for="rotateControl">Permitir rotación libre</label>
+                    </div>
+                </div>
+
+                <!-- crop image -->
                 <div class="button-group">
                     <div class="group-title">Recorte de Imagen</div>
                     <button type="button" id="cropButton" class="control-button">
@@ -193,6 +195,14 @@
                     </button>
                     <button type="button" id="cancelCrop" class="control-button">
                         <i class="fas fa-times button-icon"></i> Cancelar
+                    </button>
+                </div>
+
+                <!-- Color de Imagen -->
+                <div class="button-group">
+                    <div class="group-title">Color de Imagen</div>
+                    <button type="button" id="grayScaleButton" class="control-button">
+                        <i class="fas fa-adjust button-icon"></i> Convertir a B/N
                     </button>
                 </div>
 
