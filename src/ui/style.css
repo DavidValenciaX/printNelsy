@@ -323,3 +323,7 @@ body.drag-over {
 #gridControlsGroup {
   display: none; /* Oculto por defecto */
 }
+
+#orderGroupTitle {
+  margin-top: 1rem;
+}
