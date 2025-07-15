@@ -1,6 +1,6 @@
 import { fabric } from 'fabric';
 import { arrangeImages, sortImages } from '../transform/arrangeUtils.js';
-import { resetCustomGridDimensions } from '../layout/gridControls.js';
+import { resetCustomGridDimensions, initializeGridControls } from '../layout/gridControls.js';
 
 // Variables exportadas para gestión de imágenes
 export const originalImages = {};
@@ -108,9 +108,15 @@ function _processFilesForCanvas(files, canvas, rotateCheckbox) {
           imageState.orientation = orientation;
           imageState.order = order;
 
-          // Update order buttons UI
-          if (domManagerInstance?.eventManager) {
-            domManagerInstance.eventManager.updateOrderButtons(imageState.order);
+          // Update UI
+          if (domManagerInstance) {
+            initializeGridControls(canvas, domManagerInstance);
+            if (domManagerInstance.eventManager) {
+              domManagerInstance.eventManager.updateLayoutOrientationButtons(
+                imageState.orientation
+              );
+              domManagerInstance.eventManager.updateOrderButtons(imageState.order);
+            }
           }
 
           // Luego, se guardan los datos originales ya con sus valores de top, left, scaleX y scaleY actualizados

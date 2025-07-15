@@ -32,11 +32,6 @@ export class EventManager {
   initializeFileEvents() {
     this.addEventBinding('imageLoader', 'change', (e) => {
       this.actions.handleImageUpload(e, this.canvasManager.getCanvas(), this.dom.get('rotateCheckbox'));
-      // Inicializar controles de grid después de cargar imágenes
-      setTimeout(() => {
-        this.actions.initializeGridControls(this.canvasManager.getCanvas(), this.dom);
-        this.updateLayoutOrientationButtons(imageState.orientation);
-      }, 100);
     });
     
     this.addEventBinding('downloadPdfButton', 'click', () =>
@@ -366,11 +361,6 @@ export class EventManager {
 
     document.body.addEventListener('drop', (e) => {
       this.actions.handleImageDrop(e, this.canvasManager.getCanvas(), this.dom.get('rotateCheckbox'));
-      // Inicializar controles de grid después de hacer drop de imágenes
-      setTimeout(() => {
-        this.actions.initializeGridControls(this.canvasManager.getCanvas(), this.dom);
-        this.updateLayoutOrientationButtons(imageState.orientation);
-      }, 100);
     });
 
     // Keyboard events
