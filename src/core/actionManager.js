@@ -22,7 +22,10 @@ import {
 import { 
   initializeCrop, 
   confirmCrop, 
-  exitCropMode
+  exitCropMode,
+  initializePerspectiveCrop,
+  confirmPerspectiveCrop,
+  exitPerspectiveCropMode
 } from '../image/cropUtils.js';
 import { 
   resizeCanvas, 
@@ -97,6 +100,11 @@ export class ActionManager {
   initializeCrop = initializeCrop;
   confirmCrop = confirmCrop;
   exitCropMode = exitCropMode;
+  
+  // Perspective crop actions
+  initializePerspectiveCrop = initializePerspectiveCrop;
+  confirmPerspectiveCrop = confirmPerspectiveCrop;
+  exitPerspectiveCropMode = exitPerspectiveCropMode;
 
   // Canvas actions
   resizeCanvas = resizeCanvas;

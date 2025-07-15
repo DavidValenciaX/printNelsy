@@ -289,6 +289,40 @@ export class EventManager {
         this.dom.get('cropButton')
       )
     );
+
+    // Perspective crop events
+    this.addEventBinding('perspectiveCropButton', 'click', () => 
+      this.actions.initializePerspectiveCrop(
+        this.canvasManager.getCanvas(), 
+        Swal, 
+        this.dom.get('confirmPerspectiveCropButton'), 
+        this.dom.get('cancelPerspectiveCropButton'), 
+        this.dom.get('perspectiveCropButton'), 
+        this.canvasManager.getMarginRect(), 
+        this.dom.get('rotateCheckbox')
+      )
+    );
+
+    this.addEventBinding('confirmPerspectiveCropButton', 'click', () => 
+      this.actions.confirmPerspectiveCrop(
+        this.canvasManager.getCanvas(), 
+        this.canvasManager.getMarginRect(), 
+        this.dom.get('rotateCheckbox'), 
+        Swal, 
+        this.dom.get('confirmPerspectiveCropButton'), 
+        this.dom.get('cancelPerspectiveCropButton'), 
+        this.dom.get('perspectiveCropButton')
+      )
+    );
+
+    this.addEventBinding('cancelPerspectiveCropButton', 'click', () => 
+      this.actions.exitPerspectiveCropMode(
+        this.canvasManager.getCanvas(), 
+        this.dom.get('confirmPerspectiveCropButton'), 
+        this.dom.get('cancelPerspectiveCropButton'), 
+        this.dom.get('perspectiveCropButton')
+      )
+    );
   }
 
   initializeCollageEvents() {

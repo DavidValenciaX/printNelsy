@@ -215,6 +215,14 @@ input:focus {
   background-color: #dc3545;
 }
 
+#confirmPerspectiveCrop {
+  display: none;
+}
+
+#cancelPerspectiveCrop {
+  display: none;
+}
+
 .button-icon {
   font-size: 1rem;
 }

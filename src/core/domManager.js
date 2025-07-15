@@ -52,8 +52,11 @@ export class DOMManager {
       
       // Crop controls
       cropButton: document.getElementById("cropButton"),
+      perspectiveCropButton: document.getElementById("perspectiveCropButton"),
       confirmCropButton: document.getElementById("confirmCrop"),
+      confirmPerspectiveCropButton: document.getElementById("confirmPerspectiveCrop"),
       cancelCropButton: document.getElementById("cancelCrop"),
+      cancelPerspectiveCropButton: document.getElementById("cancelPerspectiveCrop"),
       
       // Collage controls
       gridArrangeButton: document.getElementById("gridArrangeButton"),
