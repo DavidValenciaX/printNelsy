@@ -44,7 +44,8 @@ export default defineConfig({
     include: [
       'fabric',
       'jspdf',
-      'sweetalert2'
+      'sweetalert2',
+      'perspective-transform'
     ]
   },
 

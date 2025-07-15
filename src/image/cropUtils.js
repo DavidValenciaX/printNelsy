@@ -1,9 +1,48 @@
 import { fabric } from 'fabric';
+// import getTransform from 'perspective-transform'; // Comentado temporalmente
 import {
   showNoObjectSelectedWarning,
   showSingleImageWarning,
   showInvalidSelectionWarning,
 } from "../utils/uiUtils.js";
+
+// Función simplificada para transformación de perspectiva usando interpolación bilineal
+function calculatePerspectiveTransform(srcCorners, dstCorners) {
+  // Implementación simplificada usando interpolación bilineal
+  // Esta es una aproximación que funciona bien para casos comunes
+  
+  return {
+    transformInverse: (u, v) => {
+      // Normalizar las coordenadas de destino (0-1)
+      const dstWidth = Math.max(dstCorners[1][0], dstCorners[2][0]) - Math.min(dstCorners[0][0], dstCorners[3][0]);
+      const dstHeight = Math.max(dstCorners[2][1], dstCorners[3][1]) - Math.min(dstCorners[0][1], dstCorners[1][1]);
+      
+      const normalizedU = u / dstWidth;
+      const normalizedV = v / dstHeight;
+      
+      // Interpolación bilineal para encontrar el punto correspondiente en la imagen fuente
+      const topLeft = srcCorners[0];
+      const topRight = srcCorners[1];
+      const bottomRight = srcCorners[2];
+      const bottomLeft = srcCorners[3];
+      
+      // Interpolar en la dirección horizontal para el borde superior e inferior
+      const topX = topLeft[0] + normalizedU * (topRight[0] - topLeft[0]);
+      const topY = topLeft[1] + normalizedU * (topRight[1] - topLeft[1]);
+      
+      const bottomX = bottomLeft[0] + normalizedU * (bottomRight[0] - bottomLeft[0]);
+      const bottomY = bottomLeft[1] + normalizedU * (bottomRight[1] - bottomLeft[1]);
+      
+      // Interpolar en la dirección vertical
+      const finalX = topX + normalizedV * (bottomX - topX);
+      const finalY = topY + normalizedV * (bottomY - topY);
+      
+      return [finalX, finalY];
+    }
+  };
+}
+
+
 
 let cropRect = null;
 let activeImage = null;
@@ -400,14 +439,140 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
     return;
   }
 
-  // Por ahora solo mostraremos un mensaje indicando que la funcionalidad está en desarrollo
-  Swal.fire({
-    title: 'Funcionalidad en desarrollo',
-    text: 'El recorte en perspectiva está en desarrollo. Por ahora solo se pueden posicionar los manejadores.',
-    icon: 'info'
-  });
+  try {
+    // Mostrar indicador de procesamiento
+    Swal.fire({
+      title: 'Procesando...',
+      text: 'Aplicando transformación de perspectiva',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      willOpen: () => {
+        Swal.showLoading();
+      }
+    });
 
-  exitPerspectiveCropMode(canvas, confirmButton, cancelButton, perspectiveButton);
+    // 1. OBTENER COORDENADAS DE LAS ESQUINAS
+    const srcCorners = perspectiveCorners.map(corner => [corner.left, corner.top]);
+
+    // 2. CALCULAR DIMENSIONES DE LA IMAGEN DE SALIDA
+    const width1 = Math.sqrt(Math.pow(srcCorners[1][0] - srcCorners[0][0], 2) + Math.pow(srcCorners[1][1] - srcCorners[0][1], 2));
+    const width2 = Math.sqrt(Math.pow(srcCorners[2][0] - srcCorners[3][0], 2) + Math.pow(srcCorners[2][1] - srcCorners[3][1], 2));
+    const destWidth = Math.max(width1, width2);
+
+    const height1 = Math.sqrt(Math.pow(srcCorners[3][0] - srcCorners[0][0], 2) + Math.pow(srcCorners[3][1] - srcCorners[0][1], 2));
+    const height2 = Math.sqrt(Math.pow(srcCorners[2][0] - srcCorners[1][0], 2) + Math.pow(srcCorners[2][1] - srcCorners[1][1], 2));
+    const destHeight = Math.max(height1, height2);
+
+    // Esquinas del rectángulo de destino (imagen final rectangular)
+    const dstCorners = [[0, 0], [destWidth, 0], [destWidth, destHeight], [0, destHeight]];
+
+    // 3. CALCULAR LA MATRIZ DE TRANSFORMACIÓN INVERSA
+    const transform = calculatePerspectiveTransform(srcCorners, dstCorners);
+
+    // 4. CREAR UN CANVAS TEMPORAL PARA RENDERIZAR LA NUEVA IMAGEN
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = Math.round(destWidth);
+    tempCanvas.height = Math.round(destHeight);
+    const tempCtx = tempCanvas.getContext('2d');
+
+    // 5. OBTENER LOS DATOS DE LA IMAGEN ORIGINAL
+    // Primero, necesitamos hacer temporalmente invisibles los controles de perspectiva
+    perspectiveCorners.forEach(corner => corner.set({ opacity: 0 }));
+    perspectiveLines.forEach(line => line.set({ opacity: 0 }));
+    canvas.requestRenderAll();
+
+    // Obtener los datos del canvas completo
+    const canvasImageData = tempCtx.createImageData(canvas.width, canvas.height);
+    const canvasCtx = canvas.getContext('2d');
+    const sourceImageData = canvasCtx.getImageData(0, 0, canvas.width, canvas.height);
+
+    // Crear los datos de la imagen transformada
+    const transformedImageData = tempCtx.createImageData(tempCanvas.width, tempCanvas.height);
+
+    // 6. APLICAR TRANSFORMACIÓN PÍXEL A PÍXEL
+    for (let y = 0; y < tempCanvas.height; y++) {
+      for (let x = 0; x < tempCanvas.width; x++) {
+        // Transformar coordenadas inversas para encontrar el píxel fuente
+        const sourceCoords = transform.transformInverse(x, y);
+        const sourceX = Math.round(sourceCoords[0]);
+        const sourceY = Math.round(sourceCoords[1]);
+
+        // Verificar si las coordenadas están dentro del canvas original
+        if (sourceX >= 0 && sourceX < canvas.width && sourceY >= 0 && sourceY < canvas.height) {
+          const sourceIndex = (sourceY * canvas.width + sourceX) * 4;
+          const destIndex = (y * tempCanvas.width + x) * 4;
+
+          // Copiar los valores RGBA
+          transformedImageData.data[destIndex] = sourceImageData.data[sourceIndex];     // R
+          transformedImageData.data[destIndex + 1] = sourceImageData.data[sourceIndex + 1]; // G
+          transformedImageData.data[destIndex + 2] = sourceImageData.data[sourceIndex + 2]; // B
+          transformedImageData.data[destIndex + 3] = sourceImageData.data[sourceIndex + 3]; // A
+        } else {
+          // Píxel fuera del canvas original - establecer como transparente
+          const destIndex = (y * tempCanvas.width + x) * 4;
+          transformedImageData.data[destIndex + 3] = 0; // A = 0 (transparente)
+        }
+      }
+    }
+
+    // Dibujar la imagen transformada en el canvas temporal
+    tempCtx.putImageData(transformedImageData, 0, 0);
+
+    // 7. REEMPLAZAR LA IMAGEN ANTIGUA CON LA NUEVA
+    const newImageSrc = tempCanvas.toDataURL();
+    const originalId = activePerspectiveImage.id;
+    const originalLeft = Math.min(...srcCorners.map(c => c[0]));
+    const originalTop = Math.min(...srcCorners.map(c => c[1]));
+
+    // Remover la imagen original
+    canvas.remove(activePerspectiveImage);
+
+    // Crear la nueva imagen transformada
+    fabric.Image.fromURL(newImageSrc, (newImage) => {
+      newImage.set({
+        id: originalId,
+        left: originalLeft,
+        top: originalTop,
+      });
+
+      // Configurar controles de rotación según el checkbox
+      newImage.setControlsVisibility({
+        mtr: rotateCheckbox.checked,
+      });
+
+      newImage.setCoords();
+      canvas.add(newImage);
+      canvas.renderAll();
+
+      // Mostrar mensaje de éxito
+      Swal.fire({
+        title: '¡Éxito!',
+        text: 'La transformación de perspectiva se ha aplicado correctamente.',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
+      // Salir del modo de recorte en perspectiva
+      exitPerspectiveCropMode(canvas, confirmButton, cancelButton, perspectiveButton);
+    });
+
+  } catch (error) {
+    console.error('Error en transformación de perspectiva:', error);
+    
+    // Restaurar visibilidad de los controles en caso de error
+    if (perspectiveCorners.length > 0) {
+      perspectiveCorners.forEach(corner => corner.set({ opacity: 1 }));
+      perspectiveLines.forEach(line => line.set({ opacity: 1 }));
+      canvas.requestRenderAll();
+    }
+
+    Swal.fire({
+      title: 'Error',
+      text: 'Hubo un problema al aplicar la transformación de perspectiva. Por favor, inténtalo de nuevo.',
+      icon: 'error'
+    });
+  }
 }
 
 function exitPerspectiveCropMode(canvas, confirmButton, cancelButton, perspectiveButton) {
