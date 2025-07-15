@@ -278,6 +278,14 @@ body.drag-over {
   font-weight: 500;
 }
 
+.grid-control-slider {
+  flex-grow: 1;
+  width: 100%;
+  margin: 0 0.5rem;
+  accent-color: #4CAF50;
+  cursor: pointer;
+}
+
 .grid-control-button {
   width: 2rem;
   height: 2rem;

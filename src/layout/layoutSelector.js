@@ -28,7 +28,8 @@ export function applyGridArrangement(canvas, domManager) {
     sortedImages, 
     imageState.orientation,
     customDimensions.rows,
-    customDimensions.cols
+    customDimensions.cols,
+    imageState.spacing
   ));
   
   initializeGridControls(canvas, domManager);

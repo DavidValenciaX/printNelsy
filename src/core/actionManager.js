@@ -43,7 +43,8 @@ import {
   increaseCols,
   decreaseCols,
   resetCustomGridDimensions,
-  toggleGridControlsVisibility
+  toggleGridControlsVisibility,
+  updateImageSpacing
 } from '../layout/gridControls.js';
 
 /**
@@ -124,6 +125,7 @@ export class ActionManager {
   decreaseCols = decreaseCols;
   resetCustomGridDimensions = resetCustomGridDimensions;
   toggleGridControlsVisibility = toggleGridControlsVisibility;
+  updateImageSpacing = updateImageSpacing;
 
   // Global window actions for zoom (backwards compatibility)
   exposeGlobalZoomActions() {

@@ -340,6 +340,10 @@ export class EventManager {
     this.addEventBinding('decreaseColsButton', 'click', () => {
       this.actions.decreaseCols(this.canvasManager.getCanvas(), this.dom);
     });
+    
+    this.addEventBinding('spacingRange', 'input', (e) => {
+      this.actions.updateImageSpacing(this.canvasManager.getCanvas(), this.dom, parseInt(e.target.value, 10));
+    });
   }
 
   initializeGlobalEvents() {

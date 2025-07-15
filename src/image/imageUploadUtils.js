@@ -7,7 +7,8 @@ export const originalImages = {};
 export const imageState = {
   arrangementStatus: "none",
   orientation: "rows",
-  order: "forward"
+  order: "forward",
+  spacing: 20
 };
 
 // Variable para almacenar la referencia al domManager
@@ -40,6 +41,10 @@ export function setOrientation(orientation) {
 // Función para actualizar la dirección
 export function setOrder(order) {
   imageState.order = order;
+}
+
+export function setSpacing(spacing) {
+  imageState.spacing = parseInt(spacing, 10);
 }
 
 /**
@@ -95,7 +100,7 @@ function _processFilesForCanvas(files, canvas, rotateCheckbox) {
 
           // Arrange the new images on the canvas. This function adds them.
           const sortedImages = sortImages(loadedImages, order);
-          arrangeImages(canvas, sortedImages, orientation);
+          arrangeImages(canvas, sortedImages, orientation, null, null, imageState.spacing);
 
           // Set the final arrangement status based on whether the canvas was initially empty.
           if (canvasWasEmpty) {

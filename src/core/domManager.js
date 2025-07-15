@@ -69,7 +69,9 @@ export class DOMManager {
       increaseColsButton: document.getElementById("increaseColsButton"),
       decreaseColsButton: document.getElementById("decreaseColsButton"),
       rowsDisplay: document.getElementById("rowsDisplay"),
-      colsDisplay: document.getElementById("colsDisplay")
+      colsDisplay: document.getElementById("colsDisplay"),
+      spacingRange: document.getElementById("spacingRange"),
+      spacingDisplay: document.getElementById("spacingDisplay")
     };
     this.eventManager = null;
   }

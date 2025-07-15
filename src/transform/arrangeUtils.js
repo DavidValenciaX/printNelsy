@@ -42,7 +42,8 @@ export function arrangeImages(
   images,
   orientation,
   customRows = null,
-  customCols = null
+  customCols = null,
+  imageSpacing = 20
 ) {
   const count = images.length;
 
@@ -51,8 +52,6 @@ export function arrangeImages(
     console.error("Margin rect not found for arranging images. Layout may be incorrect.");
     return null; // Return null to indicate error
   }
-
-  const imageSpacing = 20;
 
   const { rows, cols } = calculateGridDimensions(
     count,

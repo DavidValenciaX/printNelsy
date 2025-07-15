@@ -51,7 +51,8 @@ function reAddAndArrangeImages(images, currentOrientation, currentOrder, canvas,
         sortedImages, 
         currentOrientation, 
         customDimensions.rows,
-        customDimensions.cols
+        customDimensions.cols,
+        imageState.spacing
       ));
     },
     "columns-collage": () => {

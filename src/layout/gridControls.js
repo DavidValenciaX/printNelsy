@@ -1,5 +1,5 @@
 import { arrangeImages, getCurrentGridDimensions, sortImages } from '../transform/arrangeUtils.js';
-import { imageState, setArrangementStatus } from '../image/imageUploadUtils.js';
+import { imageState, setArrangementStatus, setSpacing } from '../image/imageUploadUtils.js';
 import { fabric } from 'fabric';
 import { getCurrentMarginRect } from '../canvas/marginRectManager.js';
 
@@ -95,6 +95,12 @@ export function initializeGridControls(canvas, domManager) {
     updateGridControlButtons(currentCustomRows, currentCustomCols, images.length, domManager);
   }
   
+  // Actualizar controles de espaciado
+  const spacingRange = domManager.get('spacingRange');
+  const spacingDisplay = domManager.get('spacingDisplay');
+  if (spacingRange) spacingRange.value = imageState.spacing;
+  if (spacingDisplay) spacingDisplay.textContent = imageState.spacing;
+
   toggleGridControlsVisibility(canvas, domManager);
 }
 
@@ -120,7 +126,8 @@ export function increaseRows(canvas, domManager) {
     sortedImages, 
     imageState.orientation, 
     currentCustomRows,
-    currentCustomCols
+    currentCustomCols,
+    imageState.spacing
   ));
   
   updateGridVisualization(canvas);
@@ -150,7 +157,8 @@ export function decreaseRows(canvas, domManager) {
     sortedImages, 
     imageState.orientation, 
     currentCustomRows,
-    currentCustomCols
+    currentCustomCols,
+    imageState.spacing
   ));
   
   updateGridVisualization(canvas);
@@ -180,7 +188,8 @@ export function increaseCols(canvas, domManager) {
     sortedImages, 
     imageState.orientation, 
     currentCustomRows,
-    currentCustomCols
+    currentCustomCols,
+    imageState.spacing
   ));
   
   updateGridVisualization(canvas);
@@ -210,7 +219,8 @@ export function decreaseCols(canvas, domManager) {
     sortedImages, 
     imageState.orientation, 
     currentCustomRows,
-    currentCustomCols
+    currentCustomCols,
+    imageState.spacing
   ));
   
   updateGridVisualization(canvas);
@@ -224,6 +234,7 @@ export function decreaseCols(canvas, domManager) {
 export function resetCustomGridDimensions() {
   currentCustomRows = null;
   currentCustomCols = null;
+  setSpacing(20);
 }
 
 /**
@@ -235,6 +246,36 @@ export function getCustomGridDimensions() {
     cols: currentCustomCols
   };
 } 
+
+/**
+ * Actualiza el espaciado entre imágenes en el grid
+ */
+export function updateImageSpacing(canvas, domManager, spacing) {
+  setSpacing(spacing);
+
+  const spacingDisplay = domManager.get('spacingDisplay');
+  if (spacingDisplay) spacingDisplay.textContent = spacing;
+
+  const images = canvas.getObjects().filter(obj => obj.type === 'image');
+  if (images.length === 0 || imageState.arrangementStatus !== 'grid') return;
+
+  // Remover imágenes para reorganizar
+  images.forEach(img => canvas.remove(img));
+
+  const customDimensions = getCustomGridDimensions();
+  const sortedImages = sortImages(images, imageState.order);
+
+  setArrangementStatus(arrangeImages(
+    canvas,
+    sortedImages,
+    imageState.orientation,
+    customDimensions.rows,
+    customDimensions.cols,
+    imageState.spacing
+  ));
+
+  updateGridVisualization(canvas);
+}
 
 // --- Grid Visualization Logic ---
 
