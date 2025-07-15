@@ -74,31 +74,22 @@ export function arrangeImages(
       row = index % rows;
     }
 
-    let realImageWidth = img.width * img.scaleX;
-    let realImageHeight = img.height * img.scaleY;
-    let bounds = img.getBoundingRect();
+    const availableWidth = cellWidth - imageSpacing;
+    const availableHeight = cellHeight - imageSpacing;
 
-    let roundedBoundsWidth = roundToDecimals(bounds.width, 2);
-    let roundedImageWidth = roundToDecimals(realImageWidth, 2);
-    const offsetWidthImageBound = roundToDecimals(
-      roundedBoundsWidth - roundedImageWidth,
-      2
-    );
+    // Reset angle to 0 unless it's a multiple of 90
+    const currentAngle = roundToDecimals(img.angle || 0, 0);
+    const newAngle = currentAngle % 90 === 0 ? currentAngle : 0;
 
-    let roundedBoundsHeight = roundToDecimals(bounds.height, 2);
-    let roundedImageHeight = roundToDecimals(realImageHeight, 2);
-    const offsetHeightImageBound = roundToDecimals(
-      roundedBoundsHeight - roundedImageHeight,
-      2
-    );
+    // Determine effective dimensions based on the final orthogonal rotation
+    const isSideways = Math.abs(newAngle) % 180 === 90;
+    const imageEffectiveWidth = isSideways ? img.height : img.width;
+    const imageEffectiveHeight = isSideways ? img.width : img.height;
 
-    const availableWidth = cellWidth - imageSpacing - offsetWidthImageBound;
-    const availableHeight = cellHeight - imageSpacing - offsetHeightImageBound;
-
-    // We need to check against the original image dimensions, not the scaled ones
+    // Calculate scale factor to fit the image within the cell
     const scaleFactor = Math.min(
-      availableWidth / img.width,
-      availableHeight / img.height
+      availableWidth / imageEffectiveWidth,
+      availableHeight / imageEffectiveHeight
     );
 
     img.scale(scaleFactor);
@@ -108,6 +99,7 @@ export function arrangeImages(
       top: marginRect.top + row * cellHeight + cellHeight / 2,
       originX: "center",
       originY: "center",
+      angle: newAngle,
     });
 
     canvas.add(img);
