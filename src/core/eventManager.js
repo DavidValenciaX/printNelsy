@@ -35,7 +35,7 @@ export class EventManager {
       // Inicializar controles de grid después de cargar imágenes
       setTimeout(() => {
         this.actions.initializeGridControls(this.canvasManager.getCanvas(), this.dom);
-        this.updateLayoutOrientationButtons('rows');
+        this.updateLayoutOrientationButtons(imageState.orientation);
       }, 100);
     });
     
@@ -217,7 +217,7 @@ export class EventManager {
       this.updateOrderButtons('reverse');
     });
 
-    this.updateLayoutOrientationButtons('rows');
+    this.updateLayoutOrientationButtons(imageState.orientation);
     this.updateOrderButtons(imageState.order);
   }
 
@@ -300,7 +300,7 @@ export class EventManager {
     this.addEventBinding('gridArrangeButton', 'click', () => {
       this.actions.applyGridArrangement(this.canvasManager.getCanvas(), this.dom);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
-      this.updateLayoutOrientationButtons('rows');
+      this.updateLayoutOrientationButtons(imageState.orientation);
       this.updateOrderButtons(imageState.order);
     });
 
@@ -369,7 +369,7 @@ export class EventManager {
       // Inicializar controles de grid después de hacer drop de imágenes
       setTimeout(() => {
         this.actions.initializeGridControls(this.canvasManager.getCanvas(), this.dom);
-        this.updateLayoutOrientationButtons('rows');
+        this.updateLayoutOrientationButtons(imageState.orientation);
       }, 100);
     });
 
