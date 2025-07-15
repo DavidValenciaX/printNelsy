@@ -1,3 +1,4 @@
+import Swal from 'sweetalert2';
 import { arrangeImages, sortImages } from './../transform/arrangeUtils.js';
 import { 
   imageState,
@@ -10,6 +11,10 @@ import { getCustomGridDimensions, initializeGridControls } from './gridControls.
 export function applyGridArrangement(canvas, domManager) {
   const images = canvas.getObjects().filter((obj) => obj.type === "image");
   if (images.length === 0) {
+    Swal.fire({
+      text: "Debe haber al menos una imagen en el canvas.",
+      icon: "warning",
+    });
     return;
   }
 
