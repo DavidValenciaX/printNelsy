@@ -1,8 +1,7 @@
 import { fabric } from 'fabric';
 import { 
   resizeCanvas, 
-  changeOrientation, 
-  paperSizes, 
+  changeOrientation,
   dpi, 
   getCurrentSize, 
   getIsVertical 
