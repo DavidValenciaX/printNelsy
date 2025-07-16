@@ -546,7 +546,7 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
       Swal.close();
 
       // Salir del modo de recorte en perspectiva
-      exitPerspectiveCropMode(canvas, confirmButton, cancelButton, perspectiveButton);
+      exitPerspectiveCropMode(canvas, confirmButton, cancelButton, perspectiveButton, newImage);
     });
 
   } catch (error) {
@@ -567,7 +567,7 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
   }
 }
 
-function exitPerspectiveCropMode(canvas, confirmButton, cancelButton, perspectiveButton) {
+function exitPerspectiveCropMode(canvas, confirmButton, cancelButton, perspectiveButton, newActiveObject = null) {
   // Remove corners and lines from canvas
   perspectiveCorners.forEach(corner => canvas.remove(corner));
   perspectiveLines.forEach(line => canvas.remove(line));
@@ -582,7 +582,9 @@ function exitPerspectiveCropMode(canvas, confirmButton, cancelButton, perspectiv
   restorePerspectiveOtherObjects(canvas);
   
   // Reselect the active image if it still exists
-  if (activePerspectiveImage) {
+  if (newActiveObject) {
+    canvas.setActiveObject(newActiveObject);
+  } else if (activePerspectiveImage) {
     canvas.setActiveObject(activePerspectiveImage);
   }
   activePerspectiveImage = null;
