@@ -150,6 +150,14 @@ function setSingleImageSizeInCm(selectedImage, inputElements, maintainAspect, pa
 }
 
 function setImageSizeInCm({ canvas, widthInput, heightInput, marginRect, paperConfig }) {
+  if (!paperConfig) {
+    console.error("paperConfig is not defined. Cannot set image size.");
+    Swal.fire({
+      text: "Error de configuración: no se pudo obtener la configuración del papel.",
+      icon: "error",
+    });
+    return;
+  }
   const { currentSize, isVertical, paperSizes, dpi } = paperConfig;
   const activeObjects = canvas.getActiveObjects();
   const selectedImages = activeObjects.filter((obj) => obj.type === "image");

@@ -4,7 +4,8 @@ import {
   changeOrientation,
   dpi, 
   getCurrentSize, 
-  getIsVertical 
+  getIsVertical,
+  paperSizes
 } from '../canvas/canvasResizeUtils.js';
 import { setupMovingEvents } from '../events/movingEvents.js';
 import { setupScalingEvents } from '../events/scalingEvents.js';
@@ -70,9 +71,10 @@ export class CanvasManager {
 
   getPaperConfig() {
     return {
-      size: getCurrentSize(),
+      currentSize: getCurrentSize(),
       isVertical: getIsVertical(),
-      dpi: dpi
+      dpi: dpi,
+      paperSizes: paperSizes
     };
   }
 
