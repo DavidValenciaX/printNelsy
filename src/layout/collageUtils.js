@@ -241,6 +241,7 @@ export function collageArrange(canvas, marginRect, Swal) {
   canvas.renderAll();
   optimizeCollageSize(canvas, marginRect);
   centerImages(canvas, marginRect);
+  optimizeCollageSize(canvas, marginRect);
   return 'collage'; // Return the arrangement status
 }
 
