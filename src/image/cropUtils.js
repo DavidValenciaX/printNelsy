@@ -542,14 +542,8 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
       canvas.add(newImage);
       canvas.renderAll();
 
-      // Mostrar mensaje de éxito
-      Swal.fire({
-            title: '¡Éxito!',
-            text: 'La transformación de perspectiva se ha aplicado correctamente.',
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false
-          });
+      // Cerrar el diálogo de "Procesando..." en lugar de mostrar un mensaje de éxito
+      Swal.close();
 
       // Salir del modo de recorte en perspectiva
       exitPerspectiveCropMode(canvas, confirmButton, cancelButton, perspectiveButton);
