@@ -221,6 +221,7 @@ input:focus {
 
 #cancelPerspectiveCrop {
   display: none;
+  background-color: #dc3545;
 }
 
 .button-icon {

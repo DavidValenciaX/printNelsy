@@ -543,16 +543,16 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
       canvas.renderAll();
 
       // Mostrar mensaje de éxito
-  Swal.fire({
-        title: '¡Éxito!',
-        text: 'La transformación de perspectiva se ha aplicado correctamente.',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      });
+      Swal.fire({
+            title: '¡Éxito!',
+            text: 'La transformación de perspectiva se ha aplicado correctamente.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
 
       // Salir del modo de recorte en perspectiva
-  exitPerspectiveCropMode(canvas, confirmButton, cancelButton, perspectiveButton);
+      exitPerspectiveCropMode(canvas, confirmButton, cancelButton, perspectiveButton);
     });
 
   } catch (error) {
