@@ -477,9 +477,9 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
 
     // 5. OBTENER LOS DATOS DE LA IMAGEN ORIGINAL
     // Primero, necesitamos hacer temporalmente invisibles los controles de perspectiva
-    perspectiveCorners.forEach(corner => corner.set({ opacity: 0 }));
-    perspectiveLines.forEach(line => line.set({ opacity: 0 }));
-    canvas.requestRenderAll();
+    perspectiveCorners.forEach(corner => corner.set({ visible: false }));
+    perspectiveLines.forEach(line => line.set({ visible: false }));
+    canvas.renderAll(); // Usamos renderAll() para un renderizado síncrono
 
     // Obtener los datos del canvas completo
     const canvasImageData = tempCtx.createImageData(canvas.width, canvas.height);
@@ -545,7 +545,7 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
       canvas.renderAll();
 
       // Mostrar mensaje de éxito
-      Swal.fire({
+  Swal.fire({
         title: '¡Éxito!',
         text: 'La transformación de perspectiva se ha aplicado correctamente.',
         icon: 'success',
@@ -554,7 +554,7 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
       });
 
       // Salir del modo de recorte en perspectiva
-      exitPerspectiveCropMode(canvas, confirmButton, cancelButton, perspectiveButton);
+  exitPerspectiveCropMode(canvas, confirmButton, cancelButton, perspectiveButton);
     });
 
   } catch (error) {
@@ -562,9 +562,9 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
     
     // Restaurar visibilidad de los controles en caso de error
     if (perspectiveCorners.length > 0) {
-      perspectiveCorners.forEach(corner => corner.set({ opacity: 1 }));
-      perspectiveLines.forEach(line => line.set({ opacity: 1 }));
-      canvas.requestRenderAll();
+      perspectiveCorners.forEach(corner => corner.set({ visible: true }));
+      perspectiveLines.forEach(line => line.set({ visible: true }));
+      canvas.renderAll();
     }
 
     Swal.fire({
