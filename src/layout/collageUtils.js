@@ -240,6 +240,7 @@ export function collageArrange(canvas, marginRect, Swal) {
 
   canvas.renderAll();
   optimizeCollageSize(canvas, marginRect);
+  centerImages(canvas, marginRect);
   return 'collage'; // Return the arrangement status
 }
 
@@ -494,4 +495,93 @@ function optimizeCollageSize(canvas, marginRect) {
   }
 
   canvas.renderAll();
+}
+
+/**
+ * PHASE 3: CENTER IMAGES
+ * Moves each image towards the center of the canvas both horizontally and vertically
+ * while respecting boundaries and avoiding overlaps with other images.
+ */
+function centerImages(canvas, marginRect) {
+  const images = canvas.getObjects('image');
+  if (images.length === 0) return;
+
+  // Calculate canvas centers
+  const centerX = marginRect.left + marginRect.width / 2;
+  const centerY = marginRect.top + marginRect.height / 2;
+
+  const MOVEMENT_STEP = 1; // Pixels to move per iteration
+  const MAX_ITERATIONS = 1000; // Prevent infinite loops
+
+  let globalMovement = true;
+  let iterations = 0;
+
+  while (globalMovement && iterations < MAX_ITERATIONS) {
+    globalMovement = false;
+
+    for (const img of images) {
+      const moved = attemptCenterMovement(img, centerX, centerY, images, marginRect, MOVEMENT_STEP);
+      if (moved) {
+        globalMovement = true;
+      }
+    }
+
+    iterations++;
+  }
+
+  canvas.renderAll();
+}
+
+/**
+ * Attempts to move an image towards the center of the canvas
+ * @param {fabric.Image} img - The image to move
+ * @param {number} centerX - Horizontal center of the canvas
+ * @param {number} centerY - Vertical center of the canvas
+ * @param {Array} images - All images in the canvas
+ * @param {Object} marginRect - Canvas boundaries
+ * @param {number} step - Movement step size
+ * @returns {boolean} - True if the image was moved, false otherwise
+ */
+function attemptCenterMovement(img, centerX, centerY, images, marginRect, step) {
+  let moved = false;
+
+  // Store current position
+  const currentLeft = img.left;
+  const currentTop = img.top;
+
+  // Determine movement direction towards center
+  const horizontalDirection = Math.sign(centerX - img.left);
+  const verticalDirection = Math.sign(centerY - img.top);
+
+  // Try horizontal movement
+  if (horizontalDirection !== 0) {
+    const newLeft = img.left + (horizontalDirection * step);
+    img.set({ left: newLeft });
+    img.setCoords();
+
+    if (exceedsMargin(img, marginRect) || checkOverlapWithOthers(img, images, marginRect)) {
+      // Revert horizontal movement
+      img.set({ left: currentLeft });
+      img.setCoords();
+    } else {
+      moved = true;
+    }
+  }
+
+  // Try vertical movement
+  if (verticalDirection !== 0) {
+    const newTop = img.top + (verticalDirection * step);
+    img.set({ top: newTop });
+    img.setCoords();
+
+    if (exceedsMargin(img, marginRect) || checkOverlapWithOthers(img, images, marginRect)) {
+      // Revert vertical movement
+      img.set({ top: currentTop });
+      img.setCoords();
+    } else {
+      moved = true;
+    }
+  }
+
+  return moved;
 } 
