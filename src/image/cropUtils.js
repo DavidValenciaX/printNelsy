@@ -100,15 +100,15 @@ function enterCropMode(imgObject, canvas, marginRect, confirmCropButton, cancelC
     width: bounds.width,
     height: bounds.height,
     fill: "transparent",
-    stroke: "#000",
-    strokeWidth: 1,
+    stroke: "blue",
+    strokeWidth: 1.5,
     strokeDashArray: [5, 5],
     absolutePositioned: true,
     transparentCorners: false,
-    cornerColor: "DodgerBlue",
+    cornerColor: "#007bffcc",
     cornerStyle: "circle",
-    cornerSize: 12,
-    cornerStrokeColor: "Blue",
+    cornerSize: 16,
+    cornerStrokeColor: "blue",
   });
 
   canvas.add(cropRect);
@@ -271,8 +271,8 @@ function createPerspectiveCorner(x, y, index) {
     left: x,
     top: y,
     radius: 8,
-    fill: 'rgba(0, 123, 255, 0.8)',
-    stroke: '#007bff',
+    fill: '#007bffcc',
+    stroke: 'blue',
     strokeWidth: 2,
     originX: 'center',
     originY: 'center',
@@ -290,8 +290,8 @@ function createPerspectiveLine(corner1, corner2) {
     corner1.left, corner1.top,
     corner2.left, corner2.top
   ], {
-    stroke: '#007bff',
-    strokeWidth: 2,
+    stroke: 'blue',
+    strokeWidth: 1.5,
     strokeDashArray: [5, 5],
     selectable: false,
     evented: false,
