@@ -1,5 +1,4 @@
 import { fabric } from 'fabric';
-// import getTransform from 'perspective-transform'; // Comentado temporalmente
 import {
   showNoObjectSelectedWarning,
   showSingleImageWarning,
@@ -482,7 +481,6 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
     canvas.renderAll(); // Usamos renderAll() para un renderizado síncrono
 
     // Obtener los datos del canvas completo
-    const canvasImageData = tempCtx.createImageData(canvas.width, canvas.height);
     const canvasCtx = canvas.getContext('2d');
     const sourceImageData = canvasCtx.getImageData(0, 0, canvas.width, canvas.height);
 
