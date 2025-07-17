@@ -109,6 +109,7 @@ function enterCropMode(imgObject, canvas, marginRect, confirmCropButton, cancelC
     cornerStyle: "circle",
     cornerSize: 16,
     cornerStrokeColor: "blue",
+    hasBorders: false,
   });
 
   canvas.add(cropRect);
