@@ -198,8 +198,10 @@ function confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton
     const newImage = new fabric.Image(cropped);
     newImage.set({
       id: originalId, // Transfer the original ID
-      left: rect.left,
-      top: rect.top,
+      left: rect.left + (rect.width * rect.scaleX) / 2,
+      top: rect.top + (rect.height * rect.scaleY) / 2,
+      originX: 'center',
+      originY: 'center',
     });
 
     // Set rotation control visibility based on checkbox state
@@ -529,8 +531,10 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
     fabric.Image.fromURL(newImageSrc, (newImage) => {
       newImage.set({
         id: originalId,
-        left: originalLeft,
-        top: originalTop,
+        left: originalLeft + newImage.width / 2,
+        top: originalTop + newImage.height / 2,
+        originX: 'center',
+        originY: 'center',
       });
 
       // Configurar controles de rotación según el checkbox
