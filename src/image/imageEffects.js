@@ -121,6 +121,11 @@ function replaceImageOnCanvas(canvas, oldImage, newImage) {
     ...oldImage.customProps,
   });
 
+  // Preservar la visibilidad de los controles
+  if (oldImage._controlsVisibility) {
+    newImage.setControlsVisibility(oldImage._controlsVisibility);
+  }
+
   console.log(`[Debug] Propiedades transferidas a la nueva imagen ID: ${newImage.id}.`);
   console.log(`[Debug] Escala final: X=${newImage.scaleX}, Y=${newImage.scaleY}`);
 
