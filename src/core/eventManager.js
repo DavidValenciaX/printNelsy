@@ -1,6 +1,8 @@
 import { initializeKeyboardInteractions } from '../interactions/keyboardInteractions.js';
 import Swal from 'sweetalert2';
 import { imageState } from '../image/imageUploadUtils.js';
+import { groupSelectedObjects, ungroupActiveObject } from '../interactions/groupUtils.js';
+import { updateGroupButtonsState, initializeGroupButtonsState, handleGroupCreated, handleGroupUngrouped } from '../ui/groupButtons.js';
 
 /**
  * Gestiona todos los event listeners de la aplicación
@@ -25,6 +27,7 @@ export class EventManager {
     this.initializeCropEvents();
     this.initializeCollageEvents();
     this.initializeGridControlEvents();
+    this.initializeGroupEvents();
     this.initializeGlobalEvents();
     this.initializeKeyboardEvents();
   }
@@ -412,6 +415,60 @@ export class EventManager {
     document.body.addEventListener("click", (event) => 
       this.actions.deactivateObjects(event, this.canvasManager.getCanvas())
     );
+  }
+
+  initializeGroupEvents() {
+    // Inicializar estado de botones de agrupación
+    initializeGroupButtonsState(this.dom);
+
+    // Event listeners para los botones de agrupar/desagrupar
+    this.addEventBinding('groupButton', 'click', () => {
+      const canvas = this.canvasManager.getCanvas();
+      const group = groupSelectedObjects(canvas);
+      
+      if (group) {
+        handleGroupCreated(group, this.dom);
+        // Actualizar estado de botones después de agrupar
+        updateGroupButtonsState(canvas, this.dom);
+      }
+    });
+
+    this.addEventBinding('ungroupButton', 'click', () => {
+      const canvas = this.canvasManager.getCanvas();
+      const activeSelection = ungroupActiveObject(canvas);
+      
+      if (activeSelection) {
+        handleGroupUngrouped(activeSelection, this.dom);
+        // Actualizar estado de botones después de desagrupar
+        updateGroupButtonsState(canvas, this.dom);
+      }
+    });
+
+    // Event listeners para eventos de selección del canvas
+    const canvas = this.canvasManager.getCanvas();
+    if (canvas) {
+      // Actualizar estado cuando cambie la selección
+      canvas.on('selection:created', () => {
+        updateGroupButtonsState(canvas, this.dom);
+      });
+
+      canvas.on('selection:updated', () => {
+        updateGroupButtonsState(canvas, this.dom);
+      });
+
+      canvas.on('selection:cleared', () => {
+        updateGroupButtonsState(canvas, this.dom);
+      });
+
+      // Actualizar estado cuando se agreguen o quiten objetos
+      canvas.on('object:added', () => {
+        updateGroupButtonsState(canvas, this.dom);
+      });
+
+      canvas.on('object:removed', () => {
+        updateGroupButtonsState(canvas, this.dom);
+      });
+    }
   }
 
   initializeKeyboardEvents() {

@@ -74,7 +74,11 @@ export class DOMManager {
       rowsDisplay: document.getElementById("rowsDisplay"),
       colsDisplay: document.getElementById("colsDisplay"),
       spacingRange: document.getElementById("spacingRange"),
-      spacingDisplay: document.getElementById("spacingDisplay")
+      spacingDisplay: document.getElementById("spacingDisplay"),
+      
+      // Group controls
+      groupButton: document.getElementById("groupButton"),
+      ungroupButton: document.getElementById("ungroupButton")
     };
     this.eventManager = null;
   }
