@@ -37,6 +37,11 @@ export function resetActiveImage(canvas, marginRect, originalImages) {
         originY: "center",
       });
 
+      // Preservar la visibilidad de los controles
+      if (activeObject._controlsVisibility) {
+        img.setControlsVisibility(activeObject._controlsVisibility);
+      }
+
       // Si la imagen queda fuera del canvas, se reubica dentro de los márgenes.
       img = constrainObjectToMargin(img, marginRect);
 
