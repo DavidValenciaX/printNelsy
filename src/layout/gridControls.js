@@ -54,13 +54,13 @@ export function updateGridControlButtons(rows, cols, imageCount, domManager) {
 export function toggleGridControlsVisibility(canvas, domManager) {
   const gridControlsGroup = domManager.get('gridControlsGroup');
   
-  const images = canvas.getObjects().filter(obj => obj.type === 'image');
-  const imageCount = images.length;
+  const objects = canvas.getObjects().filter(obj => obj.type === 'image' || obj.type === 'group');
+  const objectCount = objects.length;
 
   const isGridArrangement = imageState.arrangementStatus === 'grid' && 
                            (imageState.orientation === 'rows' || imageState.orientation === 'cols');
   
-  const shouldShow = isGridArrangement && imageCount > 1;
+  const shouldShow = isGridArrangement && objectCount > 1;
 
   if (gridControlsGroup) {
     gridControlsGroup.style.display = shouldShow ? 'flex' : 'none';
@@ -72,9 +72,9 @@ export function toggleGridControlsVisibility(canvas, domManager) {
  * Inicializa los controles de grid con los valores actuales
  */
 export function initializeGridControls(canvas, domManager) {
-  const images = canvas.getObjects().filter(obj => obj.type === 'image');
+  const objects = canvas.getObjects().filter(obj => obj.type === 'image' || obj.type === 'group');
   
-  if (images.length === 0) {
+  if (objects.length === 0) {
     toggleGridControlsVisibility(canvas, domManager);
     return;
   }
@@ -85,14 +85,14 @@ export function initializeGridControls(canvas, domManager) {
   if (isGridArrangement) {
     // Si no tenemos dimensiones personalizadas, calcular las actuales y guardarlas
     if (currentCustomRows === null && currentCustomCols === null) {
-      const dimensions = getCurrentGridDimensions(images, imageState.orientation);
+      const dimensions = getCurrentGridDimensions(objects, imageState.orientation);
       currentCustomRows = dimensions.rows;
       currentCustomCols = dimensions.cols;
     }
     
     // Usar las dimensiones personalizadas (ya sean las que teníamos o las que acabamos de calcular)
     updateGridDisplays(currentCustomRows, currentCustomCols, domManager);
-    updateGridControlButtons(currentCustomRows, currentCustomCols, images.length, domManager);
+    updateGridControlButtons(currentCustomRows, currentCustomCols, objects.length, domManager);
   }
   
   // Actualizar controles de espaciado
@@ -108,8 +108,8 @@ export function initializeGridControls(canvas, domManager) {
  * Incrementa el número de filas
  */
 export function increaseRows(canvas, domManager) {
-  const images = canvas.getObjects().filter(obj => obj.type === 'image');
-  if (images.length === 0) return;
+  const objects = canvas.getObjects().filter(obj => obj.type === 'image' || obj.type === 'group');
+  if (objects.length === 0) return;
   
   const newRows = Math.min(currentCustomRows + 1, MAX_ROWS);
   if (newRows === currentCustomRows) return; // No cambió
@@ -117,13 +117,13 @@ export function increaseRows(canvas, domManager) {
   currentCustomRows = newRows;
   
   // Remover imágenes del canvas
-  images.forEach(img => canvas.remove(img));
+  objects.forEach(img => canvas.remove(img));
   
   // Reorganizar con las nuevas dimensiones
-  const sortedImages = sortImages(images, imageState.order);
+  const sortedObjects = sortImages(objects, imageState.order);
   setArrangementStatus(arrangeImages(
     canvas, 
-    sortedImages, 
+    sortedObjects, 
     imageState.orientation, 
     currentCustomRows,
     currentCustomCols,
@@ -132,15 +132,15 @@ export function increaseRows(canvas, domManager) {
   
   updateGridVisualization(canvas);
   updateGridDisplays(currentCustomRows, currentCustomCols, domManager);
-  updateGridControlButtons(currentCustomRows, currentCustomCols, images.length, domManager);
+  updateGridControlButtons(currentCustomRows, currentCustomCols, objects.length, domManager);
 }
 
 /**
  * Decrementa el número de filas
  */
 export function decreaseRows(canvas, domManager) {
-  const images = canvas.getObjects().filter(obj => obj.type === 'image');
-  if (images.length === 0) return;
+  const objects = canvas.getObjects().filter(obj => obj.type === 'image' || obj.type === 'group');
+  if (objects.length === 0) return;
   
   const newRows = Math.max(currentCustomRows - 1, MIN_ROWS);
   if (newRows === currentCustomRows) return; // No cambió
@@ -148,13 +148,13 @@ export function decreaseRows(canvas, domManager) {
   currentCustomRows = newRows;
   
   // Remover imágenes del canvas
-  images.forEach(img => canvas.remove(img));
+  objects.forEach(img => canvas.remove(img));
   
   // Reorganizar con las nuevas dimensiones
-  const sortedImages = sortImages(images, imageState.order);
+  const sortedObjects = sortImages(objects, imageState.order);
   setArrangementStatus(arrangeImages(
     canvas, 
-    sortedImages, 
+    sortedObjects, 
     imageState.orientation, 
     currentCustomRows,
     currentCustomCols,
@@ -163,15 +163,15 @@ export function decreaseRows(canvas, domManager) {
   
   updateGridVisualization(canvas);
   updateGridDisplays(currentCustomRows, currentCustomCols, domManager);
-  updateGridControlButtons(currentCustomRows, currentCustomCols, images.length, domManager);
+  updateGridControlButtons(currentCustomRows, currentCustomCols, objects.length, domManager);
 }
 
 /**
  * Incrementa el número de columnas
  */
 export function increaseCols(canvas, domManager) {
-  const images = canvas.getObjects().filter(obj => obj.type === 'image');
-  if (images.length === 0) return;
+  const objects = canvas.getObjects().filter(obj => obj.type === 'image' || obj.type === 'group');
+  if (objects.length === 0) return;
   
   const newCols = Math.min(currentCustomCols + 1, MAX_COLS);
   if (newCols === currentCustomCols) return; // No cambió
@@ -179,13 +179,13 @@ export function increaseCols(canvas, domManager) {
   currentCustomCols = newCols;
   
   // Remover imágenes del canvas
-  images.forEach(img => canvas.remove(img));
+  objects.forEach(img => canvas.remove(img));
   
   // Reorganizar con las nuevas dimensiones
-  const sortedImages = sortImages(images, imageState.order);
+  const sortedObjects = sortImages(objects, imageState.order);
   setArrangementStatus(arrangeImages(
     canvas, 
-    sortedImages, 
+    sortedObjects, 
     imageState.orientation, 
     currentCustomRows,
     currentCustomCols,
@@ -194,15 +194,15 @@ export function increaseCols(canvas, domManager) {
   
   updateGridVisualization(canvas);
   updateGridDisplays(currentCustomRows, currentCustomCols, domManager);
-  updateGridControlButtons(currentCustomRows, currentCustomCols, images.length, domManager);
+  updateGridControlButtons(currentCustomRows, currentCustomCols, objects.length, domManager);
 }
 
 /**
  * Decrementa el número de columnas
  */
 export function decreaseCols(canvas, domManager) {
-  const images = canvas.getObjects().filter(obj => obj.type === 'image');
-  if (images.length === 0) return;
+  const objects = canvas.getObjects().filter(obj => obj.type === 'image' || obj.type === 'group');
+  if (objects.length === 0) return;
   
   const newCols = Math.max(currentCustomCols - 1, MIN_COLS);
   if (newCols === currentCustomCols) return; // No cambió
@@ -210,13 +210,13 @@ export function decreaseCols(canvas, domManager) {
   currentCustomCols = newCols;
   
   // Remover imágenes del canvas
-  images.forEach(img => canvas.remove(img));
+  objects.forEach(img => canvas.remove(img));
   
   // Reorganizar con las nuevas dimensiones
-  const sortedImages = sortImages(images, imageState.order);
+  const sortedObjects = sortImages(objects, imageState.order);
   setArrangementStatus(arrangeImages(
     canvas, 
-    sortedImages, 
+    sortedObjects, 
     imageState.orientation, 
     currentCustomRows,
     currentCustomCols,
@@ -225,7 +225,7 @@ export function decreaseCols(canvas, domManager) {
   
   updateGridVisualization(canvas);
   updateGridDisplays(currentCustomRows, currentCustomCols, domManager);
-  updateGridControlButtons(currentCustomRows, currentCustomCols, images.length, domManager);
+  updateGridControlButtons(currentCustomRows, currentCustomCols, objects.length, domManager);
 }
 
 /**
@@ -256,18 +256,18 @@ export function updateImageSpacing(canvas, domManager, spacing) {
   const spacingDisplay = domManager.get('spacingDisplay');
   if (spacingDisplay) spacingDisplay.textContent = spacing;
 
-  const images = canvas.getObjects().filter(obj => obj.type === 'image');
-  if (images.length === 0 || imageState.arrangementStatus !== 'grid') return;
+  const objects = canvas.getObjects().filter(obj => obj.type === 'image' || obj.type === 'group');
+  if (objects.length === 0 || imageState.arrangementStatus !== 'grid') return;
 
   // Remover imágenes para reorganizar
-  images.forEach(img => canvas.remove(img));
+  objects.forEach(img => canvas.remove(img));
 
   const customDimensions = getCustomGridDimensions();
-  const sortedImages = sortImages(images, imageState.order);
+  const sortedObjects = sortImages(objects, imageState.order);
 
   setArrangementStatus(arrangeImages(
     canvas,
-    sortedImages,
+    sortedObjects,
     imageState.orientation,
     customDimensions.rows,
     customDimensions.cols,
@@ -344,17 +344,17 @@ export function updateGridVisualization(canvas) {
   const marginRect = getCurrentMarginRect();
   if (!marginRect) return;
 
-  const images = canvas.getObjects().filter(obj => obj.type === 'image');
+  const objects = canvas.getObjects().filter(obj => obj.type === 'image' || obj.type === 'group');
   const isGridArrangement = imageState.arrangementStatus === 'grid' &&
                            (imageState.orientation === 'rows' || imageState.orientation === 'cols');
 
-  if (isGridArrangement && images.length > 0) {
+  if (isGridArrangement && objects.length > 0) {
     const customDimensions = getCustomGridDimensions();
     let dims;
     if (customDimensions.rows !== null && customDimensions.cols !== null) {
       dims = { rows: customDimensions.rows, cols: customDimensions.cols };
     } else {
-      dims = getCurrentGridDimensions(images, imageState.orientation);
+      dims = getCurrentGridDimensions(objects, imageState.orientation);
     }
     drawGrid(canvas, dims.rows, dims.cols, marginRect);
   }

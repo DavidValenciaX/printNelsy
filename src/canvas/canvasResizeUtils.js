@@ -86,7 +86,7 @@ function reAddAndArrangeImages(images, currentOrientation, currentOrder, canvas,
 
 export function resizeCanvas(size, canvas, marginRect, orientation = isVertical) {
   // Store current canvas state
-  const images = canvas.getObjects().filter((obj) => obj.type === "image");
+  const images = canvas.getObjects().filter((obj) => obj.type === "image" || obj.type === "group");
   const currentOrientation = imageState.orientation || (images.length <= 2 ? "cols" : "rows");
   const currentOrder = "forward";
 

@@ -1,5 +1,5 @@
 export function createMasonryColumnsCollage(canvas, marginRect, Swal) {
-  const images = canvas.getObjects("image");
+  const images = canvas.getObjects().filter((obj) => obj.type === "image" || obj.type === "group");
   if (images.length === 0) {
     Swal.fire({
       text: "Debe haber al menos una imagen en el canvas.",
@@ -99,7 +99,7 @@ export function createMasonryColumnsCollage(canvas, marginRect, Swal) {
 }
 
 export function createMasonryRowsCollage(canvas, marginRect, Swal) {
-  const images = canvas.getObjects("image");
+  const images = canvas.getObjects().filter((obj) => obj.type === "image" || obj.type === "group");
   if (images.length === 0) {
     Swal.fire({
       text: "Debe haber al menos una imagen en el canvas.",
@@ -211,7 +211,7 @@ import { checkOverlap } from './../utils/mathUtils.js';
  *  Drop‑in replacement for the previous collageArrange()
  */
 export function collageArrange(canvas, marginRect, Swal) {
-  const images = canvas.getObjects('image');
+  const images = canvas.getObjects().filter((obj) => obj.type === 'image' || obj.type === 'group');
   if (images.length === 0) {
     Swal.fire({ text: 'Debe haber al menos una imagen en el canvas.', icon: 'warning' });
     return null; // Return null to indicate error
@@ -469,7 +469,7 @@ function attemptImageGrowth(img, images, marginRect) {
  * Uses directional scaling from each corner for more precise space utilization.
  */
 function optimizeCollageSize(canvas, marginRect) {
-  const images = canvas.getObjects('image');
+  const images = canvas.getObjects().filter((obj) => obj.type === 'image' || obj.type === 'group');
   if (images.length === 0) return;
 
   let globalImprovement = true;
@@ -504,7 +504,7 @@ function optimizeCollageSize(canvas, marginRect) {
  * while respecting boundaries and avoiding overlaps with other images.
  */
 function centerImages(canvas, marginRect) {
-  const images = canvas.getObjects('image');
+  const images = canvas.getObjects().filter((obj) => obj.type === 'image' || obj.type === 'group');
   if (images.length === 0) return;
 
   // Calculate canvas centers

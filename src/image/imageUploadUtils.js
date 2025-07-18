@@ -53,7 +53,7 @@ export function setSpacing(spacing) {
  * @returns {boolean} True if the canvas has no images, false otherwise.
  */
 function isCanvasEmpty(canvas) {
-  return canvas.getObjects("image").length === 0;
+  return canvas.getObjects().filter((obj) => obj.type === "image" || obj.type === "group").length === 0;
 }
 
 function _processFilesForCanvas(files, canvas, rotateCheckbox) {

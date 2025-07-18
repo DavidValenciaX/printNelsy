@@ -9,7 +9,7 @@ import {
 import { getCustomGridDimensions, initializeGridControls } from './gridControls.js';
 
 export function applyGridArrangement(canvas, domManager) {
-  const images = canvas.getObjects().filter((obj) => obj.type === "image");
+  const images = canvas.getObjects().filter((obj) => obj.type === "image" || obj.type === "group");
   if (images.length === 0) {
     Swal.fire({
       text: "Debe haber al menos una imagen en el canvas.",

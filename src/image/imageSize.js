@@ -160,7 +160,7 @@ function setImageSizeInCm({ canvas, widthInput, heightInput, marginRect, paperCo
   }
   const { currentSize, isVertical, paperSizes, dpi } = paperConfig;
   const activeObjects = canvas.getActiveObjects();
-  const selectedImages = activeObjects.filter((obj) => obj.type === "image");
+  const selectedImages = activeObjects.filter((obj) => obj.type === "image" || obj.type === "group");
 
   if (selectedImages.length === 0) {
     Swal.fire({
@@ -178,12 +178,16 @@ function setImageSizeInCm({ canvas, widthInput, heightInput, marginRect, paperCo
   const maintainAspect = document.getElementById("maintainAspectCheckbox").checked;
 
   selectedImages.forEach((obj) => {
-    if (obj.type === "image") {
+    if (obj.type === "image" || obj.type === "group") {
       // Ensure origin is set to center for individual scaling
       obj.set({
         originX: "center",
         originY: "center",
       });
+      // For groups, we might need to recalculate center
+      if (obj.type === 'group') {
+        obj.setCoords(); // Recalculate coordinates and center
+      }
       setSingleImageSizeInCm(
         obj, 
         { widthInput, heightInput }, 

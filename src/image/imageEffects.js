@@ -151,25 +151,58 @@ function replaceImageOnCanvas(canvas, oldImage, newImage) {
  * @param {fabric.Canvas} canvas - El canvas de fabric.js
  */
 export async function convertToGrayscale(canvas) {
-  const activeObjects = canvas.getActiveObjects().filter((obj) => obj.type === 'image');
+  const activeObjects = canvas.getActiveObjects();
 
   if (activeObjects.length === 0) {
     showNoObjectSelectedWarning();
     return;
   }
 
-  console.log(`[Debug] Iniciando conversión a escala de grises para ${activeObjects.length} imagen(es).`);
+  const imagesToProcess = [];
 
-  for (const imageObject of activeObjects) {
+  // Recorrer todos los objetos activos y extraer las imágenes
+  activeObjects.forEach(obj => {
+    if (obj.type === 'image') {
+      imagesToProcess.push(obj);
+    } else if (obj.type === 'group') {
+      // Si es un grupo, añadir todas las imágenes que contiene
+      obj.getObjects('image').forEach(imageInGroup => {
+        imagesToProcess.push(imageInGroup);
+      });
+    }
+  });
+
+  if (imagesToProcess.length === 0) {
+    showNoObjectSelectedWarning(); // O un mensaje más específico
+    return;
+  }
+  
+  console.log(`[Debug] Iniciando conversión a escala de grises para ${imagesToProcess.length} imagen(es).`);
+
+  for (const imageObject of imagesToProcess) {
     try {
       const newGrayscaleImage = await applyGrayscaleToFullResolution(imageObject);
-      replaceImageOnCanvas(canvas, imageObject, newGrayscaleImage);
-      console.log(`[Debug] Imagen ID ${imageObject.id} procesada y reemplazada exitosamente.`);
+      
+      // Si la imagen estaba en un grupo, no la reemplazamos directamente en el canvas
+      if (imageObject.group) {
+        // Este es un caso complejo. La forma más segura es recrear el grupo.
+        // Por ahora, simplemente aplicaremos el filtro sin reemplazar, 
+        // lo que puede no funcionar como se espera con el método actual.
+        // La solución ideal es más compleja.
+        // Solución simple (puede no ser visualmente correcta sin recrear el grupo):
+        const originalFilters = imageObject.filters || [];
+        imageObject.filters = [...originalFilters, new fabric.Image.filters.Grayscale()];
+        imageObject.applyFilters();
+      } else {
+        replaceImageOnCanvas(canvas, imageObject, newGrayscaleImage);
+      }
+
+      console.log(`[Debug] Imagen ID ${imageObject.id} procesada exitosamente.`);
     } catch (error) {
       console.error(`Error al procesar la imagen ID ${imageObject.id}:`, error);
-      // Opcional: notificar al usuario sobre el fallo de una imagen específica
     }
   }
-
+  
+  canvas.renderAll();
   console.log('[Debug] Proceso de conversión a escala de grises finalizado.');
 } 

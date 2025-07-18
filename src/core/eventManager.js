@@ -172,7 +172,7 @@ export class EventManager {
     this.addEventBinding('rotateCheckbox', 'change', (e) => {
       const canvas = this.canvasManager.getCanvas();
       canvas.getObjects().forEach((obj) => {
-        if (obj.type === "image") {
+        if (obj.type === "image" || obj.type === "group") {
           obj.setControlsVisibility({
             mtr: e.target.checked,
           });

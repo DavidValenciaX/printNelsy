@@ -8,7 +8,7 @@ import Swal from 'sweetalert2';
  */
 export function centerVertically(canvas) {
   const activeObjects = canvas.getActiveObjects();
-  const selectedImages = activeObjects.filter((obj) => obj.type === "image");
+  const selectedImages = activeObjects.filter((obj) => obj.type === "image" || obj.type === "group");
 
   if (selectedImages.length === 0) {
     Swal.fire({
@@ -43,7 +43,7 @@ export function centerVertically(canvas) {
  */
 export function centerHorizontally(canvas) {
   const activeObjects = canvas.getActiveObjects();
-  const selectedImages = activeObjects.filter((obj) => obj.type === "image");
+  const selectedImages = activeObjects.filter((obj) => obj.type === "image" || obj.type === "group");
 
   if (selectedImages.length === 0) {
     Swal.fire({
