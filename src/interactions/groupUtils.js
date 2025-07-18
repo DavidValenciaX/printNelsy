@@ -11,6 +11,8 @@ import { fabric } from 'fabric';
 const GROUP_CONFIG = {
   // Configuración por defecto para grupos
   DEFAULT_PROPS: {
+    originX: 'center',
+    originY: 'center',
     cornerColor: 'blue',
     cornerStrokeColor: 'darkblue',
     borderColor: 'blue',
@@ -60,6 +62,8 @@ export function groupSelectedObjects(canvas) {
     
     // Aplicar configuración personalizada al grupo
     group.set({
+      left: group.left + group.width / 2,
+      top: group.top + group.height / 2,
       ...GROUP_CONFIG.DEFAULT_PROPS,
       ...GROUP_CONFIG.CONSTRAINTS
     });
