@@ -179,15 +179,26 @@ function setImageSizeInCm({ canvas, widthInput, heightInput, marginRect, paperCo
 
   selectedImages.forEach((obj) => {
     if (obj.type === "image" || obj.type === "group") {
-      // Ensure origin is set to center for individual scaling
-      obj.set({
-        originX: "center",
-        originY: "center",
-      });
-      // For groups, we might need to recalculate center
+      // Para los grupos, debemos obtener el punto central antes de cambiar el origen
+      // para evitar que el objeto se desplace. Luego establecemos el origen y
+      // lo reposicionamos en su centro calculado.
       if (obj.type === 'group') {
-        obj.setCoords(); // Recalculate coordinates and center
+        const centerPoint = obj.getCenterPoint();
+        obj.set({
+          originX: "center",
+          originY: "center",
+          left: centerPoint.x,
+          top: centerPoint.y,
+        });
+        obj.setCoords(); // Recalcular coordenadas después de reposicionar
+      } else {
+        // Para imágenes individuales, basta con establecer el origen
+        obj.set({
+          originX: "center",
+          originY: "center",
+        });
       }
+
       setSingleImageSizeInCm(
         obj, 
         { widthInput, heightInput }, 
