@@ -182,7 +182,16 @@ export class EventManager {
     });
 
     this.addEventBinding('resetImageButton', 'click', () => 
-      this.actions.resetActiveImage(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), this.actions.originalImages)
+      this.actions.resetActiveObject(
+        this.canvasManager.getCanvas(), 
+        this.canvasManager.getMarginRect(), 
+        this.actions.originalImages, 
+        this.actions.originalGroups
+      )
+    );
+
+    this.addEventBinding('resetGroupButton', 'click', () => 
+      this.actions.resetActiveGroup(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), this.actions.originalGroups)
     );
   }
 

@@ -9,7 +9,7 @@ import { downloadAsPNG } from '../output/pngUtils.js';
 import { deactivateObjects } from '../interactions/deactivateObjects.js';
 import { rotateImage } from '../transform/rotateUtils.js';
 import { flipHorizontal, flipVertical } from '../transform/flipUtils.js';
-import { resetActiveImage } from '../image/resetUtils.js';
+import { resetActiveObject } from '../image/resetUtils.js';
 import { deleteActiveObject } from '../interactions/deleteUtils.js';
 import { scaleUp, scaleDown } from '../transform/scaleUtils.js';
 import { convertToGrayscale } from '../image/imageEffects.js';
@@ -17,6 +17,7 @@ import {
   handleImageUpload, 
   handleImageDrop,
   originalImages,
+  originalGroups,
   setArrangementStatus
 } from '../image/imageUploadUtils.js';
 import { 
@@ -55,8 +56,9 @@ import {
  */
 export class ActionManager {
   constructor() {
-    // Expose original images for access
+    // Expose original images and groups for access
     this.originalImages = originalImages;
+    this.originalGroups = originalGroups;
   }
 
   // Zoom actions
@@ -88,7 +90,7 @@ export class ActionManager {
   // Object actions
   deactivateObjects = deactivateObjects;
   deleteActiveObject = deleteActiveObject;
-  resetActiveImage = resetActiveImage;
+  resetActiveObject = resetActiveObject;
 
   // Transform actions
   rotateImage = rotateImage;

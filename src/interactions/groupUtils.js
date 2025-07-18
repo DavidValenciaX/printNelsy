@@ -5,6 +5,7 @@
 
 import { fabric } from 'fabric';
 import Swal from 'sweetalert2';
+import { originalGroups } from '../image/imageUploadUtils.js';
 
 /**
  * Constantes para la gestión de grupos
@@ -31,6 +32,62 @@ const GROUP_CONFIG = {
     lockUniScaling: false
   }
 };
+
+/**
+ * Guarda el estado original de un grupo recién creado
+ * @param {fabric.Group} group - El grupo del cual guardar el estado original
+ */
+function saveOriginalGroupState(group) {
+  if (!group || !group.id) {
+    console.warn('No se puede guardar el estado original: grupo sin ID válido');
+    return;
+  }
+
+  console.log(`[saveOriginalGroupState] Guardando estado del grupo ID: ${group.id}`);
+  console.log(`[saveOriginalGroupState] Propiedades del grupo - flipX: ${group.flipX}, flipY: ${group.flipY}`);
+
+  // Guardar las propiedades principales del grupo
+  originalGroups[group.id] = {
+    left: group.left,
+    top: group.top,
+    scaleX: group.scaleX,
+    scaleY: group.scaleY,
+    angle: group.angle,
+    width: group.width,
+    height: group.height,
+    originX: group.originX,
+    originY: group.originY,
+    // Guardar propiedades de transformación visual
+    flipX: group.flipX || false,
+    flipY: group.flipY || false,
+    // Guardar información de los objetos que componen el grupo
+    objects: group._objects.map(obj => ({
+      id: obj.id,
+      type: obj.type,
+      left: obj.left,
+      top: obj.top,
+      scaleX: obj.scaleX,
+      scaleY: obj.scaleY,
+      angle: obj.angle,
+      width: obj.width,
+      height: obj.height,
+      // Guardar propiedades de transformación visual para objetos individuales
+      flipX: obj.flipX || false,
+      flipY: obj.flipY || false,
+      // Para imágenes, guardar filtros y URL original
+      ...(obj.type === 'image' ? {
+        originalUrl: obj.originalUrl || null,
+        filters: obj.filters ? obj.filters.map(filter => ({
+          type: filter.type || filter.constructor.name,
+          ...filter
+        })) : []
+      } : {})
+    })),
+    createdAt: new Date().toISOString()
+  };
+
+  console.log(`[saveOriginalGroupState] Estado guardado:`, originalGroups[group.id]);
+}
 
 /**
  * Agrupa los objetos seleccionados en el canvas
@@ -65,6 +122,14 @@ export function groupSelectedObjects(canvas) {
     // Convertir la selección activa a un grupo usando el método nativo de Fabric.js
     const group = activeSelection.toGroup();
 
+    // Generar un ID único para el grupo si no lo tiene
+    if (!group.id) {
+      const uniqueId = `group-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 11)}`;
+      group.id = uniqueId;
+    }
+
     // Aplicar configuración personalizada al grupo
     group.set({
       left: group.left + group.width / 2,
@@ -75,6 +140,9 @@ export function groupSelectedObjects(canvas) {
 
     // Asegurar que el grupo sea seleccionable y movible
     group.setCoords();
+
+    // Guardar el estado original del grupo
+    saveOriginalGroupState(group);
 
     // Renderizar el canvas para reflejar los cambios
     canvas.renderAll();

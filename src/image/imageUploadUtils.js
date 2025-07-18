@@ -4,6 +4,7 @@ import { resetCustomGridDimensions, initializeGridControls } from '../layout/gri
 
 // Variables exportadas para gestión de imágenes
 export const originalImages = {};
+export const originalGroups = {};
 export const imageState = {
   arrangementStatus: "none",
   orientation: "rows",
