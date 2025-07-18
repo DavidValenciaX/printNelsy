@@ -334,26 +334,6 @@ function shouldUnblock(obj, marginRect, direction, proposedAngle) {
   // 4. Rotation must be nearby (not ~180° flip)
   const shouldUnblockResult = isWithinMargin && hasRealDirectionChange && sameCorner && nearby;
   
-  if (shouldUnblockResult) {
-    console.log(`Enhanced unblock conditions met:`, {
-      isWithinMargin,
-      hasRealDirectionChange,
-      sameCorner: `${closestCornerNow} === ${originalCorner}`,
-      nearby,
-      lockDir: obj._lockDir,
-      recentDirections: obj._directionHistory.slice(-3).map(d => `${d.direction}(${d.angleDelta.toFixed(1)}°)`)
-    });
-  } else if (isWithinMargin) {
-    // Debug why unblocking failed when object is within margin
-    console.log(`Unblocking failed while within margin:`, {
-      hasRealDirectionChange,
-      sameCorner: `${closestCornerNow} === ${originalCorner}`,
-      nearby,
-      lockDir: obj._lockDir,
-      recentDirections: obj._directionHistory.slice(-3).map(d => `${d.direction}(${d.angleDelta.toFixed(1)}°)`)
-    });
-  }
-  
   return shouldUnblockResult;
 }
 
@@ -366,18 +346,12 @@ function handleBlockedState(obj, marginRect, direction, proposedAngle, isValid) 
 
   if (isValid()) {
     if (shouldUnblock(obj, marginRect, direction, proposedAngle)) {
-      const { corner: originalCorner, margin: originalMargin } = obj._collisionDetails;
-      console.log(
-        `Rotation unblocked: Object re-entered correctly using enhanced logic. ` +
-        `Original collision: corner '${originalCorner}' at margin '${originalMargin}'.`
-      );
       obj._rotationState = 'unblocked';
       obj._lastAngle = proposedAngle;
       delete obj._lockDir;
       delete obj._directionHistory;
       delete obj._angleDeltaHistory;
     } else {
-      console.log(`Rotation still blocked: Enhanced unblock conditions not met.`);
       obj.angle = obj._lastAngle;
     }
   } else {
@@ -394,20 +368,14 @@ function handleUnblockedState(obj, marginRect, direction, proposedAngle, isValid
   const collisionDetails = findCollisionDetails(obj, marginRect);
   if (collisionDetails) {
     obj._collisionDetails = collisionDetails;
-    console.log(
-      `Rotation blocked: Corner '${collisionDetails.corner}' crossed margin '${collisionDetails.margin}'.`
-    );
   }
   
   if (direction) {
     obj._lockDir = direction;
-    console.log(`Lock direction stored: ${direction}`);
   }
   
   const lastValidAngle = obj._lastAngle;
   const finalAngle = findClosestValidAngle(obj, isValid, lastValidAngle, proposedAngle);
-  
-  console.log(`Objeto bloqueado en ángulo: ${finalAngle.toFixed(2)}°`);
   
   obj.angle = finalAngle;
   obj._lastAngle = finalAngle;

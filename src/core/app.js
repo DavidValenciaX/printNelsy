@@ -135,8 +135,6 @@ export class PrintImageApp {
     // Clear modules
     this.modules = {};
     this.isInitialized = false;
-    
-    console.log('Print Image App destroyed');
   }
 
   // Health check

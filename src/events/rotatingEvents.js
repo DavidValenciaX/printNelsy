@@ -70,8 +70,6 @@ function handleLargeAngleJump(obj, delta, lastAngle, currentAngle) {
     return; // Continue without interpolating to prevent the bug
   }
   
-  console.log(`Large angle jump detected: ${delta.toFixed(2)}° (from ${lastAngle.toFixed(2)}° to ${currentAngle.toFixed(2)}°)`);
-  
   interpolateAngleSteps(obj, delta, lastAngle, jumpDirection);
 }
 
@@ -86,8 +84,6 @@ function interpolateAngleSteps(obj, delta, lastAngle, stepDirection) {
   const steps = Math.ceil(Math.abs(delta) / INTERPOLATION_STEP_SIZE);
   const stepSize = delta / steps;
   
-  console.log(`Interpolating ${steps} steps of ${stepSize.toFixed(2)}° each in ${stepDirection} direction`);
-  
   for (let i = 1; i <= steps; i++) {
     const intermediateAngle = lastAngle + (stepSize * i);
     
@@ -96,8 +92,8 @@ function interpolateAngleSteps(obj, delta, lastAngle, stepDirection) {
     
     constrainRotationToMargin(obj, getCurrentMarginRect(), stepDirection);
     
+    // if Object blocked at intermediate angle, break the loop
     if (obj._rotationState === 'blocked') {
-      console.log(`Object blocked at intermediate angle: ${intermediateAngle.toFixed(2)}°`);
       break;
     }
   }
@@ -114,7 +110,6 @@ function calculateDirectionFromDelta(delta) {
   }
   
   const direction = delta > 0 ? DIRECTION_CLOCKWISE : DIRECTION_COUNTERCLOCKWISE;
-  console.log(direction);
   return direction;
 }
 
@@ -167,7 +162,6 @@ export function setupRotatingEvents(canvas, marginRect, updateArrangementStatus 
   // Main rotation constraint.
   canvas.on('object:rotating', (e) => {
     const obj = e.target;
-    console.log('angle', obj.angle);
     const direction = detectRotationDirection(obj);
     constrainRotationToMargin(obj, getCurrentMarginRect(), direction);
     canvas.renderAll();

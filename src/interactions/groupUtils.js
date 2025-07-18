@@ -38,7 +38,7 @@ const GROUP_CONFIG = {
  * @param {fabric.Group} group - El grupo del cual guardar el estado original
  */
 function saveOriginalGroupState(group) {
-  if (!group || !group.id) {
+  if (!group?.id) {
     console.warn('No se puede guardar el estado original: grupo sin ID válido');
     return;
   }
