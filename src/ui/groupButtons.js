@@ -91,13 +91,11 @@ function updateButtonState(button, enabled) {
     } else if (button.id === 'ungroupButton') {
       button.title = 'Desagrupar el grupo seleccionado';
     }
-  } else {
     // Título explicativo cuando está deshabilitado
-    if (button.id === 'groupButton') {
-      button.title = 'Selecciona 2 o más objetos para agrupar';
-    } else if (button.id === 'ungroupButton') {
-      button.title = 'Selecciona un grupo para desagrupar';
-    }
+  } else if (button.id === 'groupButton') {
+    button.title = 'Selecciona 2 o más objetos para agrupar';
+  } else if (button.id === 'ungroupButton') {
+    button.title = 'Selecciona un grupo para desagrupar';
   }
 }
 

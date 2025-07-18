@@ -14,7 +14,7 @@ const GROUP_CONFIG = {
     cornerColor: 'blue',
     cornerStrokeColor: 'darkblue',
     borderColor: 'blue',
-    cornerSize: 6,
+    cornerSize: 12,
     transparentCorners: false,
     cornerStyle: 'rect'
   },
