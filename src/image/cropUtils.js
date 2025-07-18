@@ -251,16 +251,8 @@ function initializeCrop(canvas, Swal, confirmCropButton, cancelCropButton, cropB
   }
 
   const activeObject = activeObjects[0];
-  if (activeObject.type === 'group') {
-    Swal.fire({
-      icon: 'info',
-      title: 'Función no disponible para grupos',
-      text: 'El recorte es una acción destructiva y no se puede aplicar a grupos. Por favor, desagrupa los objetos si deseas recortar uno de ellos.',
-    });
-    return;
-  }
 
-  if (activeObject.type !== "image") {
+  if (activeObject.type !== "image" && activeObject.type !== 'group') {
     showInvalidSelectionWarning();
     return;
   }
@@ -434,16 +426,8 @@ function initializePerspectiveCrop(canvas, Swal, confirmButton, cancelButton, pe
   }
 
   const activeObject = activeObjects[0];
-  if (activeObject.type === 'group') {
-    Swal.fire({
-      icon: 'info',
-      title: 'Función no disponible para grupos',
-      text: 'El recorte en perspectiva es una acción destructiva y no se puede aplicar a grupos. Por favor, desagrupa los objetos si deseas recortar uno de ellos.',
-    });
-    return;
-  }
   
-  if (activeObject.type !== "image") {
+  if (activeObject.type !== "image" && activeObject.type !== 'group') {
     showInvalidSelectionWarning();
     return;
   }
