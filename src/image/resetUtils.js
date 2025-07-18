@@ -152,10 +152,9 @@ export function resetActiveGroup(canvas, marginRect, originalGroups) {
                   currentObj.filters.push(filter);
                 }
               });
-              
-              // Aplicar los filtros restaurados
-              currentObj.applyFilters();
             }
+            // Aplicar los filtros restaurados (o la ausencia de ellos)
+            currentObj.applyFilters();
           }
         }
       });
