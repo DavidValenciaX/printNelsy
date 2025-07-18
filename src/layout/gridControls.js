@@ -57,6 +57,8 @@ export function toggleGridControlsVisibility(canvas, domManager) {
   const objects = canvas.getObjects().filter(obj => obj.type === 'image' || obj.type === 'group');
   const objectCount = objects.length;
 
+  console.log("objectCount", objectCount);
+
   const isGridArrangement = imageState.arrangementStatus === 'grid' && 
                            (imageState.orientation === 'rows' || imageState.orientation === 'cols');
   
@@ -238,6 +240,14 @@ export function resetCustomGridDimensions() {
 }
 
 /**
+ * Resetea solo el tamaño (filas y columnas) personalizado del grid
+ */
+export function resetCustomGridSize() {
+  currentCustomRows = null;
+  currentCustomCols = null;
+}
+
+/**
  * Obtiene las dimensiones personalizadas actuales
  */
 export function getCustomGridDimensions() {
@@ -348,7 +358,7 @@ export function updateGridVisualization(canvas) {
   const isGridArrangement = imageState.arrangementStatus === 'grid' &&
                            (imageState.orientation === 'rows' || imageState.orientation === 'cols');
 
-  if (isGridArrangement && objects.length > 0) {
+  if (isGridArrangement && objects.length > 1) {
     const customDimensions = getCustomGridDimensions();
     let dims;
     if (customDimensions.rows !== null && customDimensions.cols !== null) {

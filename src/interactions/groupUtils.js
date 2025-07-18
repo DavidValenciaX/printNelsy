@@ -158,6 +158,6 @@ export function getSelectionInfo(canvas) {
     canGroup: canGroupObjects(canvas),
     canUngroup: canUngroupObject(canvas),
     selectionType: activeObject ? activeObject.type : null,
-    objectCount: activeObject && activeObject._objects ? activeObject._objects.length : 0
+    objectCount: activeObject?._objects ? activeObject._objects.length : 0
   };
 } 
