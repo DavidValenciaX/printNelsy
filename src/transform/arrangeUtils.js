@@ -1,5 +1,6 @@
 import { roundToDecimals } from './../utils/mathUtils.js';
 import { getCurrentMarginRect } from '../canvas/marginRectManager.js';
+import Swal from 'sweetalert2';
 
 export function calculateGridDimensions(
   count,
@@ -49,7 +50,11 @@ export function arrangeImages(
 
   const marginRect = getCurrentMarginRect();
   if (!marginRect) {
-    console.error("Margin rect not found for arranging images. Layout may be incorrect.");
+    Swal.fire({
+      icon: 'warning',
+      title: 'Error de Disposición',
+      text: 'No se pudo calcular el área de trabajo. La disposición de las imágenes podría ser incorrecta.'
+    });
     return null; // Return null to indicate error
   }
 

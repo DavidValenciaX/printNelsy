@@ -4,6 +4,7 @@
  */
 
 import { fabric } from 'fabric';
+import Swal from 'sweetalert2';
 
 /**
  * Constantes para la gestión de grupos
@@ -43,41 +44,49 @@ export function groupSelectedObjects(canvas) {
   }
 
   const activeSelection = canvas.getActiveObject();
-  
-  // Verificar que hay una ActiveSelection (múltiples objetos seleccionados)
-  if (!activeSelection || activeSelection.type !== 'activeSelection') {
-    console.warn('No hay múltiples objetos seleccionados para agrupar');
-    return null;
-  }
 
-  // Verificar que hay al menos 2 objetos
-  if (!activeSelection._objects || activeSelection._objects.length < 2) {
-    console.warn('Se necesitan al menos 2 objetos para crear un grupo');
+  // Condición unificada para verificar si se puede agrupar
+  const canBeGrouped =
+    activeSelection &&
+    activeSelection.type === 'activeSelection' &&
+    activeSelection._objects &&
+    activeSelection._objects.length >= 2;
+
+  if (!canBeGrouped) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Agrupar objetos',
+      text: 'Por favor, selecciona dos o más objetos para agrupar.',
+    });
     return null;
   }
 
   try {
     // Convertir la selección activa a un grupo usando el método nativo de Fabric.js
     const group = activeSelection.toGroup();
-    
+
     // Aplicar configuración personalizada al grupo
     group.set({
       left: group.left + group.width / 2,
       top: group.top + group.height / 2,
       ...GROUP_CONFIG.DEFAULT_PROPS,
-      ...GROUP_CONFIG.CONSTRAINTS
+      ...GROUP_CONFIG.CONSTRAINTS,
     });
 
     // Asegurar que el grupo sea seleccionable y movible
     group.setCoords();
-    
+
     // Renderizar el canvas para reflejar los cambios
     canvas.renderAll();
-    
+
     return group;
-    
   } catch (error) {
     console.error('❌ Error al agrupar objetos:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al Agrupar',
+      text: 'No se pudieron agrupar los objetos seleccionados. Inténtalo de nuevo.',
+    });
     return null;
   }
 }
@@ -94,24 +103,32 @@ export function ungroupActiveObject(canvas) {
   }
 
   const activeObject = canvas.getActiveObject();
-  
+
   // Verificar que el objeto activo es un grupo
   if (!activeObject || activeObject.type !== 'group') {
-    console.warn('El objeto seleccionado no es un grupo válido para desagrupar');
+    Swal.fire({
+      icon: 'info',
+      title: 'Desagrupar objetos',
+      text: 'El objeto seleccionado no es un grupo y no se puede desagrupar.',
+    });
     return null;
   }
 
   try {
     // Convertir el grupo a una selección activa usando el método nativo de Fabric.js
     const activeSelection = activeObject.toActiveSelection();
-    
+
     // Renderizar el canvas para reflejar los cambios
     canvas.renderAll();
-    
+
     return activeSelection;
-    
   } catch (error) {
     console.error('❌ Error al desagrupar objetos:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al Desagrupar',
+      text: 'No se pudo desagrupar el objeto seleccionado. Inténtalo de nuevo.',
+    });
     return null;
   }
 }
@@ -123,11 +140,11 @@ export function ungroupActiveObject(canvas) {
  */
 export function canGroupObjects(canvas) {
   if (!canvas) return false;
-  
+
   const activeSelection = canvas.getActiveObject();
-  return activeSelection && 
-         activeSelection.type === 'activeSelection' && 
-         activeSelection._objects && 
+  return activeSelection &&
+         activeSelection.type === 'activeSelection' &&
+         activeSelection._objects &&
          activeSelection._objects.length >= 2;
 }
 
@@ -138,7 +155,7 @@ export function canGroupObjects(canvas) {
  */
 export function canUngroupObject(canvas) {
   if (!canvas) return false;
-  
+
   const activeObject = canvas.getActiveObject();
   return activeObject && activeObject.type === 'group';
 }
@@ -154,7 +171,7 @@ export function getSelectionInfo(canvas) {
   }
 
   const activeObject = canvas.getActiveObject();
-  
+
   return {
     hasSelection: !!activeObject,
     canGroup: canGroupObjects(canvas),
