@@ -57,8 +57,6 @@ export function toggleGridControlsVisibility(canvas, domManager) {
   const objects = canvas.getObjects().filter(obj => obj.type === 'image' || obj.type === 'group');
   const objectCount = objects.length;
 
-  console.log("objectCount", objectCount);
-
   const isGridArrangement = imageState.arrangementStatus === 'grid' && 
                            (imageState.orientation === 'rows' || imageState.orientation === 'cols');
   

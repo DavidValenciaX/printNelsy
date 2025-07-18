@@ -74,7 +74,6 @@ export function groupSelectedObjects(canvas) {
     // Renderizar el canvas para reflejar los cambios
     canvas.renderAll();
     
-    console.log('✅ Objetos agrupados exitosamente:', group);
     return group;
     
   } catch (error) {
@@ -109,7 +108,6 @@ export function ungroupActiveObject(canvas) {
     // Renderizar el canvas para reflejar los cambios
     canvas.renderAll();
     
-    console.log('✅ Grupo desagrupado exitosamente:', activeSelection);
     return activeSelection;
     
   } catch (error) {

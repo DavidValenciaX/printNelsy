@@ -10,7 +10,6 @@ import { showNoObjectSelectedWarning } from "../utils/uiUtils.js";
  */
 function applyGrayscaleToFullResolution(imageObject) {
   return new Promise((resolve, reject) => {
-    console.log(`[Debug] Iniciando procesamiento full-res para imagen ID: ${imageObject.id || 'N/A'}`);
 
     const originalElement = imageObject.getElement();
     const originalWidth = imageObject.width;
@@ -21,15 +20,11 @@ function applyGrayscaleToFullResolution(imageObject) {
       return reject(new Error('Dimensiones de imagen originales no válidas.'));
     }
 
-    console.log(`[Debug] Dimensiones originales: ${originalWidth}x${originalHeight}`);
-
     // Crear un canvas estático temporal fuera de pantalla
     const tempCanvas = new fabric.StaticCanvas(null, {
       width: originalWidth,
       height: originalHeight,
     });
-
-    console.log('[Debug] Canvas temporal creado.');
 
     // Crear una nueva instancia de imagen a partir del elemento original para el canvas temporal
     const tempImage = new fabric.Image(originalElement, {
@@ -50,33 +45,27 @@ function applyGrayscaleToFullResolution(imageObject) {
     const originalBackend = fabric.filterBackend;
     try {
       fabric.filterBackend = new fabric.Canvas2dFilterBackend();
-      console.log('[Debug] Forzando backend de filtro a Canvas2D para procesamiento de alta resolución.');
 
       tempImage.applyFilters();
-      console.log('[Debug] Filtro de escala de grises aplicado a la imagen temporal con backend Canvas2D.');
 
     } catch (e) {
-      console.error('[Debug] Error al aplicar filtros con backend Canvas2D:', e);
       // Asegurarse de restaurar el backend incluso si hay un error
       fabric.filterBackend = originalBackend;
       return reject(e);
     } finally {
       // Restaurar el backend de filtro original para no afectar otras operaciones
       fabric.filterBackend = originalBackend;
-      console.log('[Debug] Backend de filtro restaurado al original.');
     }
 
     // Añadir la imagen al canvas temporal para poder exportarla
     tempCanvas.add(tempImage);
     tempCanvas.renderAll();
-    console.log('[Debug] Imagen temporal renderizada en canvas temporal.');
 
     // Exportar el resultado a un dataURL
     const dataURL = tempCanvas.toDataURL({
       format: 'png', // Usar PNG para preservar la transparencia
       quality: 1,    // Máxima calidad
     });
-    console.log('[Debug] DataURL generado desde el canvas temporal.');
 
     // Liberar recursos del canvas temporal
     tempCanvas.dispose();
@@ -84,11 +73,9 @@ function applyGrayscaleToFullResolution(imageObject) {
     // Crear la imagen final a partir del dataURL
     fabric.Image.fromURL(dataURL, (newGrayscaleImage) => {
       if (!newGrayscaleImage) {
-        console.error('[Debug] Error al crear la imagen final desde el DataURL.');
         return reject(new Error('No se pudo crear la imagen en escala de grises.'));
       }
       
-      console.log('[Debug] Nueva imagen en escala de grises creada a partir del DataURL.');
       resolve(newGrayscaleImage);
     });
   });
@@ -126,12 +113,8 @@ function replaceImageOnCanvas(canvas, oldImage, newImage) {
     newImage.setControlsVisibility(oldImage._controlsVisibility);
   }
 
-  console.log(`[Debug] Propiedades transferidas a la nueva imagen ID: ${newImage.id}.`);
-  console.log(`[Debug] Escala final: X=${newImage.scaleX}, Y=${newImage.scaleY}`);
-
   const imageIndex = canvas.getObjects().indexOf(oldImage);
   canvas.remove(oldImage);
-  console.log('[Debug] Imagen antigua eliminada del canvas.');
 
   if (imageIndex !== -1) {
     canvas.insertAt(newImage, imageIndex);
@@ -141,7 +124,6 @@ function replaceImageOnCanvas(canvas, oldImage, newImage) {
 
   canvas.setActiveObject(newImage);
   canvas.renderAll();
-  console.log('[Debug] Nueva imagen añadida al canvas y establecida como activa.');
 }
 
 
@@ -176,8 +158,6 @@ export async function convertToGrayscale(canvas) {
     showNoObjectSelectedWarning(); // O un mensaje más específico
     return;
   }
-  
-  console.log(`[Debug] Iniciando conversión a escala de grises para ${imagesToProcess.length} imagen(es).`);
 
   for (const imageObject of imagesToProcess) {
     try {
@@ -197,12 +177,10 @@ export async function convertToGrayscale(canvas) {
         replaceImageOnCanvas(canvas, imageObject, newGrayscaleImage);
       }
 
-      console.log(`[Debug] Imagen ID ${imageObject.id} procesada exitosamente.`);
     } catch (error) {
       console.error(`Error al procesar la imagen ID ${imageObject.id}:`, error);
     }
   }
   
   canvas.renderAll();
-  console.log('[Debug] Proceso de conversión a escala de grises finalizado.');
 } 

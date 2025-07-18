@@ -16,7 +16,6 @@ export class PrintImageApp {
 
   async initialize() {
     try {
-      console.log('Initializing Print Image App...');
       
       // Initialize modules in order
       this.initializeModules();
@@ -31,7 +30,6 @@ export class PrintImageApp {
       this.setupAccessibility();
       
       this.isInitialized = true;
-      console.log('Print Image App initialized successfully');
       
     } catch (error) {
       console.error('Failed to initialize Print Image App:', error);

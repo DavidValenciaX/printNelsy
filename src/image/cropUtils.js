@@ -240,8 +240,6 @@ function exitCropMode(canvas, confirmCropButton, cancelCropButton, cropButton) {
 function initializeCrop(canvas, Swal, confirmCropButton, cancelCropButton, cropButton, marginRect, rotateCheckbox) {
   const activeObjects = canvas.getActiveObjects();
 
-  console.log(activeObjects);
-
   if (activeObjects.length === 0) {
     showNoObjectSelectedWarning();
     return;

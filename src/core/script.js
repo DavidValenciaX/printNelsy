@@ -20,12 +20,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Verificar que la aplicación se inicializó correctamente
     if (app.isHealthy()) {
-      console.log('✅ Application started successfully');
       
       // Opcional: Exponer la instancia de la aplicación para debugging
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         window.app = app;
-        console.log('🔧 Development mode: app instance available at window.app');
       }
     } else {
       console.error('❌ Application failed to start properly');

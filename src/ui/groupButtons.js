@@ -48,17 +48,6 @@ export function updateGroupButtonsState(canvas, domManager) {
   
   // Actualizar estado del botón "Desagrupar"
   updateButtonState(ungroupButton, selectionInfo.canUngroup);
-
-  // Log para debugging (solo en desarrollo)
-  if (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost') {
-    console.debug('📊 Estado de selección:', {
-      hasSelection: selectionInfo.hasSelection,
-      canGroup: selectionInfo.canGroup,
-      canUngroup: selectionInfo.canUngroup,
-      selectionType: selectionInfo.selectionType,
-      objectCount: selectionInfo.objectCount
-    });
-  }
 }
 
 /**
@@ -115,8 +104,6 @@ export function initializeGroupButtonsState(domManager) {
   // Establecer estado inicial (deshabilitado)
   updateButtonState(groupButton, false);
   updateButtonState(ungroupButton, false);
-
-  console.log('✅ Estado inicial de botones de agrupación configurado');
 }
 
 /**
@@ -136,8 +123,6 @@ export function handleGroupCreated(group, domManager) {
       groupButton.style.backgroundColor = '';
     }, 200);
   }
-
-  console.log('✅ Feedback visual de agrupación completado');
 }
 
 /**
@@ -157,6 +142,4 @@ export function handleGroupUngrouped(activeSelection, domManager) {
       ungroupButton.style.backgroundColor = '';
     }, 200);
   }
-
-  console.log('✅ Feedback visual de desagrupación completado');
 } 
