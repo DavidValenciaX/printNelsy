@@ -147,13 +147,42 @@ export function createNewPage(currentCanvas) {
     PAGE_STATE.pages.push(newPage);
     PAGE_STATE.nextPageId++;
     
-    console.log(`Nueva página creada con ID: ${canvasId}`, newPage);
+    // Cambiar el índice actual a la nueva página
+    PAGE_STATE.currentPageIndex = PAGE_STATE.pages.length - 1;
     
-    // Scroll hacia la nueva página
-    scrollToPage(newPage);
+    console.log(`Nueva página creada con ID: ${canvasId}`, newPage);
     
     // Actualizar información de páginas en la UI
     updatePageInfo();
+    
+    // Sincronizar estados y UI para la nueva página ANTES del scroll
+    syncGlobalStatesWithCurrentPage()
+      .then(() => updateUIButtonsForCurrentPage())
+      .then(() => {
+        // Hacer scroll después de que la sincronización esté completa
+        setTimeout(() => {
+          const pagesContainer = document.getElementById('pages-container');
+          if (pagesContainer) {
+            // Usar calculateScrollPositionForPage para evitar problemas con offsetTop
+            const targetScrollTop = calculateScrollPositionForPage(PAGE_STATE.currentPageIndex);
+            console.log('🎯 NUEVA PÁGINA: Calculando scroll para índice:', PAGE_STATE.currentPageIndex);
+            console.log('🎯 NUEVA PÁGINA: Posición calculada:', targetScrollTop);
+            
+            pagesContainer.scrollTo({
+              top: targetScrollTop,
+              behavior: 'smooth'
+            });
+            
+            // Verificar después de un delay si el scroll fue efectivo
+            setTimeout(() => {
+              const newScrollTop = pagesContainer.scrollTop;
+              console.log('✅ NUEVA PÁGINA: Nueva posición del scroll:', newScrollTop);
+              console.log('🔍 NUEVA PÁGINA: ¿Scroll correcto?', Math.abs(newScrollTop - targetScrollTop) < 50);
+            }, 100);
+          }
+        }, 50);
+      })
+      .catch(error => console.warn('Error sincronizando estados en nueva página:', error));
     
     return newPage;
     
