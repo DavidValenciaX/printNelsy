@@ -15,6 +15,19 @@ export class EventManager {
     this.eventBindings = new Map();
   }
 
+  /**
+   * Guarda automáticamente el estado actual en la página actual
+   * Esta función se llama después de cambios de configuración importantes
+   */
+  async autoSaveCurrentPageState() {
+    try {
+      const { saveCurrentStateToPage } = await import('../canvas/pageUtils.js');
+      await saveCurrentStateToPage();
+    } catch (error) {
+      console.warn('Error al guardar automáticamente el estado de la página:', error);
+    }
+  }
+
   initializeAllEvents() {
     this.initializeFileEvents();
     this.initializePaperSizeEvents();
@@ -133,10 +146,13 @@ export class EventManager {
     const paperSizes = ['carta', 'oficio', 'a4'];
     
     paperSizes.forEach(size => {
-      this.addEventBinding(`${size}Button`, 'click', () => {
+      this.addEventBinding(`${size}Button`, 'click', async () => {
         const result = this.actions.resizeCanvas(size, this.canvasManager.getCanvas(), this.canvasManager.getMarginRect());
         this.canvasManager.updateMargins(result.marginRect, result.marginWidth);
         this.updatePaperSizeButtons(size);
+        
+        // Auto-guardar estado después del cambio
+        await this.autoSaveCurrentPageState();
       });
     });
 
@@ -144,16 +160,22 @@ export class EventManager {
   }
 
   initializeOrientationEvents() {
-    this.addEventBinding('verticalButton', 'click', () => {
+    this.addEventBinding('verticalButton', 'click', async () => {
       const result = this.actions.changeOrientation(true, this.canvasManager.getCanvas(), this.canvasManager.getMarginRect());
       this.canvasManager.updateMargins(result.marginRect, result.marginWidth);
       this.updateOrientationButtons(true);
+      
+      // Auto-guardar estado después del cambio
+      await this.autoSaveCurrentPageState();
     });
 
-    this.addEventBinding('horizontalButton', 'click', () => {
+    this.addEventBinding('horizontalButton', 'click', async () => {
       const result = this.actions.changeOrientation(false, this.canvasManager.getCanvas(), this.canvasManager.getMarginRect());
       this.canvasManager.updateMargins(result.marginRect, result.marginWidth);
       this.updateOrientationButtons(false);
+      
+      // Auto-guardar estado después del cambio
+      await this.autoSaveCurrentPageState();
     });
 
     this.updateOrientationButtons(true);
@@ -238,24 +260,36 @@ export class EventManager {
       this.actions.centerHorizontally(this.canvasManager.getCanvas())
     );
     
-    this.addEventBinding('rowsLayoutButton', 'click', () => {
+    this.addEventBinding('rowsLayoutButton', 'click', async () => {
       this.actions.setOrientationLayout(this.canvasManager.getCanvas(), this.dom, 'rows');
       this.updateLayoutOrientationButtons('rows');
+      
+      // Auto-guardar estado después del cambio
+      await this.autoSaveCurrentPageState();
     });
 
-    this.addEventBinding('colsLayoutButton', 'click', () => {
+    this.addEventBinding('colsLayoutButton', 'click', async () => {
       this.actions.setOrientationLayout(this.canvasManager.getCanvas(), this.dom, 'cols');
       this.updateLayoutOrientationButtons('cols');
+      
+      // Auto-guardar estado después del cambio
+      await this.autoSaveCurrentPageState();
     });
 
-    this.addEventBinding('forwardOrderButton', 'click', () => {
+    this.addEventBinding('forwardOrderButton', 'click', async () => {
       this.actions.setOrderLayout(this.canvasManager.getCanvas(), this.dom, 'forward');
       this.updateOrderButtons('forward');
+      
+      // Auto-guardar estado después del cambio
+      await this.autoSaveCurrentPageState();
     });
 
-    this.addEventBinding('reverseOrderButton', 'click', () => {
+    this.addEventBinding('reverseOrderButton', 'click', async () => {
       this.actions.setOrderLayout(this.canvasManager.getCanvas(), this.dom, 'reverse');
       this.updateOrderButtons('reverse');
+      
+      // Auto-guardar estado después del cambio
+      await this.autoSaveCurrentPageState();
     });
 
     this.updateLayoutOrientationButtons(imageState.orientation);
@@ -372,35 +406,47 @@ export class EventManager {
   }
 
   initializeCollageEvents() {
-    this.addEventBinding('gridArrangeButton', 'click', () => {
+    this.addEventBinding('gridArrangeButton', 'click', async () => {
       this.actions.applyGridArrangement(this.canvasManager.getCanvas(), this.dom);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
       this.updateLayoutOrientationButtons(imageState.orientation);
       this.updateOrderButtons(imageState.order);
+      
+      // Auto-guardar estado después del cambio
+      await this.autoSaveCurrentPageState();
     });
 
-    this.addEventBinding('columnsCollageButton', 'click', () => {
+    this.addEventBinding('columnsCollageButton', 'click', async () => {
       const newStatus = this.actions.createMasonryColumnsCollage(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
       if (newStatus) this.actions.setArrangementStatus(newStatus);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
       this.updateLayoutOrientationButtons();
       this.updateOrderButtons();
+      
+      // Auto-guardar estado después del cambio
+      await this.autoSaveCurrentPageState();
     });
 
-    this.addEventBinding('rowsCollageButton', 'click', () => {
+    this.addEventBinding('rowsCollageButton', 'click', async () => {
       const newStatus = this.actions.createMasonryRowsCollage(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
       if (newStatus) this.actions.setArrangementStatus(newStatus);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
       this.updateLayoutOrientationButtons();
       this.updateOrderButtons();
+      
+      // Auto-guardar estado después del cambio
+      await this.autoSaveCurrentPageState();
     });
 
-    this.addEventBinding('collageButton', 'click', () => {
+    this.addEventBinding('collageButton', 'click', async () => {
       const newStatus = this.actions.collageArrange(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
       if (newStatus) this.actions.setArrangementStatus(newStatus);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
       this.updateLayoutOrientationButtons();
       this.updateOrderButtons();
+      
+      // Auto-guardar estado después del cambio
+      await this.autoSaveCurrentPageState();
     });
   }
 

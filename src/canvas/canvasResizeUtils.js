@@ -33,6 +33,14 @@ export function getIsVertical() {
   return isVertical;
 }
 
+export function setCurrentSize(size) {
+  currentSize = size;
+}
+
+export function setIsVertical(vertical) {
+  isVertical = vertical;
+}
+
 function reAddAndArrangeImages(images, currentOrientation, currentOrder, canvas, marginRect) {
   if (images.length === 0) {
     setArrangementStatus('none');

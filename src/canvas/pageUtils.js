@@ -3,10 +3,83 @@ import { resizeCanvas, getCurrentSize, getIsVertical } from './canvasResizeUtils
 
 // Estado global para manejar múltiples páginas
 const PAGE_STATE = {
-  pages: [], // Array de objetos { canvasElement, fabricCanvas, marginRect, marginWidth }
+  pages: [], // Array de objetos { canvasElement, fabricCanvas, marginRect, marginWidth, pageSettings }
   currentPageIndex: 0,
   nextPageId: 1
 };
+
+/**
+ * Obtiene la configuración por defecto para una nueva página
+ * @returns {Object} Configuración por defecto
+ */
+function getDefaultPageSettings() {
+  return {
+    orientation: true, // vertical
+    paperSize: 'carta',
+    arrangement: {
+      status: 'none',
+      orientation: 'rows',
+      order: 'forward',
+      spacing: 20
+    }
+  };
+}
+
+/**
+ * Obtiene la configuración actual de los estados globales
+ * @returns {Object} Configuración actual
+ */
+function getCurrentGlobalSettings() {
+  const currentSize = getCurrentSize();
+  const currentOrientation = getIsVertical();
+  
+  // Usar valores por defecto si no se puede acceder a imageState
+  // (imageState se importará dinámicamente donde sea necesario)
+  return {
+    orientation: currentOrientation,
+    paperSize: currentSize,
+    arrangement: {
+      status: 'none', // Se actualizará dinámicamente cuando sea necesario
+      orientation: 'rows', 
+      order: 'forward',
+      spacing: 20
+    }
+  };
+}
+
+/**
+ * Obtiene la configuración actual de los estados globales de forma asíncrona
+ * @returns {Promise<Object>} Configuración actual
+ */
+async function getCurrentGlobalSettingsAsync() {
+  const currentSize = getCurrentSize();
+  const currentOrientation = getIsVertical();
+  
+  let arrangementSettings = {
+    status: 'none',
+    orientation: 'rows',
+    order: 'forward', 
+    spacing: 20
+  };
+
+  try {
+    const { imageState } = await import('../image/imageUploadUtils.js');
+    arrangementSettings = {
+      status: imageState.arrangementStatus || 'none',
+      orientation: imageState.orientation || 'rows',
+      order: imageState.order || 'forward',
+      spacing: imageState.spacing || 20
+    };
+  } catch (error) {
+    console.warn('No se pudo obtener imageState:', error);
+  }
+  
+  return {
+    orientation: currentOrientation,
+    paperSize: currentSize,
+    arrangement: arrangementSettings
+  };
+}
 
 /**
  * Crea una nueva página en el canvas
@@ -41,23 +114,23 @@ export function createNewPage(currentCanvas) {
     // Crear nueva instancia de Fabric.js para este canvas
     const newFabricCanvas = new fabric.Canvas(canvasId);
     
-    // Configurar el nuevo canvas con las mismas dimensiones que el actual
-    const currentSize = getCurrentSize();
-    const currentOrientation = getIsVertical();
+    // Obtener configuración actual para heredar en la nueva página
+    const currentSettings = getCurrentGlobalSettings();
     
-    // Aplicar redimensionamiento al nuevo canvas
-    const result = resizeCanvas(currentSize, newFabricCanvas, null, currentOrientation);
+    // Aplicar redimensionamiento al nuevo canvas usando la configuración actual
+    const result = resizeCanvas(currentSettings.paperSize, newFabricCanvas, null, currentSettings.orientation);
     
     // Configurar propiedades del canvas
     setupCanvasProperties(newFabricCanvas);
     
-    // Crear objeto de página
+    // Crear objeto de página con configuración
     const newPage = {
       canvasElement: newCanvasElement,
       fabricCanvas: newFabricCanvas,
       marginRect: result.marginRect,
       marginWidth: result.marginWidth,
-      pageId: PAGE_STATE.nextPageId
+      pageId: PAGE_STATE.nextPageId,
+      pageSettings: { ...currentSettings } // Heredar configuración actual
     };
     
     // Añadir a la lista de páginas
@@ -194,12 +267,16 @@ export function initializePageState(mainCanvas, marginRect, marginWidth) {
   const mainCanvasElement = document.getElementById('canvas');
   
   if (mainCanvasElement && mainCanvas) {
+    // Obtener configuración inicial (por defecto)
+    const initialSettings = getDefaultPageSettings();
+    
     const mainPage = {
       canvasElement: mainCanvasElement,
       fabricCanvas: mainCanvas,
       marginRect: marginRect,
       marginWidth: marginWidth,
-      pageId: 0
+      pageId: 0,
+      pageSettings: { ...initialSettings }
     };
     
     PAGE_STATE.pages = [mainPage];
@@ -218,6 +295,11 @@ export function goToPreviousPage() {
     PAGE_STATE.currentPageIndex--;
     scrollToCurrentPage();
     updatePageInfo();
+    
+    // NUEVA FUNCIONALIDAD: Sincronizar estados y UI
+    syncGlobalStatesWithCurrentPage();
+    updateUIButtonsForCurrentPage();
+    
     console.log(`Navegando a página anterior: ${PAGE_STATE.currentPageIndex + 1}`);
   }
 }
@@ -230,6 +312,11 @@ export function goToNextPage() {
     PAGE_STATE.currentPageIndex++;
     scrollToCurrentPage();
     updatePageInfo();
+    
+    // NUEVA FUNCIONALIDAD: Sincronizar estados y UI
+    syncGlobalStatesWithCurrentPage();
+    updateUIButtonsForCurrentPage();
+    
     console.log(`Navegando a página siguiente: ${PAGE_STATE.currentPageIndex + 1}`);
   }
 }
@@ -294,6 +381,10 @@ export function deleteCurrentPage() {
   scrollToCurrentPage();
   updatePageInfo();
   
+  // NUEVA FUNCIONALIDAD: Sincronizar estados y UI después de eliminar
+  syncGlobalStatesWithCurrentPage();
+  updateUIButtonsForCurrentPage();
+  
   console.log(`Página eliminada. Nueva página actual: ${PAGE_STATE.currentPageIndex + 1}`);
   return true;
 }
@@ -320,5 +411,86 @@ export function isFirstPage() {
  */
 export function isLastPage() {
   return PAGE_STATE.currentPageIndex === PAGE_STATE.pages.length - 1;
+}
+
+/**
+ * Sincroniza los estados globales con la configuración de la página actual
+ */
+export function syncGlobalStatesWithCurrentPage() {
+  const currentPage = getCurrentPage();
+  if (!currentPage?.pageSettings) return;
+
+  const { pageSettings } = currentPage;
+  
+  // Sincronizar estados de canvas (se implementará en el siguiente paso)
+  import('./canvasResizeUtils.js').then(({ setCurrentSize, setIsVertical }) => {
+    setCurrentSize(pageSettings.paperSize);
+    setIsVertical(pageSettings.orientation);
+  }).catch(error => {
+    console.warn('Error sincronizando estados de canvas:', error);
+  });
+
+  // Sincronizar estados de imagen
+  import('../image/imageUploadUtils.js').then(({ imageState }) => {
+    imageState.arrangementStatus = pageSettings.arrangement.status;
+    imageState.orientation = pageSettings.arrangement.orientation;
+    imageState.order = pageSettings.arrangement.order;
+    imageState.spacing = pageSettings.arrangement.spacing;
+  }).catch(error => {
+    console.warn('Error sincronizando estados de imagen:', error);
+  });
+}
+
+/**
+ * Actualiza todos los botones de la UI según la página actual
+ */
+export function updateUIButtonsForCurrentPage() {
+  const currentPage = getCurrentPage();
+  if (!currentPage?.pageSettings) return;
+
+  const { pageSettings } = currentPage;
+
+  // Buscar una instancia del eventManager desde la aplicación
+  import('../core/app.js').then(({ getAppInstance }) => {
+    const app = getAppInstance();
+    if (app?.modules?.events) {
+      const eventManager = app.modules.events;
+      
+      // Actualizar botones de orientación
+      eventManager.updateOrientationButtons(pageSettings.orientation);
+      
+      // Actualizar botones de tamaño de papel
+      eventManager.updatePaperSizeButtons(pageSettings.paperSize);
+      
+      // Actualizar botones de arrangement de layout
+      eventManager.updateLayoutOrientationButtons(pageSettings.arrangement.orientation);
+      eventManager.updateOrderButtons(pageSettings.arrangement.order);
+    }
+
+    // Actualizar botones de arrangement usando el util existente
+    if (app?.modules?.dom) {
+      import('../utils/arrangementButtons.js').then(({ updateArrangementButtons }) => {
+        updateArrangementButtons(pageSettings.arrangement.status, app.modules.dom);
+      }).catch(error => {
+        console.warn('Error actualizando botones de arrangement:', error);
+      });
+    }
+  }).catch(error => {
+    console.warn('Error obteniendo instancia de la aplicación:', error);
+  });
+}
+
+/**
+ * Guarda el estado actual en la página actual
+ */
+export async function saveCurrentStateToPage() {
+  const currentPage = getCurrentPage();
+  if (!currentPage) return;
+
+  // Obtener estados actuales y guardarlos en la página
+  const currentSettings = await getCurrentGlobalSettingsAsync();
+  currentPage.pageSettings = { ...currentSettings };
+  
+  console.log('Estado guardado en página actual:', currentPage.pageSettings);
 }
 

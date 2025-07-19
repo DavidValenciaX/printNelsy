@@ -57,7 +57,7 @@ function isCanvasEmpty(canvas) {
   return canvas.getObjects().filter((obj) => obj.type === "image" || obj.type === "group").length === 0;
 }
 
-function _processFilesForCanvas(files, canvas, rotateCheckbox) {
+async function _processFilesForCanvas(files, canvas, rotateCheckbox) {
   const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
 
   if (imageFiles.length === 0) {
@@ -70,8 +70,8 @@ function _processFilesForCanvas(files, canvas, rotateCheckbox) {
 
   for (const file of imageFiles) {
     const reader = new FileReader();
-    reader.onload = function (event) {
-      fabric.Image.fromURL(event.target.result, function (img) {
+    reader.onload = async function (event) {
+      fabric.Image.fromURL(event.target.result, async function (img) {
         // Asignar un id único permanente si no lo tiene
         if (!img.id) {
           const uniqueId = `image-${Date.now()}-${Math.random()
@@ -123,6 +123,14 @@ function _processFilesForCanvas(files, canvas, rotateCheckbox) {
               );
               domManagerInstance.eventManager.updateOrderButtons(imageState.order);
             }
+          }
+          
+          // Guardar el estado en la página actual después de la carga inicial
+          try {
+            const { saveCurrentStateToPage } = await import('../canvas/pageUtils.js');
+            await saveCurrentStateToPage();
+          } catch (error) {
+            console.warn('Error guardando estado de página tras carga de imagen:', error);
           }
 
           // Luego, se guardan los datos originales ya con sus valores de top, left, scaleX y scaleY actualizados

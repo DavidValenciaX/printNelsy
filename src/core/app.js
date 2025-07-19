@@ -87,8 +87,26 @@ export class PrintImageApp {
       const { updateArrangementButtons } = await import('../utils/arrangementButtons.js');
       const { imageState } = await import('../image/imageUploadUtils.js');
       updateArrangementButtons(imageState.arrangementStatus, this.modules.dom);
+      
+      // También inicializar el estado de la UI para la primera página
+      await this.initializePageUIState();
     } catch (error) {
       console.warn('Error initializing arrangement buttons:', error);
+    }
+  }
+
+  /**
+   * Inicializa el estado de la UI para la primera página
+   */
+  async initializePageUIState() {
+    try {
+      const { updateUIButtonsForCurrentPage } = await import('../canvas/pageUtils.js');
+      // Pequeño delay para asegurar que todos los módulos estén inicializados
+      setTimeout(() => {
+        updateUIButtonsForCurrentPage();
+      }, 100);
+    } catch (error) {
+      console.warn('Error initializing page UI state:', error);
     }
   }
 
