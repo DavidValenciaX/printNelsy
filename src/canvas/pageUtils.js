@@ -16,24 +16,27 @@ export function createNewPage(currentCanvas) {
   console.log('Creando una nueva página...');
   
   try {
-    // Obtener el contenedor de canvas
-    const canvasContainer = document.getElementById('canvas-container');
-    if (!canvasContainer) {
-      console.error('No se encontró el contenedor del canvas');
+    // Obtener el contenedor padre de páginas
+    const pagesContainer = document.getElementById('pages-container');
+    if (!pagesContainer) {
+      console.error('No se encontró el contenedor de páginas');
       return;
     }
 
+    // Crear contenedor individual para el nuevo canvas
+    const canvasContainer = document.createElement('div');
+    canvasContainer.className = 'canvas-container';
+    
     // Crear nuevo elemento canvas
     const newCanvasElement = document.createElement('canvas');
     const canvasId = `canvas-page-${PAGE_STATE.nextPageId}`;
     newCanvasElement.id = canvasId;
     
-    // Añadir margen superior para separar las páginas
-    newCanvasElement.style.marginTop = '20px';
-    newCanvasElement.style.display = 'block';
-    
-    // Añadir el nuevo canvas al contenedor
+    // Añadir el canvas al contenedor individual
     canvasContainer.appendChild(newCanvasElement);
+    
+    // Añadir el contenedor individual al contenedor padre
+    pagesContainer.appendChild(canvasContainer);
     
     // Crear nueva instancia de Fabric.js para este canvas
     const newFabricCanvas = new fabric.Canvas(canvasId);

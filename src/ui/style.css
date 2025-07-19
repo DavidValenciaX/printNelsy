@@ -37,7 +37,14 @@ canvas{
   margin-top: 0 !important;
 }
 
-#canvas-container {
+#pages-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem; /* Espaciado entre páginas */
+  align-items: center;
+}
+
+.canvas-container {
   position: relative;
   border: 1px solid #e0e0e0;
   border-radius: 0.25rem;
