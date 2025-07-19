@@ -162,6 +162,13 @@ export function changeOrientation(vertical, canvas, marginRect) {
 export function resizeCanvasOnly(size, canvas, marginRect, orientation = isVertical) {
   console.log('🔧 resizeCanvasOnly llamada con:', { size, orientation });
   
+  // SCROLL DEBUG: Obtener estado del container antes del resize
+  const pagesContainer = document.getElementById('pages-container');
+  if (pagesContainer) {
+    const scrollBefore = pagesContainer.scrollTop;
+    console.log('📍 RESIZE DEBUG: Scroll position ANTES del resize:', scrollBefore);
+  }
+  
   // Update canvas dimensions
   currentSize = size;
   isVertical = orientation;
@@ -173,10 +180,13 @@ export function resizeCanvasOnly(size, canvas, marginRect, orientation = isVerti
     [width, height] = [height, width];
   }
 
-  console.log('📐 Nuevas dimensiones del canvas:', { width: width * scale, height: height * scale });
+  console.log('📐 RESIZE DEBUG: Dimensiones del canvas antes:', { width: canvas.width, height: canvas.height });
+  console.log('📐 RESIZE DEBUG: Nuevas dimensiones calculadas:', { width: width * scale, height: height * scale });
   
   canvas.setWidth(width * scale);
   canvas.setHeight(height * scale);
+  
+  console.log('📐 RESIZE DEBUG: Dimensiones del canvas después:', { width: canvas.width, height: canvas.height });
 
   // Update margin rectangle
   if (marginRect) {
@@ -203,6 +213,21 @@ export function resizeCanvasOnly(size, canvas, marginRect, orientation = isVerti
 
   // Calcular el ancho del margen
   const marginWidth = (canvas.width - newMarginRect.width) / 2;
+
+  // SCROLL DEBUG: Verificar si el resize cambió el scroll
+  if (pagesContainer) {
+    // Usar setTimeout para verificar después de que el DOM se actualice
+    setTimeout(() => {
+      const scrollAfter = pagesContainer.scrollTop;
+      console.log('📍 RESIZE DEBUG: Scroll position DESPUÉS del resize:', scrollAfter);
+      console.log('🔍 RESIZE DEBUG: ¿El resize cambió el scroll?', scrollBefore !== scrollAfter);
+      
+      if (scrollBefore !== scrollAfter) {
+        console.warn('⚠️ RESIZE DEBUG: ¡EL RESIZE CAMBIÓ LA POSICIÓN DEL SCROLL!');
+        console.log('📊 RESIZE DEBUG: Diferencia:', scrollAfter - scrollBefore);
+      }
+    }, 10);
+  }
 
   console.log('✅ Canvas redimensionado sin reorganizar imágenes');
   

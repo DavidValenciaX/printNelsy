@@ -416,6 +416,14 @@ function drawGrid(canvas, rows, cols, marginRect) {
 export function updateGridVisualization(canvas, isVerticalPaper = null) {
   console.log('🔍 updateGridVisualization llamada con isVerticalPaper:', isVerticalPaper);
   
+  // SCROLL DEBUG: Obtener estado del container antes de updateGridVisualization
+  const pagesContainer = document.getElementById('pages-container');
+  let scrollBefore = null;
+  if (pagesContainer) {
+    scrollBefore = pagesContainer.scrollTop;
+    console.log('📍 GRID DEBUG: Scroll position ANTES de updateGridVisualization:', scrollBefore);
+  }
+  
   removeGrid(canvas);
 
   const marginRect = getCurrentMarginRect();
@@ -469,7 +477,23 @@ export function updateGridVisualization(canvas, isVerticalPaper = null) {
     console.log('⏸️ No se dibuja grid (no es grid arrangement o pocos objetos)');
   }
 
+  console.log('🎨 GRID DEBUG: Llamando canvas.renderAll()...');
   canvas.renderAll();
+  
+  // SCROLL DEBUG: Verificar si updateGridVisualization cambió el scroll
+  if (pagesContainer && scrollBefore !== null) {
+    // Usar setTimeout para verificar después de que el renderAll se complete
+    setTimeout(() => {
+      const scrollAfter = pagesContainer.scrollTop;
+      console.log('📍 GRID DEBUG: Scroll position DESPUÉS de updateGridVisualization:', scrollAfter);
+      console.log('🔍 GRID DEBUG: ¿updateGridVisualization cambió el scroll?', scrollBefore !== scrollAfter);
+      
+      if (scrollBefore !== scrollAfter) {
+        console.warn('⚠️ GRID DEBUG: ¡updateGridVisualization CAMBIÓ LA POSICIÓN DEL SCROLL!');
+        console.log('📊 GRID DEBUG: Diferencia:', scrollAfter - scrollBefore);
+      }
+    }, 10);
+  }
 } 
 
 /**

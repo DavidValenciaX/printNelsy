@@ -178,28 +178,61 @@ function setupCanvasProperties(canvas) {
  * @param {Object} page - Objeto de página
  */
 function scrollToPage(page) {
+  console.log('🔄 SCROLL DEBUG: scrollToPage iniciado');
+  console.log('📄 SCROLL DEBUG: page:', page);
+  
   if (page?.canvasElement) {
     const pagesContainer = document.getElementById('pages-container');
+    console.log('📦 SCROLL DEBUG: pagesContainer encontrado:', !!pagesContainer);
+    
     if (pagesContainer) {
+      // Obtener posición actual antes del scroll
+      const currentScrollTop = pagesContainer.scrollTop;
+      console.log('📍 SCROLL DEBUG: Posición actual del scroll:', currentScrollTop);
+      
       // Obtener la posición relativa del canvas dentro del contenedor
       const canvasContainer = page.canvasElement.closest('.canvas-container');
+      console.log('🎯 SCROLL DEBUG: canvasContainer encontrado:', !!canvasContainer);
+      
       if (canvasContainer) {
         const scrollOffset = canvasContainer.offsetTop;
+        const targetScrollTop = Math.max(0, scrollOffset - 20);
+        
+        console.log('📐 SCROLL DEBUG: scrollOffset (offsetTop):', scrollOffset);
+        console.log('🎯 SCROLL DEBUG: targetScrollTop calculado:', targetScrollTop);
+        console.log('📊 SCROLL DEBUG: pagesContainer scrollHeight:', pagesContainer.scrollHeight);
+        console.log('📊 SCROLL DEBUG: pagesContainer clientHeight:', pagesContainer.clientHeight);
         
         // Hacer scroll suave dentro del contenedor con un pequeño margen
+        console.log('⚡ SCROLL DEBUG: Ejecutando scrollTo...');
         pagesContainer.scrollTo({
-          top: Math.max(0, scrollOffset - 20),
+          top: targetScrollTop,
           behavior: 'smooth'
         });
+        
+        // Verificar después de un pequeño delay si el scroll fue efectivo
+        setTimeout(() => {
+          const newScrollTop = pagesContainer.scrollTop;
+          console.log('✅ SCROLL DEBUG: Nueva posición del scroll después de scrollTo:', newScrollTop);
+          console.log('🔍 SCROLL DEBUG: ¿Scroll cambió correctamente?', Math.abs(newScrollTop - targetScrollTop) < 50);
+        }, 100);
+        
+      } else {
+        console.warn('⚠️ SCROLL DEBUG: No se encontró canvasContainer');
       }
     } else {
+      console.log('📱 SCROLL DEBUG: Usando scrollIntoView como fallback');
       // Fallback al comportamiento anterior
       page.canvasElement.scrollIntoView({ 
         behavior: 'smooth', 
         block: 'start' 
       });
     }
+  } else {
+    console.warn('❌ SCROLL DEBUG: page o page.canvasElement no válido');
   }
+  
+  console.log('✅ SCROLL DEBUG: scrollToPage completado');
 }
 
 /**
@@ -298,11 +331,74 @@ export function initializePageState(mainCanvas, marginRect, marginWidth) {
 }
 
 /**
+ * Calcula la posición de scroll correcta para una página específica
+ * Método alternativo cuando offsetTop no funciona correctamente
+ * @param {number} pageIndex - Índice de la página (0-based)
+ * @returns {number} Posición de scroll calculada
+ */
+function calculateScrollPositionForPage(pageIndex) {
+  const pagesContainer = document.getElementById('pages-container');
+  if (!pagesContainer) return 0;
+  
+  console.log('🧮 CALC DEBUG: Calculando posición para página índice:', pageIndex);
+  
+  const allCanvasContainers = pagesContainer.querySelectorAll('.canvas-container');
+  if (allCanvasContainers.length === 0) return 0;
+  
+  // Obtener el estilo computado del contenedor para el gap
+  const containerStyle = getComputedStyle(pagesContainer);
+  const gapValue = parseFloat(containerStyle.gap) || 20; // 1.25rem = 20px aprox
+  const paddingTop = parseFloat(containerStyle.paddingTop) || 8; // 0.5rem = 8px aprox
+  
+  console.log('🧮 CALC DEBUG: Valores de CSS:', { gapValue, paddingTop });
+  
+  // Calcular altura promedio de un container (usar el primero como referencia)
+  const firstContainer = allCanvasContainers[0];
+  const containerHeight = firstContainer.offsetHeight || firstContainer.clientHeight || 600; // fallback
+  
+  console.log('🧮 CALC DEBUG: Altura del container:', containerHeight);
+  
+  // Calcular posición: padding inicial + (altura del container + gap) * índice
+  const calculatedPosition = paddingTop + (containerHeight + gapValue) * pageIndex;
+  
+  console.log('🧮 CALC DEBUG: Posición calculada:', calculatedPosition);
+  
+  return Math.max(0, calculatedPosition - 20); // -20 para el margen como en scrollToPage
+}
+
+/**
  * Navega a la página anterior
  */
 export async function goToPreviousPage() {
   if (PAGE_STATE.currentPageIndex > 0) {
     console.log('⬅️ INICIANDO navegación a página anterior');
+    console.log('🔍 DEBUG: Estado inicial del scroll container antes de navegación');
+    logScrollState();
+    
+    // NUEVO: Calcular posición usando método alternativo más confiable
+    const targetPageIndex = PAGE_STATE.currentPageIndex - 1;
+    const targetPage = PAGE_STATE.pages[targetPageIndex];
+    let targetScrollTop = null;
+    
+    if (targetPage?.canvasElement) {
+      const pagesContainer = document.getElementById('pages-container');
+      const canvasContainer = targetPage.canvasElement.closest('.canvas-container');
+      if (pagesContainer && canvasContainer) {
+        // Intentar usar offsetTop primero
+        const offsetTopMethod = Math.max(0, canvasContainer.offsetTop - 20);
+        console.log('🎯 PRESERVACIÓN: offsetTop method resultado:', offsetTopMethod);
+        
+        // Si offsetTop es 0 (problema conocido), usar método de cálculo
+        if (offsetTopMethod === 0 && targetPageIndex > 0) {
+          targetScrollTop = calculateScrollPositionForPage(targetPageIndex);
+          console.log('🎯 PRESERVACIÓN: Usando método de cálculo, resultado:', targetScrollTop);
+        } else {
+          targetScrollTop = offsetTopMethod;
+          console.log('🎯 PRESERVACIÓN: Usando offsetTop method:', targetScrollTop);
+        }
+      }
+    }
+    
     PAGE_STATE.currentPageIndex--;
     updatePageInfo();
     
@@ -310,11 +406,30 @@ export async function goToPreviousPage() {
     // NUEVA FUNCIONALIDAD: Sincronizar estados y UI
     await syncGlobalStatesWithCurrentPage();
     
+    console.log('🔍 DEBUG: Estado del scroll container después de sincronización');
+    logScrollState();
+    
     console.log('🎨 PASO 2: Actualizando UI...');
     await updateUIButtonsForCurrentPage();
     
-    // Mover el scroll al final para asegurar que se ejecuta después de los cambios de UI
-    scrollToCurrentPage();
+    console.log('🔍 DEBUG: Estado del scroll container después de actualizar UI');
+    logScrollState();
+    
+    // NUEVO: Usar el scroll target preservado con método mejorado
+    console.log('📍 PASO 3: Ejecutando scroll final con posición mejorada...');
+    if (targetScrollTop !== null) {
+      const pagesContainer = document.getElementById('pages-container');
+      if (pagesContainer) {
+        console.log('🔄 PRESERVACIÓN: Restaurando scroll a posición calculada:', targetScrollTop);
+        pagesContainer.scrollTo({
+          top: targetScrollTop,
+          behavior: 'smooth'
+        });
+      }
+    } else {
+      console.log('⚠️ PRESERVACIÓN: Fallback a scrollToCurrentPage');
+      scrollToCurrentPage();
+    }
     
     console.log(`✅ COMPLETADA navegación a página: ${PAGE_STATE.currentPageIndex + 1}`);
   }
@@ -326,6 +441,33 @@ export async function goToPreviousPage() {
 export async function goToNextPage() {
   if (PAGE_STATE.currentPageIndex < PAGE_STATE.pages.length - 1) {
     console.log('➡️ INICIANDO navegación a página siguiente');
+    console.log('🔍 DEBUG: Estado inicial del scroll container antes de navegación');
+    logScrollState();
+    
+    // NUEVO: Calcular posición usando método alternativo más confiable
+    const targetPageIndex = PAGE_STATE.currentPageIndex + 1;
+    const targetPage = PAGE_STATE.pages[targetPageIndex];
+    let targetScrollTop = null;
+    
+    if (targetPage?.canvasElement) {
+      const pagesContainer = document.getElementById('pages-container');
+      const canvasContainer = targetPage.canvasElement.closest('.canvas-container');
+      if (pagesContainer && canvasContainer) {
+        // Intentar usar offsetTop primero
+        const offsetTopMethod = Math.max(0, canvasContainer.offsetTop - 20);
+        console.log('🎯 PRESERVACIÓN: offsetTop method resultado:', offsetTopMethod);
+        
+        // Si offsetTop es 0 (problema conocido), usar método de cálculo
+        if (offsetTopMethod === 0 && targetPageIndex > 0) {
+          targetScrollTop = calculateScrollPositionForPage(targetPageIndex);
+          console.log('🎯 PRESERVACIÓN: Usando método de cálculo, resultado:', targetScrollTop);
+        } else {
+          targetScrollTop = offsetTopMethod;
+          console.log('🎯 PRESERVACIÓN: Usando offsetTop method:', targetScrollTop);
+        }
+      }
+    }
+    
     PAGE_STATE.currentPageIndex++;
     updatePageInfo();
     
@@ -333,11 +475,30 @@ export async function goToNextPage() {
     // NUEVA FUNCIONALIDAD: Sincronizar estados y UI
     await syncGlobalStatesWithCurrentPage();
     
+    console.log('🔍 DEBUG: Estado del scroll container después de sincronización');
+    logScrollState();
+    
     console.log('🎨 PASO 2: Actualizando UI...');
     await updateUIButtonsForCurrentPage();
 
-    // Mover el scroll al final para asegurar que se ejecuta después de los cambios de UI
-    scrollToCurrentPage();
+    console.log('🔍 DEBUG: Estado del scroll container después de actualizar UI');
+    logScrollState();
+
+    // NUEVO: Usar el scroll target preservado con método mejorado
+    console.log('📍 PASO 3: Ejecutando scroll final con posición mejorada...');
+    if (targetScrollTop !== null) {
+      const pagesContainer = document.getElementById('pages-container');
+      if (pagesContainer) {
+        console.log('🔄 PRESERVACIÓN: Restaurando scroll a posición calculada:', targetScrollTop);
+        pagesContainer.scrollTo({
+          top: targetScrollTop,
+          behavior: 'smooth'
+        });
+      }
+    } else {
+      console.log('⚠️ PRESERVACIÓN: Fallback a scrollToCurrentPage');
+      scrollToCurrentPage();
+    }
     
     console.log(`✅ COMPLETADA navegación a página: ${PAGE_STATE.currentPageIndex + 1}`);
   }
@@ -347,10 +508,20 @@ export async function goToNextPage() {
  * Hace scroll hacia la página actual
  */
 export function scrollToCurrentPage() {
+  console.log('🚀 SCROLL DEBUG: scrollToCurrentPage iniciado');
+  console.log('📊 SCROLL DEBUG: currentPageIndex:', PAGE_STATE.currentPageIndex);
+  console.log('📊 SCROLL DEBUG: total páginas:', PAGE_STATE.pages.length);
+  
   const currentPage = getCurrentPage();
+  console.log('📄 SCROLL DEBUG: currentPage:', currentPage?.pageId || 'null');
+  
   if (currentPage) {
     scrollToPage(currentPage);
+  } else {
+    console.warn('❌ SCROLL DEBUG: No hay página actual válida');
   }
+  
+  console.log('✅ SCROLL DEBUG: scrollToCurrentPage completado');
 }
 
 /**
@@ -606,5 +777,61 @@ export async function saveCurrentStateToPage() {
   currentPage.pageSettings = { ...currentSettings };
   
   console.log('Estado guardado en página actual:', currentPage.pageSettings);
+}
+
+/**
+ * Función helper para loggear el estado del scroll
+ */
+function logScrollState() {
+  const pagesContainer = document.getElementById('pages-container');
+  if (pagesContainer) {
+    console.log('📊 SCROLL STATE:', {
+      scrollTop: pagesContainer.scrollTop,
+      scrollHeight: pagesContainer.scrollHeight,
+      clientHeight: pagesContainer.clientHeight,
+      maxScroll: pagesContainer.scrollHeight - pagesContainer.clientHeight
+    });
+    
+    // También loggear las posiciones de cada página
+    PAGE_STATE.pages.forEach((page, index) => {
+      const canvasContainer = page.canvasElement?.closest('.canvas-container');
+      if (canvasContainer) {
+        console.log(`📄 Página ${index + 1} (ID: ${page.pageId}) offsetTop:`, canvasContainer.offsetTop);
+      }
+    });
+    
+    // DEBUG ADICIONAL: Verificar la estructura real del DOM
+    console.log('🔍 DOM DEBUG: Verificando estructura real del pages-container:');
+    const allCanvasContainers = pagesContainer.querySelectorAll('.canvas-container');
+    allCanvasContainers.forEach((container, index) => {
+      const canvas = container.querySelector('canvas');
+      console.log(`🎯 DOM DEBUG: Container ${index + 1}:`, {
+        offsetTop: container.offsetTop,
+        offsetHeight: container.offsetHeight,
+        canvasId: canvas?.id || 'sin canvas',
+        classList: Array.from(container.classList),
+        computedStyle: {
+          position: getComputedStyle(container).position,
+          display: getComputedStyle(container).display,
+          marginTop: getComputedStyle(container).marginTop,
+          marginBottom: getComputedStyle(container).marginBottom
+        }
+      });
+    });
+    
+    // Forzar recálculo del layout
+    console.log('🔄 DOM DEBUG: Forzando recálculo del layout...');
+    pagesContainer.offsetHeight; // Trigger layout reflow
+    
+    // Verificar nuevamente después del recálculo
+    setTimeout(() => {
+      console.log('📊 DOM DEBUG: Posiciones después del recálculo forzado:');
+      allCanvasContainers.forEach((container, index) => {
+        console.log(`🎯 DOM DEBUG: Container ${index + 1} nuevo offsetTop:`, container.offsetTop);
+      });
+    }, 50);
+  } else {
+    console.warn('❌ No se encontró pages-container para logScrollState');
+  }
 }
 
