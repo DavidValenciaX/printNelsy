@@ -104,6 +104,8 @@ function replaceImageOnCanvas(canvas, oldImage, newImage) {
     id: oldImage.id, // Mantener el ID original
     selectable: oldImage.selectable,
     evented: oldImage.evented,
+    // Copiar explícitamente la propiedad 'originalType' si existe
+    originalType: oldImage.originalType,
     // Copiar otras propiedades personalizadas si las hubiera
     ...oldImage.customProps,
   });

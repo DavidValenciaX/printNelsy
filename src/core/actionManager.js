@@ -90,7 +90,9 @@ export class ActionManager {
   // Object actions
   deactivateObjects = deactivateObjects;
   deleteActiveObject = deleteActiveObject;
-  resetActiveObject = resetActiveObject;
+  resetActiveObject = async (canvas, marginRect, originalImages, originalGroups, rotateCheckbox) => {
+    return await resetActiveObject(canvas, marginRect, originalImages, originalGroups, rotateCheckbox);
+  };
 
   // Transform actions
   rotateImage = rotateImage;

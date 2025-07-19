@@ -4,7 +4,113 @@ import { showNoObjectSelectedWarning } from '../utils/uiUtils.js';
 import { originalGroups } from './imageUploadUtils.js';
 import Swal from 'sweetalert2';
 
-export function resetActiveImage(canvas, marginRect, originalImages) {
+async function restoreGroupFromData(originalGroupData, canvas, marginRect, rotateCheckbox) {
+  if (!originalGroupData?.objects || !Array.isArray(originalGroupData.objects)) {
+    console.error('[restoreGroupFromData] Datos del grupo original no válidos:', originalGroupData);
+    throw new Error('Datos del grupo original no válidos');
+  }
+
+  console.log(`[restoreGroupFromData] Restaurando grupo con ${originalGroupData.objects.length} objetos`);
+
+  try {
+    // Cargar todas las imágenes del grupo de forma secuencial para mejor control
+    const loadedObjects = [];
+    
+    for (const objData of originalGroupData.objects) {
+      if (objData.type === 'image' && objData.originalUrl) {
+        try {
+          const img = await new Promise((resolve, reject) => {
+            fabric.Image.fromURL(objData.originalUrl, (loadedImg) => {
+              // Configurar todas las propiedades del objeto original
+              loadedImg.set({
+                id: objData.id,
+                left: objData.left,
+                top: objData.top,
+                scaleX: objData.scaleX,
+                scaleY: objData.scaleY,
+                angle: objData.angle,
+                width: objData.width,
+                height: objData.height,
+                flipX: objData.flipX || false,
+                flipY: objData.flipY || false,
+                originX: 'center',
+                originY: 'center'
+              });
+
+              // Restaurar filtros si existen
+              if (objData.filters && objData.filters.length > 0) {
+                loadedImg.filters = [];
+                objData.filters.forEach(filterData => {
+                  if (filterData.type === 'Grayscale' || filterData.type === 'fabric.Image.filters.Grayscale') {
+                    loadedImg.filters.push(new fabric.Image.filters.Grayscale());
+                  }
+                });
+                loadedImg.applyFilters();
+              }
+
+              // Configurar controles de rotación
+              if (rotateCheckbox) {
+                loadedImg.setControlsVisibility({
+                  mtr: rotateCheckbox.checked,
+                });
+              }
+
+              resolve(loadedImg);
+            }, { 
+              crossOrigin: 'anonymous',
+              // Manejar errores de carga
+              onError: () => {
+                console.error(`Error al cargar imagen con URL: ${objData.originalUrl}`);
+                reject(new Error(`No se pudo cargar la imagen: ${objData.originalUrl}`));
+              }
+            });
+          });
+          
+          loadedObjects.push(img);
+        } catch (error) {
+          console.error(`Error al restaurar objeto ${objData.id}:`, error);
+          throw error;
+        }
+      }
+    }
+
+    if (loadedObjects.length === 0) {
+      throw new Error('No se pudieron cargar objetos válidos para el grupo');
+    }
+
+    console.log(`[restoreGroupFromData] Objetos cargados exitosamente: ${loadedObjects.length}`);
+
+    // Crear el grupo con los objetos cargados
+    const newGroup = new fabric.Group(loadedObjects, {
+      id: originalGroupData.id,
+      left: originalGroupData.left,
+      top: originalGroupData.top,
+      scaleX: originalGroupData.scaleX,
+      scaleY: originalGroupData.scaleY,
+      angle: originalGroupData.angle,
+      originX: originalGroupData.originX,
+      originY: originalGroupData.originY,
+      flipX: originalGroupData.flipX || false,
+      flipY: originalGroupData.flipY || false,
+    });
+
+    // Aplicar restricciones de margen
+    const constrainedGroup = constrainObjectToMargin(newGroup, marginRect);
+    
+    // Añadir al canvas y configurar coordenadas
+    canvas.add(constrainedGroup);
+    constrainedGroup.setCoords();
+    
+    console.log(`[restoreGroupFromData] Grupo restaurado exitosamente con ID: ${originalGroupData.id}`);
+    return constrainedGroup;
+
+  } catch (error) {
+    console.error('[restoreGroupFromData] Error al restaurar el grupo:', error);
+    throw error;
+  }
+}
+
+export async function resetActiveImage(canvas, marginRect, originalImages, originalGroups, rotateCheckbox) {
   console.log('Executing resetActiveImage...');
   const activeObjects = canvas.getActiveObjects();
   if (activeObjects.length === 0) {
@@ -12,55 +118,112 @@ export function resetActiveImage(canvas, marginRect, originalImages) {
     return;
   }
 
-  // Iterate over each selected image
-  activeObjects.forEach((activeObject) => {
+  // Procesar objetos de forma secuencial para evitar problemas de concurrencia
+  for (const activeObject of activeObjects) {
     console.log(`[resetActiveImage] Processing object: ID=${activeObject?.id}, Type=${activeObject?.type}`);
-    if (activeObject.type === 'group') {
-        console.warn('[resetActiveImage] Skipped group object inside a selection. Groups should be reset individually.');
-        return;
-    }
-    if (!originalImages[activeObject?.id]) {
-      console.error(`[resetActiveImage] Original data not found for image ID: ${activeObject?.id}`);
-      Swal.fire({
-        text: `No se pudo restablecer la imagen con id ${
-          activeObject.id || "n/a"
-        }.`,
-        icon: "warning",
-      });
-      return;
-    }
 
-    const original = originalImages[activeObject.id];
-
-    fabric.Image.fromURL(original.url, function (img) {
-      // Apply original properties to the new image
-      img.set({
-        id: activeObject.id,
-        scaleX: original.scaleX,
-        scaleY: original.scaleY,
-        angle: 0,
-        left: original.left,
-        top: original.top,
-        originX: "center",
-        originY: "center",
-      });
-
-      // Preservar la visibilidad de los controles
-      if (activeObject._controlsVisibility) {
-        img.setControlsVisibility(activeObject._controlsVisibility);
+    try {
+      // Si la imagen fue originalmente un grupo recortado
+      if (activeObject.originalType === 'group') {
+        const originalGroup = originalGroups[activeObject.id];
+        if (originalGroup) {
+          console.log(`[resetActiveImage] Restoring cropped group with ID: ${activeObject.id}`);
+          
+          // Remover el objeto actual antes de restaurar el grupo
+          canvas.remove(activeObject);
+          
+          // Restaurar el grupo
+          await restoreGroupFromData(originalGroup, canvas, marginRect, rotateCheckbox);
+          
+          // Continuar con el siguiente objeto
+          continue;
+        } else {
+          console.error(`[resetActiveImage] Original data not found for group ID: ${activeObject.id}`);
+          Swal.fire({
+            text: `No se pudo restablecer el grupo recortado con id ${activeObject.id || "n/a"}. No se encontraron datos originales.`,
+            icon: "warning",
+          });
+          continue;
+        }
       }
 
-      // Si la imagen queda fuera del canvas, se reubica dentro de los márgenes.
-      img = constrainObjectToMargin(img, marginRect);
+      // Si es un grupo normal, saltarlo (debería usar resetActiveGroup)
+      if (activeObject.type === 'group') {
+        console.warn('[resetActiveImage] Skipped group object inside a selection. Groups should be reset individually.');
+        continue;
+      }
 
-      // Replace old image with the new one
-      canvas.remove(activeObject);
-      canvas.add(img);
-      canvas.renderAll();
-    });
-  });
+      // Reseteo normal de imagen
+      if (!originalImages[activeObject?.id]) {
+        console.error(`[resetActiveImage] Original data not found for image ID: ${activeObject?.id}`);
+        Swal.fire({
+          text: `No se pudo restablecer la imagen con id ${
+            activeObject.id || "n/a"
+          }.`,
+          icon: "warning",
+        });
+        continue;
+      }
+
+      const original = originalImages[activeObject.id];
+
+      // Crear promesa para la carga de imagen
+      await new Promise((resolve, reject) => {
+        fabric.Image.fromURL(original.url, function (img) {
+          try {
+            // Apply original properties to the new image
+            img.set({
+              id: activeObject.id,
+              scaleX: original.scaleX,
+              scaleY: original.scaleY,
+              angle: 0,
+              left: original.left,
+              top: original.top,
+              originX: "center",
+              originY: "center",
+            });
+
+            // Preservar la visibilidad de los controles
+            if (activeObject._controlsVisibility) {
+              img.setControlsVisibility(activeObject._controlsVisibility);
+            } else if (rotateCheckbox) {
+              img.setControlsVisibility({
+                mtr: rotateCheckbox.checked,
+              });
+            }
+
+            // Si la imagen queda fuera del canvas, se reubica dentro de los márgenes.
+            const constrainedImg = constrainObjectToMargin(img, marginRect);
+
+            // Replace old image with the new one
+            canvas.remove(activeObject);
+            canvas.add(constrainedImg);
+            canvas.renderAll();
+            
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        }, {
+          crossOrigin: 'anonymous',
+          onError: () => {
+            reject(new Error(`Error al cargar imagen: ${original.url}`));
+          }
+        });
+      });
+
+    } catch (error) {
+      console.error(`[resetActiveImage] Error processing object ${activeObject.id}:`, error);
+      Swal.fire({
+        text: `Error al restablecer el objeto con id ${activeObject.id || "n/a"}: ${error.message}`,
+        icon: "error",
+      });
+    }
+  }
+
   // Clear active selection once reset is complete
   canvas.discardActiveObject();
+  canvas.renderAll();
 }
 
 /**
@@ -183,7 +346,7 @@ export function resetActiveGroup(canvas, marginRect, originalGroups) {
   }
 }
 
-export function resetActiveObject(canvas, marginRect, originalImages, originalGroups) {
+export async function resetActiveObject(canvas, marginRect, originalImages, originalGroups, rotateCheckbox) {
   const activeObject = canvas.getActiveObject();
 
   if (!activeObject) {
@@ -193,14 +356,22 @@ export function resetActiveObject(canvas, marginRect, originalImages, originalGr
 
   console.log(`[resetActiveObject] Dispatching reset for object Type: ${activeObject.type}, ID: ${activeObject.id}`);
 
-  if (activeObject.type === 'group') {
-    resetActiveGroup(canvas, marginRect, originalGroups);
-  } else if (activeObject.type === 'image' || activeObject.type === 'activeSelection') {
-    resetActiveImage(canvas, marginRect, originalImages);
-  } else {
+  try {
+    if (activeObject.type === 'group') {
+      resetActiveGroup(canvas, marginRect, originalGroups);
+    } else if (activeObject.type === 'image' || activeObject.type === 'activeSelection') {
+      await resetActiveImage(canvas, marginRect, originalImages, originalGroups, rotateCheckbox);
+    } else {
+      Swal.fire({
+        text: 'El objeto seleccionado no se puede restablecer.',
+        icon: 'info',
+      });
+    }
+  } catch (error) {
+    console.error('[resetActiveObject] Error during reset operation:', error);
     Swal.fire({
-      text: 'El objeto seleccionado no se puede restablecer.',
-      icon: 'info',
+      text: 'Error al restablecer el objeto. Inténtalo de nuevo.',
+      icon: 'error',
     });
   }
 }

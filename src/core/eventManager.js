@@ -181,14 +181,19 @@ export class EventManager {
       canvas.requestRenderAll();
     });
 
-    this.addEventBinding('resetImageButton', 'click', () => 
-      this.actions.resetActiveObject(
-        this.canvasManager.getCanvas(), 
-        this.canvasManager.getMarginRect(), 
-        this.actions.originalImages, 
-        this.actions.originalGroups
-      )
-    );
+    this.addEventBinding('resetImageButton', 'click', async () => {
+      try {
+        await this.actions.resetActiveObject(
+          this.canvasManager.getCanvas(), 
+          this.canvasManager.getMarginRect(), 
+          this.actions.originalImages, 
+          this.actions.originalGroups,
+          this.dom.get('rotateCheckbox')
+        );
+      } catch (error) {
+        console.error('Error during reset operation:', error);
+      }
+    });
 
     this.addEventBinding('resetGroupButton', 'click', () => 
       this.actions.resetActiveGroup(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), this.actions.originalGroups)

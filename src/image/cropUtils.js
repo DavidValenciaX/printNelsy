@@ -195,15 +195,22 @@ function confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton
     canvas.remove(img);
     canvas.remove(rect);
 
+    const originalType = img.type;
+
     // Create and add new cropped image
     const newImage = new fabric.Image(cropped);
-    newImage.set({
+    const newImageProps = {
       id: originalId, // Transfer the original ID
       left: rect.left + (rect.width * rect.scaleX) / 2,
       top: rect.top + (rect.height * rect.scaleY) / 2,
       originX: 'center',
       originY: 'center',
-    });
+    };
+    if (originalType === 'group') {
+      newImageProps.originalType = 'group';
+    }
+    newImage.set(newImageProps);
+
 
     // Set rotation control visibility based on checkbox state
     newImage.setControlsVisibility({
@@ -522,6 +529,7 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
     // 7. REEMPLAZAR LA IMAGEN ANTIGUA CON LA NUEVA
     const newImageSrc = tempCanvas.toDataURL();
     const originalId = activePerspectiveImage.id;
+    const originalType = activePerspectiveImage.type;
     const originalLeft = Math.min(...srcCorners.map(c => c[0]));
     const originalTop = Math.min(...srcCorners.map(c => c[1]));
 
@@ -530,13 +538,18 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
 
     // Crear la nueva imagen transformada
     fabric.Image.fromURL(newImageSrc, (newImage) => {
-      newImage.set({
+      const newImageProps = {
         id: originalId,
         left: originalLeft + newImage.width / 2,
         top: originalTop + newImage.height / 2,
         originX: 'center',
         originY: 'center',
-      });
+      };
+
+      if (originalType === 'group') {
+        newImageProps.originalType = 'group';
+      }
+      newImage.set(newImageProps);
 
       // Configurar controles de rotación según el checkbox
       newImage.setControlsVisibility({
