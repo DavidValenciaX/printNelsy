@@ -32,15 +32,19 @@ export function printCanvas(canvas, marginRect) {
                     margin: 0;
                     size: auto;
                 }
-                body {
+                html, body {
                     margin: 0;
                     padding: 0;
+                    height: 100%;
+                }
+                body {
+                    text-align: center;
                 }
                 img {
-                    width: 100%;
-                    height: auto;
+                    max-width: 100%;
+                    max-height: 100%;
                     display: block;
-                    margin: 0;
+                    margin: 0 auto;
                 }
             </style>
         </head>
