@@ -253,6 +253,16 @@ export function getCustomGridDimensions() {
     rows: currentCustomRows,
     cols: currentCustomCols
   };
+}
+
+/**
+ * Establece las dimensiones personalizadas del grid
+ * @param {number|null} rows Número de filas
+ * @param {number|null} cols Número de columnas
+ */
+export function setCustomGridDimensions(rows, cols) {
+  currentCustomRows = rows;
+  currentCustomCols = cols;
 } 
 
 /**

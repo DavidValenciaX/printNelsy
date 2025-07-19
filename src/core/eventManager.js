@@ -66,16 +66,16 @@ export class EventManager {
       this.actions.createNewPage(this.canvasManager.getCanvas())
     );
 
-    this.addEventBinding('prevPageButton', 'click', () => 
-      this.actions.goToPreviousPage()
+    this.addEventBinding('prevPageButton', 'click', async () => 
+      await this.actions.goToPreviousPage()
     );
 
-    this.addEventBinding('nextPageButton', 'click', () => 
-      this.actions.goToNextPage()
+    this.addEventBinding('nextPageButton', 'click', async () => 
+      await this.actions.goToNextPage()
     );
 
-    this.addEventBinding('deletePageButton', 'click', () => 
-      this.actions.deleteCurrentPage()
+    this.addEventBinding('deletePageButton', 'click', async () => 
+      await this.actions.deleteCurrentPage()
     );
 
     // Eventos para botones de múltiples páginas

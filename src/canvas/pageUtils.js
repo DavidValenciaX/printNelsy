@@ -20,7 +20,9 @@ function getDefaultPageSettings() {
       status: 'none',
       orientation: 'rows',
       order: 'forward',
-      spacing: 20
+      spacing: 20,
+      customRows: null,
+      customCols: null
     }
   };
 }
@@ -59,16 +61,24 @@ async function getCurrentGlobalSettingsAsync() {
     status: 'none',
     orientation: 'rows',
     order: 'forward', 
-    spacing: 20
+    spacing: 20,
+    customRows: null,
+    customCols: null
   };
 
   try {
     const { imageState } = await import('../image/imageUploadUtils.js');
+    const { getCustomGridDimensions } = await import('../layout/gridControls.js');
+    
+    const customDimensions = getCustomGridDimensions();
+    
     arrangementSettings = {
       status: imageState.arrangementStatus || 'none',
       orientation: imageState.orientation || 'rows',
       order: imageState.order || 'forward',
-      spacing: imageState.spacing || 20
+      spacing: imageState.spacing || 20,
+      customRows: customDimensions.rows,
+      customCols: customDimensions.cols
     };
   } catch (error) {
     console.warn('No se pudo obtener imageState:', error);
@@ -290,14 +300,14 @@ export function initializePageState(mainCanvas, marginRect, marginWidth) {
 /**
  * Navega a la página anterior
  */
-export function goToPreviousPage() {
+export async function goToPreviousPage() {
   if (PAGE_STATE.currentPageIndex > 0) {
     PAGE_STATE.currentPageIndex--;
     scrollToCurrentPage();
     updatePageInfo();
     
     // NUEVA FUNCIONALIDAD: Sincronizar estados y UI
-    syncGlobalStatesWithCurrentPage();
+    await syncGlobalStatesWithCurrentPage();
     updateUIButtonsForCurrentPage();
     
     console.log(`Navegando a página anterior: ${PAGE_STATE.currentPageIndex + 1}`);
@@ -307,14 +317,14 @@ export function goToPreviousPage() {
 /**
  * Navega a la página siguiente
  */
-export function goToNextPage() {
+export async function goToNextPage() {
   if (PAGE_STATE.currentPageIndex < PAGE_STATE.pages.length - 1) {
     PAGE_STATE.currentPageIndex++;
     scrollToCurrentPage();
     updatePageInfo();
     
     // NUEVA FUNCIONALIDAD: Sincronizar estados y UI
-    syncGlobalStatesWithCurrentPage();
+    await syncGlobalStatesWithCurrentPage();
     updateUIButtonsForCurrentPage();
     
     console.log(`Navegando a página siguiente: ${PAGE_STATE.currentPageIndex + 1}`);
@@ -364,7 +374,7 @@ export function updatePageInfo() {
 /**
  * Elimina la página actual
  */
-export function deleteCurrentPage() {
+export async function deleteCurrentPage() {
   if (PAGE_STATE.pages.length <= 1) {
     console.warn('No se puede eliminar la única página');
     return false;
@@ -382,7 +392,7 @@ export function deleteCurrentPage() {
   updatePageInfo();
   
   // NUEVA FUNCIONALIDAD: Sincronizar estados y UI después de eliminar
-  syncGlobalStatesWithCurrentPage();
+  await syncGlobalStatesWithCurrentPage();
   updateUIButtonsForCurrentPage();
   
   console.log(`Página eliminada. Nueva página actual: ${PAGE_STATE.currentPageIndex + 1}`);
@@ -415,30 +425,38 @@ export function isLastPage() {
 
 /**
  * Sincroniza los estados globales con la configuración de la página actual
+ * @returns {Promise<void>} Promesa que se resuelve cuando la sincronización está completa
  */
-export function syncGlobalStatesWithCurrentPage() {
+export async function syncGlobalStatesWithCurrentPage() {
   const currentPage = getCurrentPage();
   if (!currentPage?.pageSettings) return;
 
   const { pageSettings } = currentPage;
   
-  // Sincronizar estados de canvas (se implementará en el siguiente paso)
-  import('./canvasResizeUtils.js').then(({ setCurrentSize, setIsVertical }) => {
+  try {
+    // Sincronizar estados de canvas
+    const { setCurrentSize, setIsVertical } = await import('./canvasResizeUtils.js');
     setCurrentSize(pageSettings.paperSize);
     setIsVertical(pageSettings.orientation);
-  }).catch(error => {
-    console.warn('Error sincronizando estados de canvas:', error);
-  });
 
-  // Sincronizar estados de imagen
-  import('../image/imageUploadUtils.js').then(({ imageState }) => {
+    // Sincronizar estados de imagen
+    const { imageState } = await import('../image/imageUploadUtils.js');
     imageState.arrangementStatus = pageSettings.arrangement.status;
     imageState.orientation = pageSettings.arrangement.orientation;
     imageState.order = pageSettings.arrangement.order;
     imageState.spacing = pageSettings.arrangement.spacing;
-  }).catch(error => {
-    console.warn('Error sincronizando estados de imagen:', error);
-  });
+
+    // Sincronizar dimensiones personalizadas del grid
+    const { setCustomGridDimensions } = await import('../layout/gridControls.js');
+    setCustomGridDimensions(
+      pageSettings.arrangement.customRows, 
+      pageSettings.arrangement.customCols
+    );
+    
+    console.log('Estados sincronizados correctamente para la página actual');
+  } catch (error) {
+    console.warn('Error sincronizando estados globales:', error);
+  }
 }
 
 /**
@@ -476,12 +494,21 @@ export function updateUIButtonsForCurrentPage() {
       });
     }
 
-    // NUEVA FUNCIONALIDAD: Actualizar visibilidad de grid-controls según el estado de arrangement
+    // NUEVA FUNCIONALIDAD: Actualizar grid-controls según el estado de arrangement
     if (app?.modules?.canvas && app?.modules?.dom) {
-      import('../layout/gridControls.js').then(({ toggleGridControlsVisibility }) => {
-        toggleGridControlsVisibility(app.modules.canvas.getCanvas(), app.modules.dom);
+      import('../layout/gridControls.js').then(({ toggleGridControlsVisibility, initializeGridControls }) => {
+        const canvas = app.modules.canvas.getCanvas();
+        const domManager = app.modules.dom;
+        
+        // Si la página actual tiene arrangement "grid", inicializar completamente los controles
+        if (pageSettings.arrangement.status === 'grid') {
+          initializeGridControls(canvas, domManager);
+        } else {
+          // Si no es grid, solo actualizar la visibilidad
+          toggleGridControlsVisibility(canvas, domManager);
+        }
       }).catch(error => {
-        console.warn('Error actualizando visibilidad de grid-controls:', error);
+        console.warn('Error actualizando grid-controls:', error);
       });
     }
   }).catch(error => {
