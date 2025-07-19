@@ -196,6 +196,7 @@ function confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton
     canvas.remove(rect);
 
     const originalType = img.type;
+    const wasOriginallyGroup = img.originalType === 'group';
 
     // Create and add new cropped image
     const newImage = new fabric.Image(cropped);
@@ -206,7 +207,7 @@ function confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton
       originX: 'center',
       originY: 'center',
     };
-    if (originalType === 'group') {
+    if (originalType === 'group' || wasOriginallyGroup) {
       newImageProps.originalType = 'group';
     }
     newImage.set(newImageProps);
@@ -530,6 +531,7 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
     const newImageSrc = tempCanvas.toDataURL();
     const originalId = activePerspectiveImage.id;
     const originalType = activePerspectiveImage.type;
+    const wasOriginallyGroup = activePerspectiveImage.originalType === 'group';
     const originalLeft = Math.min(...srcCorners.map(c => c[0]));
     const originalTop = Math.min(...srcCorners.map(c => c[1]));
 
@@ -546,7 +548,7 @@ function confirmPerspectiveCrop(canvas, marginRect, rotateCheckbox, Swal, confir
         originY: 'center',
       };
 
-      if (originalType === 'group') {
+      if (originalType === 'group' || wasOriginallyGroup) {
         newImageProps.originalType = 'group';
       }
       newImage.set(newImageProps);
