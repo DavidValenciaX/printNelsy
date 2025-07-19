@@ -302,15 +302,19 @@ export function initializePageState(mainCanvas, marginRect, marginWidth) {
  */
 export async function goToPreviousPage() {
   if (PAGE_STATE.currentPageIndex > 0) {
+    console.log('⬅️ INICIANDO navegación a página anterior');
     PAGE_STATE.currentPageIndex--;
     scrollToCurrentPage();
     updatePageInfo();
     
+    console.log('🔄 PASO 1: Sincronizando estados...');
     // NUEVA FUNCIONALIDAD: Sincronizar estados y UI
     await syncGlobalStatesWithCurrentPage();
+    
+    console.log('🎨 PASO 2: Actualizando UI...');
     updateUIButtonsForCurrentPage();
     
-    console.log(`Navegando a página anterior: ${PAGE_STATE.currentPageIndex + 1}`);
+    console.log(`✅ COMPLETADA navegación a página: ${PAGE_STATE.currentPageIndex + 1}`);
   }
 }
 
@@ -319,15 +323,19 @@ export async function goToPreviousPage() {
  */
 export async function goToNextPage() {
   if (PAGE_STATE.currentPageIndex < PAGE_STATE.pages.length - 1) {
+    console.log('➡️ INICIANDO navegación a página siguiente');
     PAGE_STATE.currentPageIndex++;
     scrollToCurrentPage();
     updatePageInfo();
     
+    console.log('🔄 PASO 1: Sincronizando estados...');
     // NUEVA FUNCIONALIDAD: Sincronizar estados y UI
     await syncGlobalStatesWithCurrentPage();
+    
+    console.log('🎨 PASO 2: Actualizando UI...');
     updateUIButtonsForCurrentPage();
     
-    console.log(`Navegando a página siguiente: ${PAGE_STATE.currentPageIndex + 1}`);
+    console.log(`✅ COMPLETADA navegación a página: ${PAGE_STATE.currentPageIndex + 1}`);
   }
 }
 
@@ -429,33 +437,86 @@ export function isLastPage() {
  */
 export async function syncGlobalStatesWithCurrentPage() {
   const currentPage = getCurrentPage();
-  if (!currentPage?.pageSettings) return;
+  if (!currentPage?.pageSettings) {
+    console.log('❌ No hay página actual o pageSettings');
+    return;
+  }
 
   const { pageSettings } = currentPage;
+  console.log('🔄 Sincronizando estados para página:', pageSettings);
   
   try {
     // Sincronizar estados de canvas
-    const { setCurrentSize, setIsVertical } = await import('./canvasResizeUtils.js');
-    setCurrentSize(pageSettings.paperSize);
-    setIsVertical(pageSettings.orientation);
+    const { setCurrentSize, setIsVertical, getCurrentSize, getIsVertical, resizeCanvasOnly } = await import('./canvasResizeUtils.js');
+    
+    // Verificar si necesitamos redimensionar el canvas
+    const currentSize = getCurrentSize();
+    const currentOrientation = getIsVertical();
+    const needsResize = currentSize !== pageSettings.paperSize || currentOrientation !== pageSettings.orientation;
+    
+    console.log('📏 Estados actuales del canvas:', { currentSize, currentOrientation });
+    console.log('📏 Estados objetivo de la página:', { paperSize: pageSettings.paperSize, orientation: pageSettings.orientation });
+    console.log('📏 ¿Necesita redimensionar?', needsResize);
+    
+    if (needsResize) {
+      console.log('🔧 Redimensionando canvas para coincidir con la página...');
+      
+      // Obtener la aplicación para acceder al canvas y marginRect
+      const { getAppInstance } = await import('../core/app.js');
+      const app = getAppInstance();
+      
+      if (app?.modules?.canvas) {
+        const canvas = app.modules.canvas.getCanvas();
+        const currentMarginRect = app.modules.canvas.getMarginRect();
+        
+        // Usar resizeCanvasOnly para no reorganizar las imágenes
+        const result = resizeCanvasOnly(pageSettings.paperSize, canvas, currentMarginRect, pageSettings.orientation);
+        app.modules.canvas.updateMargins(result.marginRect, result.marginWidth);
+        
+        console.log('✅ Canvas redimensionado correctamente sin reorganizar imágenes');
+      }
+    } else {
+      console.log('➡️ No se necesita redimensionar el canvas');
+      setCurrentSize(pageSettings.paperSize);
+      setIsVertical(pageSettings.orientation);
+    }
 
     // Sincronizar estados de imagen
     const { imageState } = await import('../image/imageUploadUtils.js');
+    console.log('🖼️ Estados de imagen antes:', {
+      status: imageState.arrangementStatus,
+      orientation: imageState.orientation,
+      order: imageState.order,
+      spacing: imageState.spacing
+    });
+    
     imageState.arrangementStatus = pageSettings.arrangement.status;
     imageState.orientation = pageSettings.arrangement.orientation;
     imageState.order = pageSettings.arrangement.order;
     imageState.spacing = pageSettings.arrangement.spacing;
+    
+    console.log('🖼️ Estados de imagen después:', {
+      status: imageState.arrangementStatus,
+      orientation: imageState.orientation,
+      order: imageState.order,
+      spacing: imageState.spacing
+    });
 
     // Sincronizar dimensiones personalizadas del grid
-    const { setCustomGridDimensions } = await import('../layout/gridControls.js');
+    const { setCustomGridDimensions, getCustomGridDimensions } = await import('../layout/gridControls.js');
+    
+    console.log('🎯 Dimensiones personalizadas antes:', getCustomGridDimensions());
+    console.log('🎯 Estableciendo dimensiones personalizadas:', pageSettings.arrangement.customRows, pageSettings.arrangement.customCols);
+    
     setCustomGridDimensions(
       pageSettings.arrangement.customRows, 
       pageSettings.arrangement.customCols
     );
     
-    console.log('Estados sincronizados correctamente para la página actual');
+    console.log('🎯 Dimensiones personalizadas después:', getCustomGridDimensions());
+    console.log('✅ Estados sincronizados correctamente para la página actual');
   } catch (error) {
-    console.warn('Error sincronizando estados globales:', error);
+    console.warn('❌ Error sincronizando estados globales:', error);
   }
 }
 
@@ -464,9 +525,13 @@ export async function syncGlobalStatesWithCurrentPage() {
  */
 export function updateUIButtonsForCurrentPage() {
   const currentPage = getCurrentPage();
-  if (!currentPage?.pageSettings) return;
+  if (!currentPage?.pageSettings) {
+    console.log('❌ No hay página actual o pageSettings en updateUIButtonsForCurrentPage');
+    return;
+  }
 
   const { pageSettings } = currentPage;
+  console.log('🎨 Actualizando UI para página con configuración:', pageSettings);
 
   // Buscar una instancia del eventManager desde la aplicación
   import('../core/app.js').then(({ getAppInstance }) => {
@@ -474,6 +539,7 @@ export function updateUIButtonsForCurrentPage() {
     if (app?.modules?.events) {
       const eventManager = app.modules.events;
       
+      console.log('🔘 Actualizando botones de UI básicos');
       // Actualizar botones de orientación
       eventManager.updateOrientationButtons(pageSettings.orientation);
       
@@ -488,6 +554,7 @@ export function updateUIButtonsForCurrentPage() {
     // Actualizar botones de arrangement usando el util existente
     if (app?.modules?.dom) {
       import('../utils/arrangementButtons.js').then(({ updateArrangementButtons }) => {
+        console.log('🔘 Actualizando botones de arrangement para:', pageSettings.arrangement.status);
         updateArrangementButtons(pageSettings.arrangement.status, app.modules.dom);
       }).catch(error => {
         console.warn('Error actualizando botones de arrangement:', error);
@@ -496,16 +563,26 @@ export function updateUIButtonsForCurrentPage() {
 
     // NUEVA FUNCIONALIDAD: Actualizar grid-controls según el estado de arrangement
     if (app?.modules?.canvas && app?.modules?.dom) {
-      import('../layout/gridControls.js').then(({ toggleGridControlsVisibility, initializeGridControls }) => {
+      import('../layout/gridControls.js').then(({ toggleGridControlsVisibility, initializeGridControls, updateGridVisualization, getCustomGridDimensions }) => {
         const canvas = app.modules.canvas.getCanvas();
         const domManager = app.modules.dom;
         
+        console.log('🎛️ Actualizando grid-controls');
+        console.log('📊 Arrangement status:', pageSettings.arrangement.status);
+        console.log('📏 Orientación del papel:', pageSettings.orientation);
+        console.log('🎯 Dimensiones actuales antes de actualizar UI:', getCustomGridDimensions());
+        
         // Si la página actual tiene arrangement "grid", inicializar completamente los controles
         if (pageSettings.arrangement.status === 'grid') {
-          initializeGridControls(canvas, domManager);
+          console.log('✅ Es arrangement grid, inicializando controles');
+          initializeGridControls(canvas, domManager, pageSettings.orientation);
+          // Actualizar la visualización del grid con la orientación correcta del papel
+          console.log('🎨 Llamando updateGridVisualization con orientación:', pageSettings.orientation);
+          updateGridVisualization(canvas, pageSettings.orientation);
         } else {
+          console.log('⏸️ No es arrangement grid, solo actualizando visibilidad');
           // Si no es grid, solo actualizar la visibilidad
-          toggleGridControlsVisibility(canvas, domManager);
+          toggleGridControlsVisibility(canvas, domManager, pageSettings.orientation);
         }
       }).catch(error => {
         console.warn('Error actualizando grid-controls:', error);

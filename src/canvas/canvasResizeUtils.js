@@ -44,7 +44,7 @@ export function setIsVertical(vertical) {
 function reAddAndArrangeImages(images, currentOrientation, currentOrder, canvas, marginRect) {
   if (images.length === 0) {
     setArrangementStatus('none');
-    updateGridVisualization(canvas);
+    updateGridVisualization(canvas, isVertical);
     return;
   }
 
@@ -89,7 +89,7 @@ function reAddAndArrangeImages(images, currentOrientation, currentOrder, canvas,
   const strategy = arrangementStrategies[imageState.arrangementStatus];
   if (strategy) strategy();
 
-  updateGridVisualization(canvas);
+  updateGridVisualization(canvas, isVertical);
 }
 
 export function resizeCanvas(size, canvas, marginRect, orientation = isVertical) {
@@ -149,6 +149,64 @@ export function resizeCanvas(size, canvas, marginRect, orientation = isVertical)
 
 export function changeOrientation(vertical, canvas, marginRect) {
   return resizeCanvas(currentSize, canvas, marginRect, vertical);
+}
+
+/**
+ * Redimensiona solo el canvas y marginRect sin reorganizar las imágenes
+ * @param {string} size - Tamaño del papel  
+ * @param {fabric.Canvas} canvas - Instancia del canvas
+ * @param {fabric.Rect} marginRect - Rectángulo de margen actual
+ * @param {boolean} orientation - Orientación (true = vertical, false = horizontal)
+ * @returns {Object} Nuevo marginRect y marginWidth
+ */
+export function resizeCanvasOnly(size, canvas, marginRect, orientation = isVertical) {
+  console.log('🔧 resizeCanvasOnly llamada con:', { size, orientation });
+  
+  // Update canvas dimensions
+  currentSize = size;
+  isVertical = orientation;
+  const scale = 0.3;
+  let width = paperSizes[size].width;
+  let height = paperSizes[size].height;
+
+  if (!isVertical) {
+    [width, height] = [height, width];
+  }
+
+  console.log('📐 Nuevas dimensiones del canvas:', { width: width * scale, height: height * scale });
+  
+  canvas.setWidth(width * scale);
+  canvas.setHeight(height * scale);
+
+  // Update margin rectangle
+  if (marginRect) {
+    canvas.remove(marginRect);
+  }
+
+  const newMarginRect = new fabric.Rect({
+    width: width * scale - 2 * marginPixels * scale,
+    height: height * scale - 2 * marginPixels * scale,
+    left: marginPixels * scale,
+    top: marginPixels * scale,
+    fill: "transparent",
+    stroke: "gray",
+    strokeWidth: 1,
+    strokeDashArray: [5, 5],
+    selectable: false,
+    evented: false,
+  });
+
+  canvas.add(newMarginRect);
+  
+  // Update the marginRect reference in movingEvents and scalingEvents
+  updateMarginRect(newMarginRect);
+
+  // Calcular el ancho del margen
+  const marginWidth = (canvas.width - newMarginRect.width) / 2;
+
+  console.log('✅ Canvas redimensionado sin reorganizar imágenes');
+  
+  return { marginRect: newMarginRect, marginWidth };
 }
 
 // Exportar constantes y variables para uso externo
