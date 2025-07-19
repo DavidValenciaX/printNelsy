@@ -57,6 +57,132 @@ function isCanvasEmpty(canvas) {
   return canvas.getObjects().filter((obj) => obj.type === "image" || obj.type === "group").length === 0;
 }
 
+/**
+ * Configures a fabric image with necessary properties
+ * @param {fabric.Image} img The fabric image instance
+ * @param {string} imageUrl The image URL
+ * @param {boolean} showRotateControl Whether to show rotation controls
+ */
+function configureImageProperties(img, imageUrl, showRotateControl) {
+  if (!img.id) {
+    const uniqueId = `image-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 11)}`;
+    img.id = uniqueId;
+  }
+  
+  img.originalUrl = imageUrl;
+  img.setControlsVisibility({
+    mtr: showRotateControl,
+  });
+}
+
+/**
+ * Stores original image data for later reference
+ * @param {fabric.Image[]} images Array of fabric images
+ */
+function storeOriginalImageData(images) {
+  images.forEach((img) => {
+    originalImages[img.id] = {
+      url: img.originalUrl,
+      width: img.width,
+      height: img.height,
+      scaleX: img.scaleX,
+      scaleY: img.scaleY,
+      angle: img.angle,
+      left: img.left,
+      top: img.top,
+    };
+  });
+}
+
+/**
+ * Updates UI controls and arrangement after image processing
+ * @param {fabric.Canvas} canvas The canvas instance
+ * @param {string} orientation Layout orientation
+ * @param {string} order Arrangement order
+ */
+async function updateUIAfterImageProcessing(canvas, orientation, order) {
+  if (domManagerInstance) {
+    initializeGridControls(canvas, domManagerInstance);
+    if (domManagerInstance.eventManager) {
+      domManagerInstance.eventManager.updateLayoutOrientationButtons(orientation);
+      domManagerInstance.eventManager.updateOrderButtons(order);
+    }
+  }
+  
+  try {
+    const { saveCurrentStateToPage } = await import('../canvas/pageUtils.js');
+    await saveCurrentStateToPage();
+  } catch (error) {
+    console.warn('Error guardando estado de página tras carga de imagen:', error);
+  }
+}
+
+/**
+ * Handles the arrangement and finalization of loaded images
+ * @param {fabric.Canvas} canvas The canvas instance
+ * @param {fabric.Image[]} loadedImages Array of loaded images
+ * @param {boolean} canvasWasEmpty Whether canvas was empty before loading
+ * @param {number} numFiles Number of files processed
+ */
+async function finalizeImageProcessing(canvas, loadedImages, canvasWasEmpty, numFiles) {
+  resetCustomGridDimensions();
+
+  const orientation = numFiles <= 2 ? "cols" : "rows";
+  const order = "forward";
+
+  const sortedImages = sortImages(loadedImages, order);
+  arrangeImages(canvas, sortedImages, orientation, null, null, imageState.spacing);
+
+  const arrangementStatus = canvasWasEmpty ? "grid" : "none";
+  setArrangementStatus(arrangementStatus);
+
+  imageState.orientation = orientation;
+  imageState.order = order;
+
+  await updateUIAfterImageProcessing(canvas, orientation, order);
+  storeOriginalImageData(loadedImages);
+
+  if (numFiles === 1 && loadedImages.length === 1) {
+    canvas.discardActiveObject();
+    canvas.setActiveObject(loadedImages[0]);
+    canvas.renderAll();
+  }
+}
+
+/**
+ * Creates a fabric image from a file result
+ * @param {string} imageDataUrl The image data URL
+ * @param {boolean} showRotateControl Whether to show rotation controls
+ * @returns {Promise<fabric.Image>} Promise that resolves to the fabric image
+ */
+function createFabricImage(imageDataUrl, showRotateControl) {
+  return new Promise((resolve) => {
+    fabric.Image.fromURL(imageDataUrl, function (img) {
+      configureImageProperties(img, imageDataUrl, showRotateControl);
+      resolve(img);
+    });
+  });
+}
+
+/**
+ * Processes a single image file
+ * @param {File} file The image file to process
+ * @param {boolean} showRotateControl Whether to show rotation controls
+ * @returns {Promise<fabric.Image>} Promise that resolves to the fabric image
+ */
+function processImageFile(file, showRotateControl) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = async function (event) {
+      const img = await createFabricImage(event.target.result, showRotateControl);
+      resolve(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 async function _processFilesForCanvas(files, canvas, rotateCheckbox) {
   const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
 
@@ -64,99 +190,17 @@ async function _processFilesForCanvas(files, canvas, rotateCheckbox) {
     return;
   }
 
-  const loadedImages = [];
-  let processedCount = 0;
-  const numFilesToProcess = imageFiles.length;
+  const canvasWasEmpty = isCanvasEmpty(canvas);
+  const showRotateControl = rotateCheckbox.checked;
 
-  for (const file of imageFiles) {
-    const reader = new FileReader();
-    reader.onload = async function (event) {
-      fabric.Image.fromURL(event.target.result, async function (img) {
-        // Asignar un id único permanente si no lo tiene
-        if (!img.id) {
-          const uniqueId = `image-${Date.now()}-${Math.random()
-            .toString(36)
-            .slice(2, 11)}`;
-          img.id = uniqueId;
-        }
-        // Guardar la URL de origen
-        img.originalUrl = event.target.result;
+  try {
+    const loadedImages = await Promise.all(
+      imageFiles.map(file => processImageFile(file, showRotateControl))
+    );
 
-        img.setControlsVisibility({
-          mtr: rotateCheckbox.checked,
-        });
-
-        loadedImages.push(img);
-        processedCount++;
-
-        if (processedCount === numFilesToProcess) {
-          const canvasWasEmpty = isCanvasEmpty(canvas);
-
-          // Reset custom grid dimensions when loading new images
-          resetCustomGridDimensions();
-
-          // Determine layout for the new images
-          const orientation = numFilesToProcess <= 2 ? "cols" : "rows";
-          const order = "forward";
-
-          // Arrange the new images on the canvas. This function adds them.
-          const sortedImages = sortImages(loadedImages, order);
-          arrangeImages(canvas, sortedImages, orientation, null, null, imageState.spacing);
-
-          // Set the final arrangement status based on whether the canvas was initially empty.
-          if (canvasWasEmpty) {
-            setArrangementStatus("grid");
-          } else {
-            setArrangementStatus("none");
-          }
-
-          // Update the last layout properties regardless
-          imageState.orientation = orientation;
-          imageState.order = order;
-
-          // Update UI
-          if (domManagerInstance) {
-            initializeGridControls(canvas, domManagerInstance);
-            if (domManagerInstance.eventManager) {
-              domManagerInstance.eventManager.updateLayoutOrientationButtons(
-                imageState.orientation
-              );
-              domManagerInstance.eventManager.updateOrderButtons(imageState.order);
-            }
-          }
-          
-          // Guardar el estado en la página actual después de la carga inicial
-          try {
-            const { saveCurrentStateToPage } = await import('../canvas/pageUtils.js');
-            await saveCurrentStateToPage();
-          } catch (error) {
-            console.warn('Error guardando estado de página tras carga de imagen:', error);
-          }
-
-          // Luego, se guardan los datos originales ya con sus valores de top, left, scaleX y scaleY actualizados
-          loadedImages.forEach((loadedImgInstance) => { // Renombrado img a loadedImgInstance para evitar confusión de scope
-            originalImages[loadedImgInstance.id] = {
-              url: loadedImgInstance.originalUrl,
-              width: loadedImgInstance.width,
-              height: loadedImgInstance.height,
-              scaleX: loadedImgInstance.scaleX,
-              scaleY: loadedImgInstance.scaleY,
-              angle: loadedImgInstance.angle,
-              left: loadedImgInstance.left,
-              top: loadedImgInstance.top,
-            };
-          });
-
-          // Seleccionar automáticamente si solo hay una imagen
-          if (numFilesToProcess === 1 && loadedImages.length === 1) { // Asegurarse que loadedImages[0] existe
-            canvas.discardActiveObject();
-            canvas.setActiveObject(loadedImages[0]);
-            canvas.renderAll(); // Asegurar renderizado después de seleccionar
-          }
-        }
-      });
-    };
-    reader.readAsDataURL(file);
+    await finalizeImageProcessing(canvas, loadedImages, canvasWasEmpty, imageFiles.length);
+  } catch (error) {
+    console.error('Error processing images:', error);
   }
 }
 
