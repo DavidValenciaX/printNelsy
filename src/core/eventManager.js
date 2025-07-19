@@ -48,6 +48,10 @@ export class EventManager {
     this.addEventBinding('printButton', 'click', () => 
       this.actions.printCanvas(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect())
     );
+
+    this.addEventBinding('newPageButton', 'click', () => 
+      this.actions.createNewPage(this.canvasManager.getCanvas())
+    );
   }
 
   updatePaperSizeButtons(selectedSize) {

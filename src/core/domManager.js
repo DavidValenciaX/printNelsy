@@ -13,6 +13,7 @@ export class DOMManager {
       printButton: document.getElementById("printButton"),
       downloadPdfButton: document.getElementById("downloadPdfButton"),
       downloadPngButton: document.getElementById("downloadPngButton"),
+      newPageButton: document.getElementById("newPageButton"),
 
       // Paper size buttons
       verticalButton: document.getElementById("verticalButton"),
