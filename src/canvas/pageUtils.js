@@ -375,13 +375,18 @@ export function initializePageState(mainCanvas, marginRect, marginWidth) {
   const mainCanvasElement = document.getElementById('canvas');
   
   if (mainCanvasElement && mainCanvas) {
-    // Agregar título a la página principal si no existe
+    // El contenedor que encontramos es el de Fabric. Necesitamos su padre.
     const canvasContainer = mainCanvasElement.closest('.canvas-container');
     if (canvasContainer) {
-      const existingTitle = canvasContainer.querySelector('.page-title');
-      if (!existingTitle) {
-        const pageTitle = createPageTitle(1);
-        canvasContainer.insertBefore(pageTitle, mainCanvasElement);
+      // El contenedor que encontramos es el de Fabric. Necesitamos su padre.
+      const pageCanvasContainer = canvasContainer.parentElement;
+      if (pageCanvasContainer) {
+        const existingTitle = pageCanvasContainer.querySelector('.page-title');
+        if (!existingTitle) {
+          const pageTitle = createPageTitle(1);
+          // Insertamos el título antes del contenedor de Fabric
+          pageCanvasContainer.insertBefore(pageTitle, canvasContainer);
+        }
       }
     }
     
