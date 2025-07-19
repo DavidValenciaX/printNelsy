@@ -50,7 +50,13 @@ import {
   toggleGridControlsVisibility,
   updateImageSpacing
 } from '../layout/gridControls.js';
-import { createNewPage } from '../canvas/pageUtils.js';
+import { 
+  createNewPage, 
+  goToPreviousPage, 
+  goToNextPage, 
+  deleteCurrentPage,
+  updatePageInfo
+} from '../canvas/pageUtils.js';
 
 /**
  * Centraliza todas las acciones de la aplicación
@@ -88,6 +94,12 @@ export class ActionManager {
   handleImageUpload = handleImageUpload;
   handleImageDrop = handleImageDrop;
   createNewPage = createNewPage;
+  
+  // Page navigation actions
+  goToPreviousPage = goToPreviousPage;
+  goToNextPage = goToNextPage;
+  deleteCurrentPage = deleteCurrentPage;
+  updatePageInfo = updatePageInfo;
 
   // Object actions
   deactivateObjects = deactivateObjects;

@@ -14,6 +14,12 @@ export class DOMManager {
       downloadPdfButton: document.getElementById("downloadPdfButton"),
       downloadPngButton: document.getElementById("downloadPngButton"),
       newPageButton: document.getElementById("newPageButton"),
+      
+      // Page navigation
+      prevPageButton: document.getElementById("prevPageButton"),
+      nextPageButton: document.getElementById("nextPageButton"),
+      deletePageButton: document.getElementById("deletePageButton"),
+      pageInfo: document.getElementById("pageInfo"),
 
       // Paper size buttons
       verticalButton: document.getElementById("verticalButton"),

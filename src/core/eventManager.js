@@ -52,6 +52,18 @@ export class EventManager {
     this.addEventBinding('newPageButton', 'click', () => 
       this.actions.createNewPage(this.canvasManager.getCanvas())
     );
+
+    this.addEventBinding('prevPageButton', 'click', () => 
+      this.actions.goToPreviousPage()
+    );
+
+    this.addEventBinding('nextPageButton', 'click', () => 
+      this.actions.goToNextPage()
+    );
+
+    this.addEventBinding('deletePageButton', 'click', () => 
+      this.actions.deleteCurrentPage()
+    );
   }
 
   updatePaperSizeButtons(selectedSize) {

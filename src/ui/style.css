@@ -33,6 +33,10 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+canvas{
+  margin-top: 0 !important;
+}
+
 #canvas-container {
   position: relative;
   border: 1px solid #e0e0e0;
@@ -343,4 +347,56 @@ body.drag-over {
 
 #orderGroupTitle {
   margin-top: 1rem;
+}
+
+/* Page Navigation Styles */
+.page-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background-color: #f0f0f0;
+  border-radius: 0.25rem;
+  margin: 0.5rem 0;
+}
+
+.page-info {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #666;
+}
+
+.page-controls {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.page-nav-button {
+  padding: 0.5rem;
+  background-color: #007acc;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+}
+
+.page-nav-button:hover:not(:disabled) {
+  background-color: #005999;
+  transform: translateY(-1px);
+}
+
+.page-nav-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.page-nav-button i {
+  font-size: 0.875rem;
 }
