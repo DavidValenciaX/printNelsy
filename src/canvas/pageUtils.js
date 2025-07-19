@@ -88,16 +88,6 @@ function setupCanvasProperties(canvas) {
   canvas.selection = true;
   canvas.preserveObjectStacking = true;
   canvas.imageSmoothingEnabled = false;
-  
-  // Configurar controles de objeto
-  fabric.Object.prototype.set({
-    transparentCorners: false,
-    cornerColor: '#007acc',
-    cornerStyle: 'circle',
-    cornerSize: 8,
-    borderColor: '#007acc',
-    borderScaleFactor: 1.5,
-  });
 }
 
 /**
