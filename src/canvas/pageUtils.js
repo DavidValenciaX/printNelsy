@@ -475,6 +475,15 @@ export function updateUIButtonsForCurrentPage() {
         console.warn('Error actualizando botones de arrangement:', error);
       });
     }
+
+    // NUEVA FUNCIONALIDAD: Actualizar visibilidad de grid-controls según el estado de arrangement
+    if (app?.modules?.canvas && app?.modules?.dom) {
+      import('../layout/gridControls.js').then(({ toggleGridControlsVisibility }) => {
+        toggleGridControlsVisibility(app.modules.canvas.getCanvas(), app.modules.dom);
+      }).catch(error => {
+        console.warn('Error actualizando visibilidad de grid-controls:', error);
+      });
+    }
   }).catch(error => {
     console.warn('Error obteniendo instancia de la aplicación:', error);
   });
