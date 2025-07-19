@@ -39,4 +39,74 @@ export function downloadAsPDF(canvas, marginRect) {
   restoreGridLines(canvas, gridLinesOpacities);
   
   canvas.renderAll();
+}
+
+/**
+ * Descarga todas las páginas como un PDF multipágina
+ * @param {Array} allPages - Array de todas las páginas del sistema
+ */
+export function downloadAllPagesAsPDF(allPages) {
+  if (!allPages || allPages.length === 0) {
+    console.warn('No hay páginas para exportar a PDF');
+    return;
+  }
+
+  console.log(`Exportando ${allPages.length} páginas a PDF...`);
+
+  // Procesar cada página
+  const originalStates = [];
+  let doc = null;
+
+  allPages.forEach((page, pageIndex) => {
+    const { fabricCanvas, marginRect } = page;
+    
+    // Guardar estado original
+    const originalOpacity = marginRect.opacity;
+    const gridLinesOpacities = hideGridLines(fabricCanvas);
+    originalStates.push({ originalOpacity, gridLinesOpacities });
+
+    // Ocultar elementos no imprimibles
+    marginRect.opacity = 0;
+    fabricCanvas.renderAll();
+
+    // Generar imagen de la página
+    const dataUrl = fabricCanvas.toDataURL({
+      format: "png",
+      quality: 1,
+      multiplier: SCALE_FACTOR / fabricCanvas.getZoom(),
+    });
+
+    // Crear o configurar el documento PDF
+    if (pageIndex === 0) {
+      // Primera página: crear el documento
+      const orientation = fabricCanvas.width > fabricCanvas.height ? 'l' : 'p';
+      doc = new jsPDF({
+        orientation: orientation,
+        unit: 'px',
+        format: [fabricCanvas.width, fabricCanvas.height]
+      });
+      doc.addImage(dataUrl, 'PNG', 0, 0, fabricCanvas.width, fabricCanvas.height);
+    } else {
+      // Páginas siguientes: añadir nueva página
+      const orientation = fabricCanvas.width > fabricCanvas.height ? 'l' : 'p';
+      doc.addPage([fabricCanvas.width, fabricCanvas.height], orientation);
+      doc.addImage(dataUrl, 'PNG', 0, 0, fabricCanvas.width, fabricCanvas.height);
+    }
+  });
+
+  // Guardar el PDF
+  const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+  doc.save(`todas-las-paginas-${timestamp}.pdf`);
+
+  // Restaurar estado original de todas las páginas
+  allPages.forEach((page, index) => {
+    const { fabricCanvas, marginRect } = page;
+    const { originalOpacity, gridLinesOpacities } = originalStates[index];
+    
+    marginRect.opacity = originalOpacity;
+    restoreGridLines(fabricCanvas, gridLinesOpacities);
+    fabricCanvas.renderAll();
+  });
+
+  console.log('PDF multipágina generado exitosamente');
 } 

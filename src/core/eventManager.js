@@ -64,6 +64,19 @@ export class EventManager {
     this.addEventBinding('deletePageButton', 'click', () => 
       this.actions.deleteCurrentPage()
     );
+
+    // Eventos para botones de múltiples páginas
+    this.addEventBinding('printAllPagesButton', 'click', () => 
+      this.actions.printAllPages(this.canvasManager.getAllPages())
+    );
+
+    this.addEventBinding('downloadAllPdfButton', 'click', () =>
+      this.actions.downloadAllPagesAsPDF(this.canvasManager.getAllPages())
+    );
+
+    this.addEventBinding('downloadAllPngButton', 'click', () =>
+      this.actions.downloadAllPagesAsPNG(this.canvasManager.getAllPages())
+    );
   }
 
   updatePaperSizeButtons(selectedSize) {

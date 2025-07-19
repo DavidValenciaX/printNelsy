@@ -1,0 +1,76 @@
+Listado de rutas de carpetas
+El número de serie del volumen es 720B-3BA0
+C:.
+¦   .gitignore
+¦   index.html
+¦   package-lock.json
+¦   package.json
+¦   README.md
+¦   vercel.json
+¦   vite.config.js
+¦                   
++---src
+    +---canvas
+    ¦       canvasResizeUtils.js
+    ¦       constraintUtils.js
+    ¦       marginRectManager.js
+    ¦       pageUtils.js
+    ¦       
+    +---core
+    ¦       actionManager.js
+    ¦       app.js
+    ¦       canvasManager.js
+    ¦       domManager.js
+    ¦       eventManager.js
+    ¦       script.js
+    ¦       
+    +---events
+    ¦       movingEvents.js
+    ¦       rotatingEvents.js
+    ¦       scalingEvents.js
+    ¦       skewingEvents.js
+    ¦       
+    +---image
+    ¦       cropUtils.js
+    ¦       imageEffects.js
+    ¦       imageSize.js
+    ¦       imageUploadUtils.js
+    ¦       resetUtils.js
+    ¦       
+    +---interactions
+    ¦       clipboardUtils.js
+    ¦       deactivateObjects.js
+    ¦       deleteUtils.js
+    ¦       groupUtils.js
+    ¦       keyboardInteractions.js
+    ¦       
+    +---layout
+    ¦       collageUtils.js
+    ¦       gridControls.js
+    ¦       layoutSelector.js
+    ¦       
+    +---output
+    ¦       pdfUtils.js
+    ¦       pngUtils.js
+    ¦       printUtils.js
+    ¦       zoom.js
+    ¦       
+    +---transform
+    ¦       arrangeUtils.js
+    ¦       center.js
+    ¦       flipUtils.js
+    ¦       rotateUtils.js
+    ¦       scaleUtils.js
+    ¦       
+    +---ui
+    ¦       groupButtons.js
+    ¦       icons.css
+    ¦       style.css
+    ¦       
+    +---utils
+            accessibilityUtils.js
+            arrangementButtons.js
+            arrangementConstants.js
+            mathUtils.js
+            uiUtils.js
+            

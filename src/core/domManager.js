@@ -15,6 +15,11 @@ export class DOMManager {
       downloadPngButton: document.getElementById("downloadPngButton"),
       newPageButton: document.getElementById("newPageButton"),
       
+      // Multiple pages operations
+      printAllPagesButton: document.getElementById("printAllPagesButton"),
+      downloadAllPdfButton: document.getElementById("downloadAllPdfButton"),
+      downloadAllPngButton: document.getElementById("downloadAllPngButton"),
+      
       // Page navigation
       prevPageButton: document.getElementById("prevPageButton"),
       nextPageButton: document.getElementById("nextPageButton"),

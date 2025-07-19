@@ -3,9 +3,9 @@ import { zoomIn, zoomOut, applyZoom } from '../output/zoom.js';
 import { centerVertically, centerHorizontally } from '../transform/center.js';
 import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from '../layout/collageUtils.js';
 import { setImageSizeInCm } from '../image/imageSize.js';
-import { printCanvas } from '../output/printUtils.js';
-import { downloadAsPDF } from '../output/pdfUtils.js';
-import { downloadAsPNG } from '../output/pngUtils.js';
+import { printCanvas, printAllPages } from '../output/printUtils.js';
+import { downloadAsPDF, downloadAllPagesAsPDF } from '../output/pdfUtils.js';
+import { downloadAsPNG, downloadAllPagesAsPNG } from '../output/pngUtils.js';
 import { deactivateObjects } from '../interactions/deactivateObjects.js';
 import { rotateImage } from '../transform/rotateUtils.js';
 import { flipHorizontal, flipVertical } from '../transform/flipUtils.js';
@@ -94,6 +94,11 @@ export class ActionManager {
   handleImageUpload = handleImageUpload;
   handleImageDrop = handleImageDrop;
   createNewPage = createNewPage;
+  
+  // Nuevas funciones para múltiples páginas
+  printAllPages = printAllPages;
+  downloadAllPagesAsPDF = downloadAllPagesAsPDF;
+  downloadAllPagesAsPNG = downloadAllPagesAsPNG;
   
   // Page navigation actions
   goToPreviousPage = goToPreviousPage;
