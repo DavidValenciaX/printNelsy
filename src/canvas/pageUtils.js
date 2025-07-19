@@ -304,7 +304,6 @@ export async function goToPreviousPage() {
   if (PAGE_STATE.currentPageIndex > 0) {
     console.log('⬅️ INICIANDO navegación a página anterior');
     PAGE_STATE.currentPageIndex--;
-    scrollToCurrentPage();
     updatePageInfo();
     
     console.log('🔄 PASO 1: Sincronizando estados...');
@@ -312,7 +311,10 @@ export async function goToPreviousPage() {
     await syncGlobalStatesWithCurrentPage();
     
     console.log('🎨 PASO 2: Actualizando UI...');
-    updateUIButtonsForCurrentPage();
+    await updateUIButtonsForCurrentPage();
+    
+    // Mover el scroll al final para asegurar que se ejecuta después de los cambios de UI
+    scrollToCurrentPage();
     
     console.log(`✅ COMPLETADA navegación a página: ${PAGE_STATE.currentPageIndex + 1}`);
   }
@@ -325,7 +327,6 @@ export async function goToNextPage() {
   if (PAGE_STATE.currentPageIndex < PAGE_STATE.pages.length - 1) {
     console.log('➡️ INICIANDO navegación a página siguiente');
     PAGE_STATE.currentPageIndex++;
-    scrollToCurrentPage();
     updatePageInfo();
     
     console.log('🔄 PASO 1: Sincronizando estados...');
@@ -333,7 +334,10 @@ export async function goToNextPage() {
     await syncGlobalStatesWithCurrentPage();
     
     console.log('🎨 PASO 2: Actualizando UI...');
-    updateUIButtonsForCurrentPage();
+    await updateUIButtonsForCurrentPage();
+
+    // Mover el scroll al final para asegurar que se ejecuta después de los cambios de UI
+    scrollToCurrentPage();
     
     console.log(`✅ COMPLETADA navegación a página: ${PAGE_STATE.currentPageIndex + 1}`);
   }
@@ -523,7 +527,7 @@ export async function syncGlobalStatesWithCurrentPage() {
 /**
  * Actualiza todos los botones de la UI según la página actual
  */
-export function updateUIButtonsForCurrentPage() {
+export async function updateUIButtonsForCurrentPage() {
   const currentPage = getCurrentPage();
   if (!currentPage?.pageSettings) {
     console.log('❌ No hay página actual o pageSettings en updateUIButtonsForCurrentPage');
@@ -533,37 +537,37 @@ export function updateUIButtonsForCurrentPage() {
   const { pageSettings } = currentPage;
   console.log('🎨 Actualizando UI para página con configuración:', pageSettings);
 
-  // Buscar una instancia del eventManager desde la aplicación
-  import('../core/app.js').then(({ getAppInstance }) => {
+  try {
+    const { getAppInstance } = await import('../core/app.js');
     const app = getAppInstance();
-    if (app?.modules?.events) {
+    if (!app) {
+      console.warn('No se pudo obtener la instancia de la aplicación');
+      return;
+    }
+
+    if (app.modules.events) {
       const eventManager = app.modules.events;
       
       console.log('🔘 Actualizando botones de UI básicos');
-      // Actualizar botones de orientación
       eventManager.updateOrientationButtons(pageSettings.orientation);
-      
-      // Actualizar botones de tamaño de papel
       eventManager.updatePaperSizeButtons(pageSettings.paperSize);
-      
-      // Actualizar botones de arrangement de layout
       eventManager.updateLayoutOrientationButtons(pageSettings.arrangement.orientation);
       eventManager.updateOrderButtons(pageSettings.arrangement.order);
     }
 
-    // Actualizar botones de arrangement usando el util existente
-    if (app?.modules?.dom) {
-      import('../utils/arrangementButtons.js').then(({ updateArrangementButtons }) => {
+    if (app.modules.dom) {
+      try {
+        const { updateArrangementButtons } = await import('../utils/arrangementButtons.js');
         console.log('🔘 Actualizando botones de arrangement para:', pageSettings.arrangement.status);
         updateArrangementButtons(pageSettings.arrangement.status, app.modules.dom);
-      }).catch(error => {
+      } catch (error) {
         console.warn('Error actualizando botones de arrangement:', error);
-      });
+      }
     }
 
-    // NUEVA FUNCIONALIDAD: Actualizar grid-controls según el estado de arrangement
-    if (app?.modules?.canvas && app?.modules?.dom) {
-      import('../layout/gridControls.js').then(({ toggleGridControlsVisibility, initializeGridControls, updateGridVisualization, getCustomGridDimensions }) => {
+    if (app.modules.canvas && app.modules.dom) {
+      try {
+        const { toggleGridControlsVisibility, initializeGridControls, updateGridVisualization, getCustomGridDimensions } = await import('../layout/gridControls.js');
         const canvas = app.modules.canvas.getCanvas();
         const domManager = app.modules.dom;
         
@@ -572,25 +576,22 @@ export function updateUIButtonsForCurrentPage() {
         console.log('📏 Orientación del papel:', pageSettings.orientation);
         console.log('🎯 Dimensiones actuales antes de actualizar UI:', getCustomGridDimensions());
         
-        // Si la página actual tiene arrangement "grid", inicializar completamente los controles
         if (pageSettings.arrangement.status === 'grid') {
           console.log('✅ Es arrangement grid, inicializando controles');
           initializeGridControls(canvas, domManager, pageSettings.orientation);
-          // Actualizar la visualización del grid con la orientación correcta del papel
           console.log('🎨 Llamando updateGridVisualization con orientación:', pageSettings.orientation);
           updateGridVisualization(canvas, pageSettings.orientation);
         } else {
           console.log('⏸️ No es arrangement grid, solo actualizando visibilidad');
-          // Si no es grid, solo actualizar la visibilidad
           toggleGridControlsVisibility(canvas, domManager, pageSettings.orientation);
         }
-      }).catch(error => {
+      } catch (error) {
         console.warn('Error actualizando grid-controls:', error);
-      });
+      }
     }
-  }).catch(error => {
+  } catch (error) {
     console.warn('Error obteniendo instancia de la aplicación:', error);
-  });
+  }
 }
 
 /**
