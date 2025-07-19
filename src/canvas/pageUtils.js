@@ -92,6 +92,33 @@ async function getCurrentGlobalSettingsAsync() {
 }
 
 /**
+ * Crea un elemento de título para una página
+ * @param {number} pageNumber - Número de la página
+ * @returns {HTMLElement} Elemento del título
+ */
+function createPageTitle(pageNumber) {
+  const titleElement = document.createElement('div');
+  titleElement.className = 'page-title';
+  titleElement.textContent = `Página ${pageNumber}`;
+  return titleElement;
+}
+
+/**
+ * Actualiza los títulos de todas las páginas
+ */
+function updateAllPageTitles() {
+  PAGE_STATE.pages.forEach((page, index) => {
+    const canvasContainer = page.canvasElement?.closest('.canvas-container');
+    if (canvasContainer) {
+      const existingTitle = canvasContainer.querySelector('.page-title');
+      if (existingTitle) {
+        existingTitle.textContent = `Página ${index + 1}`;
+      }
+    }
+  });
+}
+
+/**
  * Crea una nueva página en el canvas
  * @param {fabric.Canvas} currentCanvas - Instancia del canvas actual (para referencia)
  */
@@ -110,12 +137,17 @@ export function createNewPage(currentCanvas) {
     const canvasContainer = document.createElement('div');
     canvasContainer.className = 'canvas-container';
     
+    // Crear título de página
+    const pageNumber = PAGE_STATE.pages.length + 1;
+    const pageTitle = createPageTitle(pageNumber);
+    
     // Crear nuevo elemento canvas
     const newCanvasElement = document.createElement('canvas');
     const canvasId = `canvas-page-${PAGE_STATE.nextPageId}`;
     newCanvasElement.id = canvasId;
     
-    // Añadir el canvas al contenedor individual
+    // Añadir el título y el canvas al contenedor individual
+    canvasContainer.appendChild(pageTitle);
     canvasContainer.appendChild(newCanvasElement);
     
     // Añadir el contenedor individual al contenedor padre
@@ -312,9 +344,10 @@ export function deletePage(pageIndex) {
       page.fabricCanvas.dispose();
     }
     
-    // Remover elemento DOM
-    if (page?.canvasElement?.parentNode) {
-      page.canvasElement.parentNode.removeChild(page.canvasElement);
+    // Remover elemento DOM completo (contenedor que incluye título y canvas)
+    const canvasContainer = page?.canvasElement?.closest('.canvas-container');
+    if (canvasContainer && canvasContainer.parentNode) {
+      canvasContainer.parentNode.removeChild(canvasContainer);
     }
     
     // Remover de la lista
@@ -324,6 +357,9 @@ export function deletePage(pageIndex) {
     if (PAGE_STATE.currentPageIndex >= pageIndex && PAGE_STATE.currentPageIndex > 0) {
       PAGE_STATE.currentPageIndex--;
     }
+    
+    // Actualizar títulos de todas las páginas después de eliminar
+    updateAllPageTitles();
     
     console.log(`Página eliminada en índice: ${pageIndex}`);
   }
@@ -339,6 +375,16 @@ export function initializePageState(mainCanvas, marginRect, marginWidth) {
   const mainCanvasElement = document.getElementById('canvas');
   
   if (mainCanvasElement && mainCanvas) {
+    // Agregar título a la página principal si no existe
+    const canvasContainer = mainCanvasElement.closest('.canvas-container');
+    if (canvasContainer) {
+      const existingTitle = canvasContainer.querySelector('.page-title');
+      if (!existingTitle) {
+        const pageTitle = createPageTitle(1);
+        canvasContainer.insertBefore(pageTitle, mainCanvasElement);
+      }
+    }
+    
     // Obtener configuración inicial (por defecto)
     const initialSettings = getDefaultPageSettings();
     
@@ -369,30 +415,27 @@ function calculateScrollPositionForPage(pageIndex) {
   const pagesContainer = document.getElementById('pages-container');
   if (!pagesContainer) return 0;
   
-  console.log('🧮 CALC DEBUG: Calculando posición para página índice:', pageIndex);
-  
   const allCanvasContainers = pagesContainer.querySelectorAll('.canvas-container');
-  if (allCanvasContainers.length === 0) return 0;
+  if (pageIndex < 0 || pageIndex >= allCanvasContainers.length) {
+    return 0;
+  }
   
-  // Obtener el estilo computado del contenedor para el gap
+  // Obtener el estilo computado del contenedor para el gap y padding
   const containerStyle = getComputedStyle(pagesContainer);
-  const gapValue = parseFloat(containerStyle.gap) || 20; // 1.25rem = 20px aprox
-  const paddingTop = parseFloat(containerStyle.paddingTop) || 8; // 0.5rem = 8px aprox
+  const gapValue = parseFloat(containerStyle.gap) || 20;
+  const paddingTop = parseFloat(containerStyle.paddingTop) || 8;
   
-  console.log('🧮 CALC DEBUG: Valores de CSS:', { gapValue, paddingTop });
+  let position = paddingTop;
+  // Sumar las alturas de todos los contenedores anteriores + el gap
+  for (let i = 0; i < pageIndex; i++) {
+    const container = allCanvasContainers[i];
+    if (container) {
+      position += container.offsetHeight + gapValue;
+    }
+  }
   
-  // Calcular altura promedio de un container (usar el primero como referencia)
-  const firstContainer = allCanvasContainers[0];
-  const containerHeight = firstContainer.offsetHeight || firstContainer.clientHeight || 600; // fallback
-  
-  console.log('🧮 CALC DEBUG: Altura del container:', containerHeight);
-  
-  // Calcular posición: padding inicial + (altura del container + gap) * índice
-  const calculatedPosition = paddingTop + (containerHeight + gapValue) * pageIndex;
-  
-  console.log('🧮 CALC DEBUG: Posición calculada:', calculatedPosition);
-  
-  return Math.max(0, calculatedPosition - 20); // -20 para el margen como en scrollToPage
+  // Restar un pequeño margen para que el título sea visible
+  return Math.max(0, position - 10);
 }
 
 /**
@@ -401,63 +444,29 @@ function calculateScrollPositionForPage(pageIndex) {
 export async function goToPreviousPage() {
   if (PAGE_STATE.currentPageIndex > 0) {
     console.log('⬅️ INICIANDO navegación a página anterior');
-    console.log('🔍 DEBUG: Estado inicial del scroll container antes de navegación');
-    logScrollState();
     
-    // NUEVO: Calcular posición usando método alternativo más confiable
     const targetPageIndex = PAGE_STATE.currentPageIndex - 1;
-    const targetPage = PAGE_STATE.pages[targetPageIndex];
-    let targetScrollTop = null;
     
-    if (targetPage?.canvasElement) {
-      const pagesContainer = document.getElementById('pages-container');
-      const canvasContainer = targetPage.canvasElement.closest('.canvas-container');
-      if (pagesContainer && canvasContainer) {
-        // Intentar usar offsetTop primero
-        const offsetTopMethod = Math.max(0, canvasContainer.offsetTop - 20);
-        console.log('🎯 PRESERVACIÓN: offsetTop method resultado:', offsetTopMethod);
-        
-        // Si offsetTop es 0 (problema conocido), usar método de cálculo
-        if (offsetTopMethod === 0 && targetPageIndex > 0) {
-          targetScrollTop = calculateScrollPositionForPage(targetPageIndex);
-          console.log('🎯 PRESERVACIÓN: Usando método de cálculo, resultado:', targetScrollTop);
-        } else {
-          targetScrollTop = offsetTopMethod;
-          console.log('🎯 PRESERVACIÓN: Usando offsetTop method:', targetScrollTop);
-        }
-      }
-    }
+    // Calcular la posición de scroll ANTES de cualquier cambio de estado
+    const targetScrollTop = calculateScrollPositionForPage(targetPageIndex);
+    console.log(`🎯 Posición calculada para página ${targetPageIndex}: ${targetScrollTop}`);
     
     PAGE_STATE.currentPageIndex--;
     updatePageInfo();
     
     console.log('🔄 PASO 1: Sincronizando estados...');
-    // NUEVA FUNCIONALIDAD: Sincronizar estados y UI
     await syncGlobalStatesWithCurrentPage();
-    
-    console.log('🔍 DEBUG: Estado del scroll container después de sincronización');
-    logScrollState();
     
     console.log('🎨 PASO 2: Actualizando UI...');
     await updateUIButtonsForCurrentPage();
     
-    console.log('🔍 DEBUG: Estado del scroll container después de actualizar UI');
-    logScrollState();
-    
-    // NUEVO: Usar el scroll target preservado con método mejorado
-    console.log('📍 PASO 3: Ejecutando scroll final con posición mejorada...');
-    if (targetScrollTop !== null) {
-      const pagesContainer = document.getElementById('pages-container');
-      if (pagesContainer) {
-        console.log('🔄 PRESERVACIÓN: Restaurando scroll a posición calculada:', targetScrollTop);
-        pagesContainer.scrollTo({
-          top: targetScrollTop,
-          behavior: 'smooth'
-        });
-      }
-    } else {
-      console.log('⚠️ PRESERVACIÓN: Fallback a scrollToCurrentPage');
-      scrollToCurrentPage();
+    console.log('📍 PASO 3: Ejecutando scroll final...');
+    const pagesContainer = document.getElementById('pages-container');
+    if (pagesContainer) {
+      pagesContainer.scrollTo({
+        top: targetScrollTop,
+        behavior: 'smooth'
+      });
     }
     
     console.log(`✅ COMPLETADA navegación a página: ${PAGE_STATE.currentPageIndex + 1}`);
@@ -470,63 +479,29 @@ export async function goToPreviousPage() {
 export async function goToNextPage() {
   if (PAGE_STATE.currentPageIndex < PAGE_STATE.pages.length - 1) {
     console.log('➡️ INICIANDO navegación a página siguiente');
-    console.log('🔍 DEBUG: Estado inicial del scroll container antes de navegación');
-    logScrollState();
     
-    // NUEVO: Calcular posición usando método alternativo más confiable
     const targetPageIndex = PAGE_STATE.currentPageIndex + 1;
-    const targetPage = PAGE_STATE.pages[targetPageIndex];
-    let targetScrollTop = null;
     
-    if (targetPage?.canvasElement) {
-      const pagesContainer = document.getElementById('pages-container');
-      const canvasContainer = targetPage.canvasElement.closest('.canvas-container');
-      if (pagesContainer && canvasContainer) {
-        // Intentar usar offsetTop primero
-        const offsetTopMethod = Math.max(0, canvasContainer.offsetTop - 20);
-        console.log('🎯 PRESERVACIÓN: offsetTop method resultado:', offsetTopMethod);
-        
-        // Si offsetTop es 0 (problema conocido), usar método de cálculo
-        if (offsetTopMethod === 0 && targetPageIndex > 0) {
-          targetScrollTop = calculateScrollPositionForPage(targetPageIndex);
-          console.log('🎯 PRESERVACIÓN: Usando método de cálculo, resultado:', targetScrollTop);
-        } else {
-          targetScrollTop = offsetTopMethod;
-          console.log('🎯 PRESERVACIÓN: Usando offsetTop method:', targetScrollTop);
-        }
-      }
-    }
+    // Calcular la posición de scroll ANTES de cualquier cambio de estado
+    const targetScrollTop = calculateScrollPositionForPage(targetPageIndex);
+    console.log(`🎯 Posición calculada para página ${targetPageIndex}: ${targetScrollTop}`);
     
     PAGE_STATE.currentPageIndex++;
     updatePageInfo();
     
     console.log('🔄 PASO 1: Sincronizando estados...');
-    // NUEVA FUNCIONALIDAD: Sincronizar estados y UI
     await syncGlobalStatesWithCurrentPage();
-    
-    console.log('🔍 DEBUG: Estado del scroll container después de sincronización');
-    logScrollState();
     
     console.log('🎨 PASO 2: Actualizando UI...');
     await updateUIButtonsForCurrentPage();
 
-    console.log('🔍 DEBUG: Estado del scroll container después de actualizar UI');
-    logScrollState();
-
-    // NUEVO: Usar el scroll target preservado con método mejorado
-    console.log('📍 PASO 3: Ejecutando scroll final con posición mejorada...');
-    if (targetScrollTop !== null) {
-      const pagesContainer = document.getElementById('pages-container');
-      if (pagesContainer) {
-        console.log('🔄 PRESERVACIÓN: Restaurando scroll a posición calculada:', targetScrollTop);
-        pagesContainer.scrollTo({
-          top: targetScrollTop,
-          behavior: 'smooth'
-        });
-      }
-    } else {
-      console.log('⚠️ PRESERVACIÓN: Fallback a scrollToCurrentPage');
-      scrollToCurrentPage();
+    console.log('📍 PASO 3: Ejecutando scroll final...');
+    const pagesContainer = document.getElementById('pages-container');
+    if (pagesContainer) {
+      pagesContainer.scrollTo({
+        top: targetScrollTop,
+        behavior: 'smooth'
+      });
     }
     
     console.log(`✅ COMPLETADA navegación a página: ${PAGE_STATE.currentPageIndex + 1}`);
@@ -538,16 +513,18 @@ export async function goToNextPage() {
  */
 export function scrollToCurrentPage() {
   console.log('🚀 SCROLL DEBUG: scrollToCurrentPage iniciado');
-  console.log('📊 SCROLL DEBUG: currentPageIndex:', PAGE_STATE.currentPageIndex);
-  console.log('📊 SCROLL DEBUG: total páginas:', PAGE_STATE.pages.length);
   
-  const currentPage = getCurrentPage();
-  console.log('📄 SCROLL DEBUG: currentPage:', currentPage?.pageId || 'null');
+  const currentPageIndex = getCurrentPageIndex();
+  const targetScrollTop = calculateScrollPositionForPage(currentPageIndex);
   
-  if (currentPage) {
-    scrollToPage(currentPage);
-  } else {
-    console.warn('❌ SCROLL DEBUG: No hay página actual válida');
+  console.log(`🎯 SCROLL DEBUG: Posición calculada para página actual (${currentPageIndex}): ${targetScrollTop}`);
+  
+  const pagesContainer = document.getElementById('pages-container');
+  if (pagesContainer) {
+    pagesContainer.scrollTo({
+      top: targetScrollTop,
+      behavior: 'smooth'
+    });
   }
   
   console.log('✅ SCROLL DEBUG: scrollToCurrentPage completado');
