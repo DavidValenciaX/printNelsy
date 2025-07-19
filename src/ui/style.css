@@ -12,7 +12,7 @@ html {
 
 body {
   font-family: Arial, sans-serif;
-  min-height: 100%;
+  height: 100vh;
   width: 100%;
   margin: 0;
   padding: 1.25rem;
@@ -21,20 +21,28 @@ body {
   align-items: center;
   background-color: #f5f5f5;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+#main-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .main-container {
   display: flex;
   gap: 1.25rem;
-  align-items: flex-start;
+  align-items: stretch;
   background-color: white;
   padding: 1.25rem;
   border-radius: 0.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-canvas{
-  margin-top: 0 !important;
+  height: calc(100vh - 2.5rem);
+  max-height: calc(100vh - 2.5rem);
+  overflow: hidden;
 }
 
 #pages-container {
@@ -42,12 +50,19 @@ canvas{
   flex-direction: column;
   gap: 1.25rem; /* Espaciado entre páginas */
   align-items: center;
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.5rem;
+  box-sizing: border-box;
 }
 
 .canvas-container {
   position: relative;
   border: 1px solid #e0e0e0;
   border-radius: 0.25rem;
+  flex-shrink: 0;
 }
 
 .button-container {
@@ -55,6 +70,12 @@ canvas{
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
   min-width: 12.5rem;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.25rem;
+  box-sizing: border-box;
+  align-content: start;
 }
 
 .button-group {
@@ -158,6 +179,29 @@ input:focus {
   font-size: 0.875rem;
   color: #333;
   cursor: pointer;
+}
+
+/* Estilos para scrollbars personalizados */
+#pages-container::-webkit-scrollbar,
+.button-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+#pages-container::-webkit-scrollbar-track,
+.button-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+#pages-container::-webkit-scrollbar-thumb,
+.button-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+#pages-container::-webkit-scrollbar-thumb:hover,
+.button-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 .zoom-controls {

@@ -106,10 +106,26 @@ function setupCanvasProperties(canvas) {
  */
 function scrollToPage(page) {
   if (page?.canvasElement) {
-    page.canvasElement.scrollIntoView({ 
-      behavior: 'smooth', 
-      block: 'start' 
-    });
+    const pagesContainer = document.getElementById('pages-container');
+    if (pagesContainer) {
+      // Obtener la posición relativa del canvas dentro del contenedor
+      const canvasContainer = page.canvasElement.closest('.canvas-container');
+      if (canvasContainer) {
+        const scrollOffset = canvasContainer.offsetTop;
+        
+        // Hacer scroll suave dentro del contenedor con un pequeño margen
+        pagesContainer.scrollTo({
+          top: Math.max(0, scrollOffset - 20),
+          behavior: 'smooth'
+        });
+      }
+    } else {
+      // Fallback al comportamiento anterior
+      page.canvasElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }
   }
 }
 
