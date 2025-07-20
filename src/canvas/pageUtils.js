@@ -192,20 +192,16 @@ export function createNewPage(currentCanvas) {
       .then(() => updateUIButtonsForCurrentPage())
       .then(() => {
         // Hacer scroll después de que la sincronización esté completa
-        setTimeout(() => {
+        // Usar calculateScrollPositionSafely para asegurar dimensiones correctas
+        calculateScrollPositionSafely(PAGE_STATE.currentPageIndex).then(targetScrollTop => {
           const pagesContainer = document.getElementById('pages-container');
           if (pagesContainer) {
-            // Usar calculateScrollPositionForPage para evitar problemas con offsetTop
-            const targetScrollTop = calculateScrollPositionForPage(PAGE_STATE.currentPageIndex);
-            
-            
             pagesContainer.scrollTo({
               top: targetScrollTop,
               behavior: 'smooth'
             });
-            
           }
-        }, 50);
+        });
       })
       .catch(error => console.warn('Error sincronizando estados en nueva página:', error));
     
@@ -379,6 +375,29 @@ export function initializePageState(mainCanvas, marginRect, marginWidth) {
 }
 
 /**
+ * Asegura que el cálculo de scroll se realice con dimensiones actualizadas
+ * @param {number} pageIndex - Índice de la página a calcular
+ * @returns {Promise<number>} Promesa que resuelve con la posición de scroll calculada
+ */
+function calculateScrollPositionSafely(pageIndex) {
+  const pagesContainer = document.getElementById('pages-container');
+  if (!pagesContainer) return Promise.resolve(0);
+  
+  // Forzar actualización de layout antes del cálculo
+  pagesContainer.getBoundingClientRect();
+  
+  // Pequeña pausa para permitir que el layout se estabilice
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { // Doble RAF para mayor estabilidad
+        const scrollPosition = calculateScrollPositionForPage(pageIndex);
+        resolve(scrollPosition);
+      });
+    });
+  });
+}
+
+/**
  * Calcula la posición de scroll correcta para una página específica
  * Método alternativo cuando offsetTop no funciona correctamente
  * @param {number} pageIndex - Índice de la página (0-based)
@@ -399,28 +418,63 @@ function calculateScrollPositionForPage(pageIndex) {
   const paddingTop = parseFloat(containerStyle.paddingTop) || 8;
   
   let position = paddingTop;
+  
   // Sumar las alturas de todos los contenedores anteriores + el gap
   for (let i = 0; i < pageIndex; i++) {
     const container = allCanvasContainers[i];
     if (container) {
-      position += container.offsetHeight + gapValue;
+      // Obtener la altura real del contenedor incluyendo título y canvas
+      const containerHeight = container.offsetHeight;
+      
+      // Validar que tenemos una altura válida
+      if (containerHeight > 0) {
+        position += containerHeight + gapValue;
+      } else {
+        // Fallback: calcular altura manualmente
+        const title = container.querySelector('.page-title');
+        const canvas = container.querySelector('canvas');
+        const titleHeight = title ? title.offsetHeight : 30; // fallback a 30px
+        const canvasHeight = canvas ? canvas.offsetHeight : 600; // fallback a 600px
+        position += (titleHeight + canvasHeight) + gapValue;
+      }
     }
   }
   
   // Obtener el contenedor de la página target para centrarlo
   const targetContainer = allCanvasContainers[pageIndex];
   if (targetContainer) {
-    const containerHeight = targetContainer.offsetHeight;
+    let containerHeight = targetContainer.offsetHeight;
+    
+    // Si no podemos obtener la altura, calcularla manualmente
+    if (containerHeight <= 0) {
+      const title = targetContainer.querySelector('.page-title');
+      const canvas = targetContainer.querySelector('canvas');
+      const titleHeight = title ? title.offsetHeight : 30;
+      const canvasHeight = canvas ? canvas.offsetHeight : 600;
+      containerHeight = titleHeight + canvasHeight;
+    }
+    
     const viewportHeight = pagesContainer.clientHeight;
     
     // Calcular la posición para centrar la página en la vista
+    // Posición = inicio de la página + la mitad de su altura - la mitad del viewport
     const centeredPosition = position + (containerHeight / 2) - (viewportHeight / 2);
     
     // Asegurarse de que no vaya más allá de los límites válidos
     const maxScroll = pagesContainer.scrollHeight - pagesContainer.clientHeight;
     const finalPosition = Math.max(0, Math.min(centeredPosition, maxScroll));
     
-
+    // Log temporal para depuración
+    console.log(`📍 SCROLL DEBUG - Página ${pageIndex}:`, {
+      position,
+      containerHeight,
+      viewportHeight,
+      centeredPosition,
+      maxScroll,
+      finalPosition,
+      scrollHeight: pagesContainer.scrollHeight,
+      clientHeight: pagesContainer.clientHeight
+    });
     
     return finalPosition;
   }
@@ -434,19 +488,16 @@ function calculateScrollPositionForPage(pageIndex) {
  */
 export async function goToPreviousPage() {
   if (PAGE_STATE.currentPageIndex > 0) {
-
-    
     const targetPageIndex = PAGE_STATE.currentPageIndex - 1;
-    
-    // Calcular la posición de scroll ANTES de cualquier cambio de estado
-    const targetScrollTop = calculateScrollPositionForPage(targetPageIndex);
     
     PAGE_STATE.currentPageIndex--;
     updatePageInfo();
     
     await syncGlobalStatesWithCurrentPage();
-    
     await updateUIButtonsForCurrentPage();
+    
+    // Calcular scroll después de la sincronización para tener dimensiones correctas
+    const targetScrollTop = await calculateScrollPositionSafely(targetPageIndex);
     
     const pagesContainer = document.getElementById('pages-container');
     if (pagesContainer) {
@@ -465,15 +516,14 @@ export async function goToNextPage() {
   if (PAGE_STATE.currentPageIndex < PAGE_STATE.pages.length - 1) {
     const targetPageIndex = PAGE_STATE.currentPageIndex + 1;
     
-    // Calcular la posición de scroll ANTES de cualquier cambio de estado
-    const targetScrollTop = calculateScrollPositionForPage(targetPageIndex);
-    
     PAGE_STATE.currentPageIndex++;
     updatePageInfo();
     
     await syncGlobalStatesWithCurrentPage();
-    
     await updateUIButtonsForCurrentPage();
+
+    // Calcular scroll después de la sincronización para tener dimensiones correctas
+    const targetScrollTop = await calculateScrollPositionSafely(targetPageIndex);
 
     const pagesContainer = document.getElementById('pages-container');
     if (pagesContainer) {
@@ -488,9 +538,9 @@ export async function goToNextPage() {
 /**
  * Hace scroll hacia la página actual
  */
-export function scrollToCurrentPage() {
+export async function scrollToCurrentPage() {
   const currentPageIndex = getCurrentPageIndex();
-  const targetScrollTop = calculateScrollPositionForPage(currentPageIndex);
+  const targetScrollTop = await calculateScrollPositionSafely(currentPageIndex);
   
   const pagesContainer = document.getElementById('pages-container');
   if (pagesContainer) {
@@ -548,12 +598,13 @@ export async function deleteCurrentPage() {
     PAGE_STATE.currentPageIndex = PAGE_STATE.pages.length - 1;
   }
   
-  scrollToCurrentPage();
   updatePageInfo();
   
   // NUEVA FUNCIONALIDAD: Sincronizar estados y UI después de eliminar
   await syncGlobalStatesWithCurrentPage();
   updateUIButtonsForCurrentPage();
+  
+  await scrollToCurrentPage();
   
   return true;
 }
