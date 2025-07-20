@@ -414,7 +414,7 @@ export function initializePageState(mainCanvas, marginRect, marginWidth) {
  * Calcula la posición de scroll correcta para una página específica
  * Método alternativo cuando offsetTop no funciona correctamente
  * @param {number} pageIndex - Índice de la página (0-based)
- * @returns {number} Posición de scroll calculada
+ * @returns {number} Posición de scroll calculada para centrar la página
  */
 function calculateScrollPositionForPage(pageIndex) {
   const pagesContainer = document.getElementById('pages-container');
@@ -439,7 +439,33 @@ function calculateScrollPositionForPage(pageIndex) {
     }
   }
   
-  // Restar un pequeño margen para que el título sea visible
+  // Obtener el contenedor de la página target para centrarlo
+  const targetContainer = allCanvasContainers[pageIndex];
+  if (targetContainer) {
+    const containerHeight = targetContainer.offsetHeight;
+    const viewportHeight = pagesContainer.clientHeight;
+    
+    // Calcular la posición para centrar la página en la vista
+    const centeredPosition = position + (containerHeight / 2) - (viewportHeight / 2);
+    
+    // Asegurarse de que no vaya más allá de los límites válidos
+    const maxScroll = pagesContainer.scrollHeight - pagesContainer.clientHeight;
+    const finalPosition = Math.max(0, Math.min(centeredPosition, maxScroll));
+    
+    console.log('📊 SCROLL CALC: Datos de centrado:', {
+      pageIndex,
+      position: position,
+      containerHeight,
+      viewportHeight,
+      centeredPosition,
+      maxScroll,
+      finalPosition
+    });
+    
+    return finalPosition;
+  }
+  
+  // Fallback al método anterior si no se puede obtener el contenedor
   return Math.max(0, position - 10);
 }
 
@@ -659,10 +685,19 @@ export async function syncGlobalStatesWithCurrentPage() {
         const result = resizeCanvasOnly(pageSettings.paperSize, canvas, currentMarginRect, pageSettings.orientation);
         app.modules.canvas.updateMargins(result.marginRect, result.marginWidth);
         
+        // IMPORTANTE: Actualizar las variables globales DESPUÉS del redimensionamiento
+        setCurrentSize(pageSettings.paperSize);
+        setIsVertical(pageSettings.orientation);
+        
         console.log('✅ Canvas redimensionado correctamente sin reorganizar imágenes');
+        console.log('✅ Variables globales actualizadas:', { 
+          newSize: pageSettings.paperSize, 
+          newOrientation: pageSettings.orientation 
+        });
       }
     } else {
       console.log('➡️ No se necesita redimensionar el canvas');
+      // Asegurar que las variables globales estén sincronizadas
       setCurrentSize(pageSettings.paperSize);
       setIsVertical(pageSettings.orientation);
     }
@@ -694,10 +729,11 @@ export async function syncGlobalStatesWithCurrentPage() {
     console.log('🎯 Dimensiones personalizadas antes:', getCustomGridDimensions());
     console.log('🎯 Estableciendo dimensiones personalizadas:', pageSettings.arrangement.customRows, pageSettings.arrangement.customCols);
     
-    setCustomGridDimensions(
-      pageSettings.arrangement.customRows, 
-      pageSettings.arrangement.customCols
-    );
+    // Asegurar que las dimensiones sean null en lugar de undefined
+    const customRows = pageSettings.arrangement.customRows ?? null;
+    const customCols = pageSettings.arrangement.customCols ?? null;
+    
+    setCustomGridDimensions(customRows, customCols);
     
     console.log('🎯 Dimensiones personalizadas después:', getCustomGridDimensions());
     console.log('✅ Estados sincronizados correctamente para la página actual');

@@ -164,19 +164,21 @@ export function resizeCanvasOnly(size, canvas, marginRect, orientation = isVerti
   
   // SCROLL DEBUG: Obtener estado del container antes del resize
   const pagesContainer = document.getElementById('pages-container');
+  let scrollBefore = 0;
+  
   if (pagesContainer) {
-    const scrollBefore = pagesContainer.scrollTop;
+    scrollBefore = pagesContainer.scrollTop;
     console.log('📍 RESIZE DEBUG: Scroll position ANTES del resize:', scrollBefore);
   }
   
-  // Update canvas dimensions
-  currentSize = size;
-  isVertical = orientation;
+  // NO MODIFICAR las variables globales aquí - esto es solo para redimensionar un canvas específico
+  // Las variables globales se actualizan en syncGlobalStatesWithCurrentPage
+  const targetOrientation = orientation;
   const scale = 0.3;
   let width = paperSizes[size].width;
   let height = paperSizes[size].height;
 
-  if (!isVertical) {
+  if (!targetOrientation) {
     [width, height] = [height, width];
   }
 
