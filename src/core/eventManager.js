@@ -245,10 +245,6 @@ export class EventManager {
         console.error('Error during reset operation:', error);
       }
     });
-
-    this.addEventBinding('resetGroupButton', 'click', () => 
-      this.actions.resetActiveGroup(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), this.actions.originalGroups)
-    );
   }
 
   initializePositionEvents() {
