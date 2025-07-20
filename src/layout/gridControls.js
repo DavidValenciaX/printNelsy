@@ -6,8 +6,8 @@ import { getCurrentMarginRect } from '../canvas/marginRectManager.js';
 // Constantes para los límites del grid
 const MIN_ROWS = 1;
 const MIN_COLS = 1;
-const MAX_ROWS = 20;
-const MAX_COLS = 20;
+const MAX_ROWS = 24;
+const MAX_COLS = 24;
 
 // Estado actual del grid personalizado
 let currentCustomRows = null;
@@ -35,13 +35,13 @@ export function updateGridControlButtons(rows, cols, imageCount, domManager) {
   
   // Deshabilitar botones según los límites y la cantidad de imágenes
   if (increaseRowsButton) {
-    increaseRowsButton.disabled = rows >= MAX_ROWS || (rows >= imageCount);
+    increaseRowsButton.disabled = rows >= MAX_ROWS;
   }
   if (decreaseRowsButton) {
     decreaseRowsButton.disabled = rows <= MIN_ROWS || ((rows - 1) * cols < imageCount);
   }
   if (increaseColsButton) {
-    increaseColsButton.disabled = cols >= MAX_COLS || (cols >= imageCount);
+    increaseColsButton.disabled = cols >= MAX_COLS;
   }
   if (decreaseColsButton) {
     decreaseColsButton.disabled = cols <= MIN_COLS || (rows * (cols - 1) < imageCount);
@@ -56,14 +56,11 @@ export function updateGridControlButtons(rows, cols, imageCount, domManager) {
  */
 export function toggleGridControlsVisibility(canvas, domManager, isVerticalPaper = null) {
   const gridControlsGroup = domManager.get('gridControlsGroup');
-  
-  const objects = canvas.getObjects().filter(obj => obj.type === 'image' || obj.type === 'group');
-  const objectCount = objects.length;
 
   const isGridArrangement = imageState.arrangementStatus === 'grid' && 
                            (imageState.orientation === 'rows' || imageState.orientation === 'cols');
   
-  const shouldShow = isGridArrangement && objectCount > 1;
+  const shouldShow = isGridArrangement;
 
   if (gridControlsGroup) {
     gridControlsGroup.style.display = shouldShow ? 'flex' : 'none';
@@ -378,7 +375,7 @@ function shouldDrawGrid(objects) {
   const isValidArrangement = imageState.arrangementStatus === 'grid' && 
                             (imageState.orientation === 'rows' || imageState.orientation === 'cols');
   
-  return isValidArrangement && objects.length > 1;
+  return isValidArrangement && objects.length > 0;
 }
 
 /**
