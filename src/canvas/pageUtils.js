@@ -191,17 +191,22 @@ export function createNewPage(currentCanvas) {
     syncGlobalStatesWithCurrentPage()
       .then(() => updateUIButtonsForCurrentPage())
       .then(() => {
+        // Esperar un momento adicional para que el DOM se estabilice completamente
+        return new Promise(resolve => setTimeout(resolve, 150));
+      })
+      .then(() => {
         // Hacer scroll después de que la sincronización esté completa
-        // Usar calculateScrollPositionSafely para asegurar dimensiones correctas
-        calculateScrollPositionSafely(PAGE_STATE.currentPageIndex).then(targetScrollTop => {
-          const pagesContainer = document.getElementById('pages-container');
-          if (pagesContainer) {
-            pagesContainer.scrollTo({
-              top: targetScrollTop,
-              behavior: 'smooth'
-            });
-          }
-        });
+        return calculateScrollPositionSafely(PAGE_STATE.currentPageIndex);
+      })
+      .then(targetScrollTop => {
+        const pagesContainer = document.getElementById('pages-container');
+        if (pagesContainer) {
+          console.log(`🚀 Ejecutando scroll a página ${PAGE_STATE.currentPageIndex} con posición ${targetScrollTop}`);
+          pagesContainer.scrollTo({
+            top: targetScrollTop,
+            behavior: 'smooth'
+          });
+        }
       })
       .catch(error => console.warn('Error sincronizando estados en nueva página:', error));
     
@@ -390,6 +395,20 @@ function calculateScrollPositionSafely(pageIndex) {
   return new Promise((resolve) => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => { // Doble RAF para mayor estabilidad
+        // Verificar si todos los contenedores tienen offsetTop válido
+        const allContainers = pagesContainer.querySelectorAll('.canvas-container');
+        let allHaveValidOffsets = true;
+        
+        for (let i = 0; i <= pageIndex && i < allContainers.length; i++) {
+          if (allContainers[i].offsetTop <= 0 && i > 0) {
+            allHaveValidOffsets = false;
+            console.warn(`⚠️ Contenedor ${i} no tiene offsetTop válido: ${allContainers[i].offsetTop}`);
+            break;
+          }
+        }
+        
+        console.log(`🔍 Verificación offsetTop para página ${pageIndex}: ${allHaveValidOffsets ? 'VÁLIDO' : 'INVÁLIDO'}`);
+        
         const scrollPosition = calculateScrollPositionForPage(pageIndex);
         resolve(scrollPosition);
       });
@@ -411,8 +430,43 @@ function calculateScrollPositionForPage(pageIndex) {
   if (pageIndex < 0 || pageIndex >= allCanvasContainers.length) {
     return 0;
   }
+
+  const targetContainer = allCanvasContainers[pageIndex];
+  if (!targetContainer) return 0;
+
+  // Método 1: Intentar usar offsetTop si está disponible
+  if (targetContainer.offsetTop > 0) {
+    const containerTop = targetContainer.offsetTop;
+    const containerHeight = targetContainer.offsetHeight;
+    const viewportHeight = pagesContainer.clientHeight;
+    
+    // Si la página cabe completamente en el viewport, centrarla
+    if (containerHeight <= viewportHeight) {
+      const centeredPosition = containerTop - (viewportHeight - containerHeight) / 2;
+      
+      // Asegurar que no vaya fuera de los límites
+      const maxScroll = pagesContainer.scrollHeight - pagesContainer.clientHeight;
+      const finalPosition = Math.max(0, Math.min(centeredPosition, maxScroll));
+      
+      console.log(`📍 SCROLL DEBUG (Método offsetTop) - Página ${pageIndex}:`, {
+        containerTop,
+        containerHeight,
+        viewportHeight,
+        centeredPosition,
+        maxScroll,
+        finalPosition,
+        scrollHeight: pagesContainer.scrollHeight,
+        clientHeight: pagesContainer.clientHeight
+      });
+      
+      return finalPosition;
+    } else {
+      // Si la página es más grande que el viewport, mostrar desde el inicio
+      return Math.max(0, Math.min(containerTop, pagesContainer.scrollHeight - pagesContainer.clientHeight));
+    }
+  }
   
-  // Obtener el estilo computado del contenedor para el gap y padding
+  // Método 2: Cálculo manual (fallback)
   const containerStyle = getComputedStyle(pagesContainer);
   const gapValue = parseFloat(containerStyle.gap) || 20;
   const paddingTop = parseFloat(containerStyle.paddingTop) || 8;
@@ -423,64 +477,59 @@ function calculateScrollPositionForPage(pageIndex) {
   for (let i = 0; i < pageIndex; i++) {
     const container = allCanvasContainers[i];
     if (container) {
-      // Obtener la altura real del contenedor incluyendo título y canvas
       const containerHeight = container.offsetHeight;
       
-      // Validar que tenemos una altura válida
       if (containerHeight > 0) {
         position += containerHeight + gapValue;
       } else {
         // Fallback: calcular altura manualmente
         const title = container.querySelector('.page-title');
         const canvas = container.querySelector('canvas');
-        const titleHeight = title ? title.offsetHeight : 30; // fallback a 30px
-        const canvasHeight = canvas ? canvas.offsetHeight : 600; // fallback a 600px
+        const titleHeight = title ? title.offsetHeight : 30;
+        const canvasHeight = canvas ? canvas.offsetHeight : 600;
         position += (titleHeight + canvasHeight) + gapValue;
       }
     }
   }
   
-  // Obtener el contenedor de la página target para centrarlo
-  const targetContainer = allCanvasContainers[pageIndex];
-  if (targetContainer) {
-    let containerHeight = targetContainer.offsetHeight;
-    
-    // Si no podemos obtener la altura, calcularla manualmente
-    if (containerHeight <= 0) {
-      const title = targetContainer.querySelector('.page-title');
-      const canvas = targetContainer.querySelector('canvas');
-      const titleHeight = title ? title.offsetHeight : 30;
-      const canvasHeight = canvas ? canvas.offsetHeight : 600;
-      containerHeight = titleHeight + canvasHeight;
-    }
-    
-    const viewportHeight = pagesContainer.clientHeight;
-    
-    // Calcular la posición para centrar la página en la vista
-    // Posición = inicio de la página + la mitad de su altura - la mitad del viewport
-    const centeredPosition = position + (containerHeight / 2) - (viewportHeight / 2);
-    
-    // Asegurarse de que no vaya más allá de los límites válidos
-    const maxScroll = pagesContainer.scrollHeight - pagesContainer.clientHeight;
-    const finalPosition = Math.max(0, Math.min(centeredPosition, maxScroll));
-    
-    // Log temporal para depuración
-    console.log(`📍 SCROLL DEBUG - Página ${pageIndex}:`, {
-      position,
-      containerHeight,
-      viewportHeight,
-      centeredPosition,
-      maxScroll,
-      finalPosition,
-      scrollHeight: pagesContainer.scrollHeight,
-      clientHeight: pagesContainer.clientHeight
-    });
-    
-    return finalPosition;
+  // Calcular altura del contenedor objetivo
+  let containerHeight = targetContainer.offsetHeight;
+  
+  if (containerHeight <= 0) {
+    const title = targetContainer.querySelector('.page-title');
+    const canvas = targetContainer.querySelector('canvas');
+    const titleHeight = title ? title.offsetHeight : 30;
+    const canvasHeight = canvas ? canvas.offsetHeight : 600;
+    containerHeight = titleHeight + canvasHeight;
   }
   
-  // Fallback al método anterior si no se puede obtener el contenedor
-  return Math.max(0, position - 10);
+  const viewportHeight = pagesContainer.clientHeight;
+  
+  // Si la página cabe completamente en el viewport, centrarla
+  let finalPosition;
+  if (containerHeight <= viewportHeight) {
+    const centeredPosition = position - (viewportHeight - containerHeight) / 2;
+    const maxScroll = pagesContainer.scrollHeight - pagesContainer.clientHeight;
+    finalPosition = Math.max(0, Math.min(centeredPosition, maxScroll));
+  } else {
+    // Si la página es más grande que el viewport, mostrar desde el inicio
+    const maxScroll = pagesContainer.scrollHeight - pagesContainer.clientHeight;
+    finalPosition = Math.max(0, Math.min(position, maxScroll));
+  }
+  
+  console.log(`📍 SCROLL DEBUG (Método manual) - Página ${pageIndex}:`, {
+    position,
+    containerHeight,
+    viewportHeight,
+    centeredPosition: containerHeight <= viewportHeight ? position - (viewportHeight - containerHeight) / 2 : position,
+    maxScroll: pagesContainer.scrollHeight - pagesContainer.clientHeight,
+    finalPosition,
+    scrollHeight: pagesContainer.scrollHeight,
+    clientHeight: pagesContainer.clientHeight,
+    fitsInViewport: containerHeight <= viewportHeight
+  });
+  
+  return finalPosition;
 }
 
 /**
@@ -501,6 +550,7 @@ export async function goToPreviousPage() {
     
     const pagesContainer = document.getElementById('pages-container');
     if (pagesContainer) {
+      console.log(`⬅️ Navegación a página anterior ${targetPageIndex} con scroll ${targetScrollTop}`);
       pagesContainer.scrollTo({
         top: targetScrollTop,
         behavior: 'smooth'
@@ -527,6 +577,7 @@ export async function goToNextPage() {
 
     const pagesContainer = document.getElementById('pages-container');
     if (pagesContainer) {
+      console.log(`➡️ Navegación a página siguiente ${targetPageIndex} con scroll ${targetScrollTop}`);
       pagesContainer.scrollTo({
         top: targetScrollTop,
         behavior: 'smooth'
