@@ -80,15 +80,13 @@ export function printAllPages(allPages) {
     return;
   }
 
-  
-
-  // Procesar cada página y recopilar las imágenes
+  // Procesar cada página y recopilar las imágenes con su orientación
   const pageImages = [];
   const originalStates = [];
 
   // Preparar todas las páginas para impresión
   allPages.forEach((page, index) => {
-    const { fabricCanvas, marginRect } = page;
+    const { fabricCanvas, marginRect, pageSettings } = page;
     
     // Guardar estado original
     const originalOpacity = marginRect.opacity;
@@ -106,12 +104,33 @@ export function printAllPages(allPages) {
       multiplier: SCALE_FACTOR / fabricCanvas.getZoom(),
     });
 
-    pageImages.push(dataUrl);
+    // Determinar orientación de la página
+    const isVertical = pageSettings?.orientation !== false; // Por defecto vertical si no se especifica
+    pageImages.push({ dataUrl, isVertical });
   });
 
-  // Crear HTML con todas las páginas
+  // Crear HTML con todas las páginas, aplicando orientación específica
   const imagesHtml = pageImages
-    .map((dataUrl, index) => `<img src="${dataUrl}" style="page-break-after: always; max-width: 100%; max-height: 100%; display: block; margin: 0 auto;">`)
+    .map(({ dataUrl, isVertical }, index) => {
+      const pageBreakStyle = index < pageImages.length - 1 ? 'page-break-after: always;' : '';
+      const orientationClass = isVertical ? 'page-vertical' : 'page-horizontal';
+      const pageClass = isVertical ? '' : `page-${index + 1}`;
+      
+      return `<div class="page-container ${orientationClass} ${pageClass}" style="${pageBreakStyle}">
+        <img src="${dataUrl}" style="max-width: 100%; max-height: 100vh; display: block; margin: 0 auto;">
+      </div>`;
+    })
+    .join('\n');
+
+  // Crear estilos CSS dinámicos para orientación de página
+  const orientationStyles = pageImages
+    .map(({ isVertical }, index) => {
+      if (!isVertical) {
+        return `@page page-${index + 1} { size: landscape; }`;
+      }
+      return '';
+    })
+    .filter(style => style !== '')
     .join('\n');
 
   const windowContent = `
@@ -125,6 +144,7 @@ export function printAllPages(allPages) {
                 margin: 0;
                 size: auto;
             }
+            ${orientationStyles}
             html, body {
                 margin: 0;
                 padding: 0;
@@ -133,15 +153,49 @@ export function printAllPages(allPages) {
             body {
                 text-align: center;
             }
+            .page-container {
+                width: 100%;
+                height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .page-vertical {
+                /* Orientación vertical por defecto */
+            }
+            .page-horizontal {
+                /* Para páginas horizontales, ajustar el tamaño */
+                width: 100vh;
+                height: 100%;
+            }
+            .page-horizontal img {
+                max-width: 100vh;
+                max-height: 100%;
+            }
             img {
                 max-width: 100%;
                 max-height: 100vh;
                 display: block;
                 margin: 0 auto;
-                page-break-after: always;
             }
-            img:last-child {
+            .page-container:last-child {
                 page-break-after: avoid;
+            }
+            @media print {
+                .page-container {
+                    page-break-inside: avoid;
+                }
+                .page-horizontal {
+                    /* En impresión, usar orientación landscape para páginas horizontales */
+                    page-break-before: always;
+                }
+                .page-horizontal:first-child {
+                    page-break-before: avoid;
+                }
+                /* Aplicar orientación específica para cada página horizontal */
+                ${pageImages.map(({ isVertical }, index) => 
+                  !isVertical ? `.page-${index + 1} { page: page-${index + 1}; }` : ''
+                ).filter(style => style !== '').join('\n')}
             }
         </style>
     </head>
