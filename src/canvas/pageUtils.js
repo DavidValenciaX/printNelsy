@@ -108,7 +108,7 @@ function createPageTitle(pageNumber) {
  */
 function updateAllPageTitles() {
   PAGE_STATE.pages.forEach((page, index) => {
-    const canvasContainer = page.canvasElement?.closest('.canvas-container');
+    const canvasContainer = page.canvasElement?.closest('.page-container');
     if (canvasContainer) {
       const existingTitle = canvasContainer.querySelector('.page-title');
       if (existingTitle) {
@@ -135,7 +135,7 @@ export function createNewPage(currentCanvas) {
 
     // Crear contenedor individual para el nuevo canvas
     const canvasContainer = document.createElement('div');
-    canvasContainer.className = 'canvas-container';
+    canvasContainer.className = 'page-container';
     
     // Crear título de página
     const pageNumber = PAGE_STATE.pages.length + 1;
@@ -238,7 +238,7 @@ function scrollToPage(page) {
     
     if (pagesContainer) {
       // Obtener la posición relativa del canvas dentro del contenedor
-      const canvasContainer = page.canvasElement.closest('.canvas-container');
+      const canvasContainer = page.canvasElement.closest('.page-container');
       
       if (canvasContainer) {
         const scrollOffset = canvasContainer.offsetTop;
@@ -314,7 +314,7 @@ export function deletePage(pageIndex) {
     }
     
     // Remover elemento DOM completo (contenedor que incluye título y canvas)
-    const canvasContainer = page?.canvasElement?.closest('.canvas-container');
+    const canvasContainer = page?.canvasElement?.closest('.page-container');
     if (canvasContainer?.parentNode) {
       canvasContainer.parentNode.removeChild(canvasContainer);
     }
@@ -344,18 +344,18 @@ export function initializePageState(mainCanvas, marginRect, marginWidth) {
   const mainCanvasElement = document.getElementById('canvas');
   
   if (mainCanvasElement && mainCanvas) {
-    // El contenedor que encontramos es el de Fabric. Necesitamos su padre.
-    const canvasContainer = mainCanvasElement.closest('.canvas-container');
-    if (canvasContainer) {
-      // El contenedor que encontramos es el de Fabric. Necesitamos su padre.
-      const pageCanvasContainer = canvasContainer.parentElement;
-      if (pageCanvasContainer) {
-        const existingTitle = pageCanvasContainer.querySelector('.page-title');
-        if (!existingTitle) {
-          const pageTitle = createPageTitle(1);
-          // Insertamos el título antes del contenedor de Fabric
-          pageCanvasContainer.insertBefore(pageTitle, canvasContainer);
-        }
+    // Buscar el contenedor de página que contiene el canvas
+    const pageContainer = mainCanvasElement.closest('.page-container');
+    if (pageContainer) {
+      // Verificar si ya existe un título en este contenedor
+      const existingTitle = pageContainer.querySelector('.page-title');
+      if (!existingTitle) {
+        const pageTitle = createPageTitle(1);
+        
+        // Buscar el canvas-container que Fabric.js crea
+        const canvasContainer = mainCanvasElement.closest('.canvas-container');
+        // Insertar el título antes del canvas-container
+        pageContainer.insertBefore(pageTitle, canvasContainer);
       }
     }
     
@@ -374,7 +374,6 @@ export function initializePageState(mainCanvas, marginRect, marginWidth) {
     PAGE_STATE.pages = [mainPage];
     PAGE_STATE.currentPageIndex = 0;
     
-
     updatePageInfo();
   }
 }
@@ -396,7 +395,7 @@ function calculateScrollPositionSafely(pageIndex) {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => { // Doble RAF para mayor estabilidad
         // Verificar si todos los contenedores tienen offsetTop válido
-        const allContainers = pagesContainer.querySelectorAll('.canvas-container');
+        const allContainers = pagesContainer.querySelectorAll('.page-container');
         let allHaveValidOffsets = true;
         
         for (let i = 0; i <= pageIndex && i < allContainers.length; i++) {
@@ -426,12 +425,16 @@ function calculateScrollPositionForPage(pageIndex) {
   const pagesContainer = document.getElementById('pages-container');
   if (!pagesContainer) return 0;
   
-  const allCanvasContainers = pagesContainer.querySelectorAll('.canvas-container');
+  const allCanvasContainers = pagesContainer.querySelectorAll('.page-container');
   if (pageIndex < 0 || pageIndex >= allCanvasContainers.length) {
     return 0;
   }
 
   const targetContainer = allCanvasContainers[pageIndex];
+
+  console.log("pageIndex", pageIndex);
+  console.log("targetContainer", targetContainer);
+
   if (!targetContainer) return 0;
 
   // Método 1: Intentar usar offsetTop si está disponible
@@ -442,11 +445,28 @@ function calculateScrollPositionForPage(pageIndex) {
     
     // Si la página cabe completamente en el viewport, centrarla
     if (containerHeight <= viewportHeight) {
+
+      console.log("containerTop", containerTop);
+
+      console.log("viewportHeight", viewportHeight);
+
+      console.log("containerHeight", containerHeight);
+
       const centeredPosition = containerTop - (viewportHeight - containerHeight) / 2;
+
+      console.log("containerTop - (viewportHeight - containerHeight) / 2", containerTop - (viewportHeight - containerHeight) / 2);
+      console.log("centeredPosition", centeredPosition);
       
       // Asegurar que no vaya fuera de los límites
       const maxScroll = pagesContainer.scrollHeight - pagesContainer.clientHeight;
-      const finalPosition = Math.max(0, Math.min(centeredPosition, maxScroll));
+
+      console.log("maxScroll", maxScroll);
+
+      const minValue = Math.min(centeredPosition, maxScroll)
+
+      console.log("minValue", minValue);
+
+      const finalPosition = Math.max(0, minValue);
       
       console.log(`📍 SCROLL DEBUG (Método offsetTop) - Página ${pageIndex}:`, {
         containerTop,

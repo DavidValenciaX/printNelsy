@@ -10,6 +10,7 @@ export function deactivateObjects(event, canvas) {
   const isOnCanvasElement = event.target === canvasElement;
   const isOnFabricControls =
     event.target.classList.contains("canvas-container") ||
+    event.target.classList.contains("page-container") ||
     event.target.classList.contains("upper-canvas") ||
     event.target.classList.contains("lower-canvas");
   const isOnButton =
