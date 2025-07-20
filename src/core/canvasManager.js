@@ -12,6 +12,7 @@ import { setupScalingEvents } from '../events/scalingEvents.js';
 import { setupRotatingEvents } from '../events/rotatingEvents.js';
 import { setupSkewingEvents } from '../events/skewingEvents.js';
 import { initializePageState, getCurrentPage, getAllPages } from '../canvas/pageUtils.js';
+import { configureCanvas } from './fabricConfig.js';
 
 /**
  * Gestiona el canvas y sus configuraciones
@@ -35,16 +36,8 @@ export class CanvasManager {
   }
 
   setupCanvasProperties() {
-    // Configurar propiedades del canvas
-    fabric.Object.prototype.transparentCorners = false;
-    fabric.Object.prototype.cornerColor = "limegreen";
-    fabric.Object.prototype.cornerStrokeColor = "black";
-    fabric.Object.prototype.cornerStyle = "rect";
-    fabric.Object.prototype.cornerSize = 12;
-    
-    const controls = fabric.Object.prototype.controls;
-    const rotateControls = controls.mtr;
-    rotateControls.visible = false;
+    // Aplicar configuración específica del canvas
+    configureCanvas(this.canvas);
   }
 
   initializePageSystem() {

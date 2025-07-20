@@ -3,6 +3,13 @@
  * Este archivo ahora es mucho más limpio y solo se encarga de inicializar la aplicación
  */
 import Swal from 'sweetalert2';
+// Configuración temprana de eventos pasivos - DEBE EJECUTARSE ANTES DE CUALQUIER IMPORT
+import './earlyConfig.js';
+
+// Importar configuración de Fabric.js
+import './fabricConfig.js';
+
+// Importar la aplicación principal
 import { initializeApp, getAppInstance } from './app.js';
 import favicon from '@fortawesome/fontawesome-free/svgs/solid/print.svg';
 

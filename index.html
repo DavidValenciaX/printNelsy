@@ -7,6 +7,20 @@
     <title>Asistente de impresión de Imágenes</title>
     <link rel="stylesheet" href="/src/ui/icons.css">
     <link rel="stylesheet" href="/src/ui/style.css">
+    
+    <!-- Configuración de eventos pasivos - DEBE EJECUTARSE ANTES DE CUALQUIER SCRIPT -->
+    <script>
+        // Interceptar addEventListener para usar eventos pasivos cuando sea apropiado
+        const originalAddEventListener = EventTarget.prototype.addEventListener;
+        EventTarget.prototype.addEventListener = function(type, listener, options) {
+            // Para eventos de wheel, usar passive: true por defecto
+            if (type === 'wheel' && !options) {
+                options = { passive: true };
+            }
+            return originalAddEventListener.call(this, type, listener, options);
+        };
+        console.log('✅ Configuración de eventos pasivos aplicada desde HTML');
+    </script>
 </head>
 
 <body>
