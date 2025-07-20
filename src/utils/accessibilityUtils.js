@@ -4,6 +4,7 @@ export function setupAccessibility() {
   const imageLoader = document.getElementById("imageLoader");
   const printButton = document.getElementById("printButton");
   const deleteButton = document.getElementById("deleteButton");
+  const deletePageButton = document.getElementById("deletePageButton");
   const cropButton = document.getElementById("cropButton");
   const confirmCropButton = document.getElementById("confirmCrop");
   const cancelCropButton = document.getElementById("cancelCrop");
@@ -37,6 +38,7 @@ export function setupAccessibility() {
     imageLoader,
     printButton,
     deleteButton,
+    deletePageButton,
     cropButton,
     confirmCropButton,
     cancelCropButton,

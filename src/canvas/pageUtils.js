@@ -1,5 +1,6 @@
 import { fabric } from 'fabric';
 import { resizeCanvas, getCurrentSize, getIsVertical } from './canvasResizeUtils.js';
+import Swal from 'sweetalert2';
 
 // Estado global para manejar múltiples páginas
 const PAGE_STATE = {
@@ -612,6 +613,20 @@ export function updatePageInfo() {
 export async function deleteCurrentPage() {
   if (PAGE_STATE.pages.length <= 1) {
     console.warn('No se puede eliminar la única página');
+    return false;
+  }
+  
+  // Mostrar alerta de confirmación antes de eliminar
+  const result = await Swal.fire({
+    title: "Confirmación",
+    text: "¿Está seguro de eliminar la página actual?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Eliminar",
+    cancelButtonText: "Cancelar",
+  });
+  
+  if (!result.isConfirmed) {
     return false;
   }
   
