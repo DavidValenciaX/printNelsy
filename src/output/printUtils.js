@@ -80,7 +80,7 @@ export function printAllPages(allPages) {
     return;
   }
 
-  console.log(`Imprimiendo ${allPages.length} páginas...`);
+  
 
   // Procesar cada página y recopilar las imágenes
   const pageImages = [];

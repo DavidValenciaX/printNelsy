@@ -267,11 +267,8 @@ export function getCustomGridDimensions() {
  * @param {number|null} cols Número de columnas
  */
 export function setCustomGridDimensions(rows, cols) {
-  console.log('🔧 setCustomGridDimensions llamada con:', { rows, cols });
-  console.log('🔧 Valores previos:', { currentCustomRows, currentCustomCols });
   currentCustomRows = rows;
   currentCustomCols = cols;
-  console.log('🔧 Nuevos valores establecidos:', { currentCustomRows, currentCustomCols });
 }
 
 /**
@@ -283,34 +280,23 @@ export function setCustomGridDimensions(rows, cols) {
  * @returns {Object} Dimensiones adaptadas { rows, cols }
  */
 function adaptGridDimensionsToOrientation(rows, cols, isVerticalPaper, layoutOrientation) {
-  console.log('🔄 adaptGridDimensionsToOrientation llamada con:', {
-    rows, 
-    cols, 
-    isVerticalPaper, 
-    layoutOrientation
-  });
-  
   // Si no tenemos dimensiones válidas, retornar sin cambios
   if (!rows || !cols) {
-    console.log('❌ Dimensiones inválidas, retornando sin cambios');
     return { rows, cols };
   }
 
   // Lógica simple: si el papel está en horizontal y tenemos más filas que columnas,
   // intercambiar para que sea visualmente coherente
   if (!isVerticalPaper && rows > cols) {
-    console.log(`🔄 Adaptando dimensiones para papel horizontal: ${rows}x${cols} -> ${cols}x${rows}`);
     return { rows: cols, cols: rows };
   }
   
   // Si el papel está en vertical y tenemos muchas más columnas que filas,
   // intercambiar para que sea visualmente coherente
   if (isVerticalPaper && cols > rows && cols > rows * 1.5) {
-    console.log(`🔄 Adaptando dimensiones para papel vertical: ${rows}x${cols} -> ${cols}x${rows}`);
     return { rows: cols, cols: rows };
   }
   
-  console.log('➡️ Sin adaptación necesaria, retornando dimensiones originales');
   return { rows, cols };
 } 
 
@@ -344,43 +330,6 @@ export function updateImageSpacing(canvas, domManager, spacing) {
   updateGridVisualization(canvas);
 }
 
-// --- Grid Visualization Logic ---
-
-/**
- * Captures the current scroll position for debugging purposes
- * @returns {Object} Object containing pagesContainer and scrollBefore
- */
-function captureScrollPosition() {
-  const pagesContainer = document.getElementById('pages-container');
-  const scrollBefore = pagesContainer?.scrollTop || null;
-  
-  if (pagesContainer && scrollBefore !== null) {
-    console.log('📍 GRID DEBUG: Scroll position ANTES de updateGridVisualization:', scrollBefore);
-  }
-  
-  return { pagesContainer, scrollBefore };
-}
-
-/**
- * Monitors scroll position changes after grid visualization update
- * @param {HTMLElement} pagesContainer The pages container element
- * @param {number} scrollBefore The scroll position before the update
- */
-function monitorScrollChanges(pagesContainer, scrollBefore) {
-  if (!pagesContainer || scrollBefore === null) return;
-  
-  setTimeout(() => {
-    const scrollAfter = pagesContainer.scrollTop;
-    console.log('📍 GRID DEBUG: Scroll position DESPUÉS de updateGridVisualization:', scrollAfter);
-    console.log('🔍 GRID DEBUG: ¿updateGridVisualization cambió el scroll?', scrollBefore !== scrollAfter);
-    
-    if (scrollBefore !== scrollAfter) {
-      console.warn('⚠️ GRID DEBUG: ¡updateGridVisualization CAMBIÓ LA POSICIÓN DEL SCROLL!');
-      console.log('📊 GRID DEBUG: Diferencia:', scrollAfter - scrollBefore);
-    }
-  }, 10);
-}
-
 /**
  * Calculates grid dimensions based on current state
  * @param {Array} objects Canvas objects
@@ -389,18 +338,14 @@ function monitorScrollChanges(pagesContainer, scrollBefore) {
  */
 function calculateGridDimensions(objects, isVerticalPaper) {
   const customDimensions = getCustomGridDimensions();
-  console.log('🎯 Dimensiones personalizadas:', customDimensions);
   
   const hasCustomDimensions = customDimensions.rows !== null && customDimensions.cols !== null;
   
   if (hasCustomDimensions) {
-    console.log('📐 Usando dimensiones personalizadas');
     return getAdaptedDimensions(customDimensions, isVerticalPaper);
   }
   
-  console.log('📊 Calculando dimensiones basadas en objetos');
   const dims = getCurrentGridDimensions(objects, imageState.orientation);
-  console.log('📝 Dimensiones calculadas:', dims);
   return dims;
 }
 
@@ -412,18 +357,15 @@ function calculateGridDimensions(objects, isVerticalPaper) {
  */
 function getAdaptedDimensions(customDimensions, isVerticalPaper) {
   if (isVerticalPaper !== null) {
-    console.log('🔄 Adaptando dimensiones para orientación del papel');
     const dims = adaptGridDimensionsToOrientation(
       customDimensions.rows, 
       customDimensions.cols, 
       isVerticalPaper, 
       imageState.orientation
     );
-    console.log('📝 Dimensiones adaptadas:', dims);
     return dims;
   }
   
-  console.log('📝 Usando dimensiones sin adaptar (no se proporcionó orientación)');
   return { rows: customDimensions.rows, cols: customDimensions.cols };
 }
 
@@ -456,19 +398,12 @@ function removeGrid(canvas) {
  * @param {fabric.Rect} marginRect The margin rectangle defining the grid area.
  */
 function drawGrid(canvas, rows, cols, marginRect) {
-  console.log('🎨 drawGrid llamada con:', { rows, cols });
-  console.log('📐 Canvas dimensiones:', { width: canvas.width, height: canvas.height });
-  console.log('📦 MarginRect dimensiones:', { width: marginRect.width, height: marginRect.height, left: marginRect.left, top: marginRect.top });
-  
   if (!marginRect || (rows <= 1 && cols <= 1)) {
-    console.log('❌ No se dibuja grid: marginRect inválido o muy pocas celdas');
     return;
   }
 
   const cellWidth = marginRect.width / cols;
   const cellHeight = marginRect.height / rows;
-  
-  console.log('📊 Dimensiones de celda:', { cellWidth, cellHeight });
 
   // Draw vertical lines
   for (let i = 1; i < cols; i++) {
@@ -507,38 +442,21 @@ function drawGrid(canvas, rows, cols, marginRect) {
  * @param {boolean} [isVerticalPaper] Optional paper orientation (true = vertical, false = horizontal)
  */
 export function updateGridVisualization(canvas, isVerticalPaper = null) {
-  console.log('🔍 updateGridVisualization llamada con isVerticalPaper:', isVerticalPaper);
-  
-  const { pagesContainer, scrollBefore } = captureScrollPosition();
-  
   removeGrid(canvas);
 
   const marginRect = getCurrentMarginRect();
   if (!marginRect) {
-    console.log('❌ No hay marginRect disponible');
     return;
   }
 
   const objects = canvas.getObjects().filter(obj => obj.type === 'image' || obj.type === 'group');
-  
-  console.log('📊 Estado actual:', {
-    arrangementStatus: imageState.arrangementStatus,
-    orientation: imageState.orientation,
-    objectCount: objects.length
-  });
 
   if (shouldDrawGrid(objects)) {
     const dims = calculateGridDimensions(objects, isVerticalPaper);
-    console.log('🎨 Dibujando grid con dimensiones:', dims);
     drawGrid(canvas, dims.rows, dims.cols, marginRect);
-  } else {
-    console.log('⏸️ No se dibuja grid (no es grid arrangement o pocos objetos)');
   }
 
-  console.log('🎨 GRID DEBUG: Llamando canvas.renderAll()...');
   canvas.renderAll();
-  
-  monitorScrollChanges(pagesContainer, scrollBefore);
 } 
 
 /**

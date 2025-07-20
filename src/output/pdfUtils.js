@@ -51,7 +51,7 @@ export function downloadAllPagesAsPDF(allPages) {
     return;
   }
 
-  console.log(`Exportando ${allPages.length} páginas a PDF...`);
+  
 
   // Procesar cada página
   const originalStates = [];
@@ -108,5 +108,5 @@ export function downloadAllPagesAsPDF(allPages) {
     fabricCanvas.renderAll();
   });
 
-  console.log('PDF multipágina generado exitosamente');
+  
 } 

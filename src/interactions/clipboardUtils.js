@@ -204,7 +204,7 @@ export async function pasteSelection(canvas, marginRect) {
       if (!clipboardData?.objects?.length) {
         return;
       }
-      console.log('Falló pegado del sistema, usando portapapeles interno como fallback');
+  
     }
 
     // Pegar desde portapapeles interno
@@ -213,7 +213,7 @@ export async function pasteSelection(canvas, marginRect) {
     selectPastedObjects(canvas, pastedObjects);
     canvas.renderAll();
     
-    console.log(`${pastedObjects.length} objetos pegados desde el portapapeles interno`);
+
 
   } catch (error) {
     console.error('Error al pegar:', error);
@@ -320,7 +320,7 @@ async function processClipboardContent(clipboardItem, type, currentTime) {
     const timeSinceInternalCopy = currentTime - lastInternalCopy;
     
     if (shouldUpdateTimestamp(timeSinceLastClipboard, timeSinceInternalCopy)) {
-      console.log('Detectando posible recopiado del mismo contenido (sin actividad interna reciente)');
+  
       lastSystemClipboardCheck = {
         hasContent: true,
         timestamp: currentTime,
@@ -363,7 +363,7 @@ async function checkSystemClipboardContent() {
     return await processClipboardContent(imageSearch.item, imageSearch.type, currentTime);
     
   } catch (error) {
-    console.log('No se pudo verificar el portapapeles del sistema:', error);
+    console.warn('No se pudo verificar el portapapeles del sistema:', error);
     return createClipboardResult(false);
   } finally {
     lastClipboardAccess = Date.now();
@@ -436,7 +436,7 @@ async function pasteFromSystemClipboard(canvas, marginRect) {
             canvas.setActiveObject(img);
             canvas.renderAll();
 
-            console.log('Imagen pegada desde el portapapeles del sistema');
+        
             
             // Actualizar el timestamp del sistema cuando se pega exitosamente
             lastSystemClipboardCheck = {
@@ -454,7 +454,7 @@ async function pasteFromSystemClipboard(canvas, marginRect) {
     return false;
 
   } catch (error) {
-    console.log('No se pudo acceder al portapapeles del sistema:', error);
+    console.warn('No se pudo acceder al portapapeles del sistema:', error);
     return false;
   }
 }
@@ -554,7 +554,7 @@ let lastSystemCopyEvent = 0;
 export function setupClipboardEvents(canvas, marginRect) {
   // Evitar múltiples registros de eventos
   if (clipboardEventsInitialized) {
-    console.log('Clipboard events already initialized, skipping...');
+
     return;
   }
 
@@ -591,7 +591,7 @@ export function setupClipboardEvents(canvas, marginRect) {
   });
 
   clipboardEventsInitialized = true;
-  console.log('Clipboard events initialized');
+  
 }
 
 /**

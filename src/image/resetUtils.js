@@ -10,7 +10,7 @@ async function restoreGroupFromData(originalGroupData, canvas, marginRect, rotat
     throw new Error('Datos del grupo original no válidos');
   }
 
-  console.log(`[restoreGroupFromData] Restaurando grupo con ${originalGroupData.objects.length} objetos`);
+  
 
   try {
     // Cargar todas las imágenes del grupo de forma secuencial para mejor control
@@ -78,7 +78,7 @@ async function restoreGroupFromData(originalGroupData, canvas, marginRect, rotat
       throw new Error('No se pudieron cargar objetos válidos para el grupo');
     }
 
-    console.log(`[restoreGroupFromData] Objetos cargados exitosamente: ${loadedObjects.length}`);
+
 
     // Crear el grupo con los objetos cargados
     const newGroup = new fabric.Group(loadedObjects, {
@@ -101,7 +101,7 @@ async function restoreGroupFromData(originalGroupData, canvas, marginRect, rotat
     canvas.add(constrainedGroup);
     constrainedGroup.setCoords();
     
-    console.log(`[restoreGroupFromData] Grupo restaurado exitosamente con ID: ${originalGroupData.id}`);
+
     return constrainedGroup;
 
   } catch (error) {
@@ -111,7 +111,6 @@ async function restoreGroupFromData(originalGroupData, canvas, marginRect, rotat
 }
 
 export async function resetActiveImage(canvas, marginRect, originalImages, originalGroups, rotateCheckbox) {
-  console.log('Executing resetActiveImage...');
   const activeObjects = canvas.getActiveObjects();
   if (activeObjects.length === 0) {
     showNoObjectSelectedWarning();
@@ -120,14 +119,14 @@ export async function resetActiveImage(canvas, marginRect, originalImages, origi
 
   // Procesar objetos de forma secuencial para evitar problemas de concurrencia
   for (const activeObject of activeObjects) {
-    console.log(`[resetActiveImage] Processing object: ID=${activeObject?.id}, Type=${activeObject?.type}`);
+
 
     try {
       // Si la imagen fue originalmente un grupo recortado
       if (activeObject.originalType === 'group') {
         const originalGroup = originalGroups[activeObject.id];
         if (originalGroup) {
-          console.log(`[resetActiveImage] Restoring cropped group with ID: ${activeObject.id}`);
+
           
           // Remover el objeto actual antes de restaurar el grupo
           canvas.remove(activeObject);
@@ -149,7 +148,7 @@ export async function resetActiveImage(canvas, marginRect, originalImages, origi
 
       // Si es un grupo normal, saltarlo (debería usar resetActiveGroup)
       if (activeObject.type === 'group') {
-        console.warn('[resetActiveImage] Skipped group object inside a selection. Groups should be reset individually.');
+
         continue;
       }
 
@@ -233,10 +232,7 @@ export async function resetActiveImage(canvas, marginRect, originalImages, origi
  * @param {Object} originalGroups - Objeto con los datos originales de los grupos
  */
 export function resetActiveGroup(canvas, marginRect, originalGroups) {
-  console.log('Executing resetActiveGroup...');
   const activeObject = canvas.getActiveObject();
-
-  console.log(`[resetActiveGroup] Processing object: ID=${activeObject?.id}, Type=${activeObject?.type}`);
   // Verificar que hay un objeto seleccionado y que es un grupo
   if (!activeObject || activeObject.type !== 'group') {
     Swal.fire({
@@ -260,7 +256,7 @@ export function resetActiveGroup(canvas, marginRect, originalGroups) {
 
   const original = originalGroups[activeObject.id];
 
-  console.log(`[resetActiveGroup] Estado original encontrado:`, original);
+
 
   try {
     // Restablece las propiedades principales del grupo
@@ -296,7 +292,7 @@ export function resetActiveGroup(canvas, marginRect, originalGroups) {
 
           // Para imágenes, restaurar filtros si existen
           if (currentObj.type === 'image' && originalObj.filters) {
-            console.log(`[resetActiveGroup] Restaurando filtros para imagen ID: ${currentObj.id}`, originalObj.filters);
+
             // Limpiar filtros actuales
             currentObj.filters = [];
             
@@ -354,7 +350,7 @@ export async function resetActiveObject(canvas, marginRect, originalImages, orig
     return;
   }
 
-  console.log(`[resetActiveObject] Dispatching reset for object Type: ${activeObject.type}, ID: ${activeObject.id}`);
+  
 
   try {
     if (activeObject.type === 'group') {

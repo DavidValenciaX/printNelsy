@@ -123,7 +123,7 @@ function updateAllPageTitles() {
  * @param {fabric.Canvas} currentCanvas - Instancia del canvas actual (para referencia)
  */
 export function createNewPage(currentCanvas) {
-  console.log('Creando una nueva página...');
+  
   
   try {
     // Obtener el contenedor padre de páginas
@@ -182,7 +182,7 @@ export function createNewPage(currentCanvas) {
     // Cambiar el índice actual a la nueva página
     PAGE_STATE.currentPageIndex = PAGE_STATE.pages.length - 1;
     
-    console.log(`Nueva página creada con ID: ${canvasId}`, newPage);
+
     
     // Actualizar información de páginas en la UI
     updatePageInfo();
@@ -197,20 +197,13 @@ export function createNewPage(currentCanvas) {
           if (pagesContainer) {
             // Usar calculateScrollPositionForPage para evitar problemas con offsetTop
             const targetScrollTop = calculateScrollPositionForPage(PAGE_STATE.currentPageIndex);
-            console.log('🎯 NUEVA PÁGINA: Calculando scroll para índice:', PAGE_STATE.currentPageIndex);
-            console.log('🎯 NUEVA PÁGINA: Posición calculada:', targetScrollTop);
+            
             
             pagesContainer.scrollTo({
               top: targetScrollTop,
               behavior: 'smooth'
             });
             
-            // Verificar después de un delay si el scroll fue efectivo
-            setTimeout(() => {
-              const newScrollTop = pagesContainer.scrollTop;
-              console.log('✅ NUEVA PÁGINA: Nueva posición del scroll:', newScrollTop);
-              console.log('🔍 NUEVA PÁGINA: ¿Scroll correcto?', Math.abs(newScrollTop - targetScrollTop) < 50);
-            }, 100);
           }
         }, 50);
       })
@@ -239,50 +232,27 @@ function setupCanvasProperties(canvas) {
  * @param {Object} page - Objeto de página
  */
 function scrollToPage(page) {
-  console.log('🔄 SCROLL DEBUG: scrollToPage iniciado');
-  console.log('📄 SCROLL DEBUG: page:', page);
-  
   if (page?.canvasElement) {
     const pagesContainer = document.getElementById('pages-container');
-    console.log('📦 SCROLL DEBUG: pagesContainer encontrado:', !!pagesContainer);
     
     if (pagesContainer) {
-      // Obtener posición actual antes del scroll
-      const currentScrollTop = pagesContainer.scrollTop;
-      console.log('📍 SCROLL DEBUG: Posición actual del scroll:', currentScrollTop);
-      
       // Obtener la posición relativa del canvas dentro del contenedor
       const canvasContainer = page.canvasElement.closest('.canvas-container');
-      console.log('🎯 SCROLL DEBUG: canvasContainer encontrado:', !!canvasContainer);
       
       if (canvasContainer) {
         const scrollOffset = canvasContainer.offsetTop;
         const targetScrollTop = Math.max(0, scrollOffset - 20);
         
-        console.log('📐 SCROLL DEBUG: scrollOffset (offsetTop):', scrollOffset);
-        console.log('🎯 SCROLL DEBUG: targetScrollTop calculado:', targetScrollTop);
-        console.log('📊 SCROLL DEBUG: pagesContainer scrollHeight:', pagesContainer.scrollHeight);
-        console.log('📊 SCROLL DEBUG: pagesContainer clientHeight:', pagesContainer.clientHeight);
-        
         // Hacer scroll suave dentro del contenedor con un pequeño margen
-        console.log('⚡ SCROLL DEBUG: Ejecutando scrollTo...');
         pagesContainer.scrollTo({
           top: targetScrollTop,
           behavior: 'smooth'
         });
         
-        // Verificar después de un pequeño delay si el scroll fue efectivo
-        setTimeout(() => {
-          const newScrollTop = pagesContainer.scrollTop;
-          console.log('✅ SCROLL DEBUG: Nueva posición del scroll después de scrollTo:', newScrollTop);
-          console.log('🔍 SCROLL DEBUG: ¿Scroll cambió correctamente?', Math.abs(newScrollTop - targetScrollTop) < 50);
-        }, 100);
-        
       } else {
         console.warn('⚠️ SCROLL DEBUG: No se encontró canvasContainer');
       }
     } else {
-      console.log('📱 SCROLL DEBUG: Usando scrollIntoView como fallback');
       // Fallback al comportamiento anterior
       page.canvasElement.scrollIntoView({ 
         behavior: 'smooth', 
@@ -292,8 +262,6 @@ function scrollToPage(page) {
   } else {
     console.warn('❌ SCROLL DEBUG: page o page.canvasElement no válido');
   }
-  
-  console.log('✅ SCROLL DEBUG: scrollToPage completado');
 }
 
 /**
@@ -327,7 +295,7 @@ export function getCurrentPage() {
 export function setCurrentPage(index) {
   if (index >= 0 && index < PAGE_STATE.pages.length) {
     PAGE_STATE.currentPageIndex = index;
-    console.log(`Página actual cambiada a índice: ${index}`);
+
   }
 }
 
@@ -361,7 +329,7 @@ export function deletePage(pageIndex) {
     // Actualizar títulos de todas las páginas después de eliminar
     updateAllPageTitles();
     
-    console.log(`Página eliminada en índice: ${pageIndex}`);
+
   }
 }
 
@@ -405,7 +373,7 @@ export function initializePageState(mainCanvas, marginRect, marginWidth) {
     PAGE_STATE.pages = [mainPage];
     PAGE_STATE.currentPageIndex = 0;
     
-    console.log('Estado de páginas inicializado con canvas principal');
+
     updatePageInfo();
   }
 }
@@ -452,15 +420,7 @@ function calculateScrollPositionForPage(pageIndex) {
     const maxScroll = pagesContainer.scrollHeight - pagesContainer.clientHeight;
     const finalPosition = Math.max(0, Math.min(centeredPosition, maxScroll));
     
-    console.log('📊 SCROLL CALC: Datos de centrado:', {
-      pageIndex,
-      position: position,
-      containerHeight,
-      viewportHeight,
-      centeredPosition,
-      maxScroll,
-      finalPosition
-    });
+
     
     return finalPosition;
   }
@@ -474,24 +434,20 @@ function calculateScrollPositionForPage(pageIndex) {
  */
 export async function goToPreviousPage() {
   if (PAGE_STATE.currentPageIndex > 0) {
-    console.log('⬅️ INICIANDO navegación a página anterior');
+
     
     const targetPageIndex = PAGE_STATE.currentPageIndex - 1;
     
     // Calcular la posición de scroll ANTES de cualquier cambio de estado
     const targetScrollTop = calculateScrollPositionForPage(targetPageIndex);
-    console.log(`🎯 Posición calculada para página ${targetPageIndex}: ${targetScrollTop}`);
     
     PAGE_STATE.currentPageIndex--;
     updatePageInfo();
     
-    console.log('🔄 PASO 1: Sincronizando estados...');
     await syncGlobalStatesWithCurrentPage();
     
-    console.log('🎨 PASO 2: Actualizando UI...');
     await updateUIButtonsForCurrentPage();
     
-    console.log('📍 PASO 3: Ejecutando scroll final...');
     const pagesContainer = document.getElementById('pages-container');
     if (pagesContainer) {
       pagesContainer.scrollTo({
@@ -499,8 +455,6 @@ export async function goToPreviousPage() {
         behavior: 'smooth'
       });
     }
-    
-    console.log(`✅ COMPLETADA navegación a página: ${PAGE_STATE.currentPageIndex + 1}`);
   }
 }
 
@@ -509,24 +463,18 @@ export async function goToPreviousPage() {
  */
 export async function goToNextPage() {
   if (PAGE_STATE.currentPageIndex < PAGE_STATE.pages.length - 1) {
-    console.log('➡️ INICIANDO navegación a página siguiente');
-    
     const targetPageIndex = PAGE_STATE.currentPageIndex + 1;
     
     // Calcular la posición de scroll ANTES de cualquier cambio de estado
     const targetScrollTop = calculateScrollPositionForPage(targetPageIndex);
-    console.log(`🎯 Posición calculada para página ${targetPageIndex}: ${targetScrollTop}`);
     
     PAGE_STATE.currentPageIndex++;
     updatePageInfo();
     
-    console.log('🔄 PASO 1: Sincronizando estados...');
     await syncGlobalStatesWithCurrentPage();
     
-    console.log('🎨 PASO 2: Actualizando UI...');
     await updateUIButtonsForCurrentPage();
 
-    console.log('📍 PASO 3: Ejecutando scroll final...');
     const pagesContainer = document.getElementById('pages-container');
     if (pagesContainer) {
       pagesContainer.scrollTo({
@@ -534,8 +482,6 @@ export async function goToNextPage() {
         behavior: 'smooth'
       });
     }
-    
-    console.log(`✅ COMPLETADA navegación a página: ${PAGE_STATE.currentPageIndex + 1}`);
   }
 }
 
@@ -543,12 +489,8 @@ export async function goToNextPage() {
  * Hace scroll hacia la página actual
  */
 export function scrollToCurrentPage() {
-  console.log('🚀 SCROLL DEBUG: scrollToCurrentPage iniciado');
-  
   const currentPageIndex = getCurrentPageIndex();
   const targetScrollTop = calculateScrollPositionForPage(currentPageIndex);
-  
-  console.log(`🎯 SCROLL DEBUG: Posición calculada para página actual (${currentPageIndex}): ${targetScrollTop}`);
   
   const pagesContainer = document.getElementById('pages-container');
   if (pagesContainer) {
@@ -557,8 +499,6 @@ export function scrollToCurrentPage() {
       behavior: 'smooth'
     });
   }
-  
-  console.log('✅ SCROLL DEBUG: scrollToCurrentPage completado');
 }
 
 /**
@@ -615,7 +555,6 @@ export async function deleteCurrentPage() {
   await syncGlobalStatesWithCurrentPage();
   updateUIButtonsForCurrentPage();
   
-  console.log(`Página eliminada. Nueva página actual: ${PAGE_STATE.currentPageIndex + 1}`);
   return true;
 }
 
@@ -650,12 +589,11 @@ export function isLastPage() {
 export async function syncGlobalStatesWithCurrentPage() {
   const currentPage = getCurrentPage();
   if (!currentPage?.pageSettings) {
-    console.log('❌ No hay página actual o pageSettings');
     return;
   }
 
   const { pageSettings } = currentPage;
-  console.log('🔄 Sincronizando estados para página:', pageSettings);
+
   
   try {
     // Sincronizar estados de canvas
@@ -666,12 +604,9 @@ export async function syncGlobalStatesWithCurrentPage() {
     const currentOrientation = getIsVertical();
     const needsResize = currentSize !== pageSettings.paperSize || currentOrientation !== pageSettings.orientation;
     
-    console.log('📏 Estados actuales del canvas:', { currentSize, currentOrientation });
-    console.log('📏 Estados objetivo de la página:', { paperSize: pageSettings.paperSize, orientation: pageSettings.orientation });
-    console.log('📏 ¿Necesita redimensionar?', needsResize);
     
     if (needsResize) {
-      console.log('🔧 Redimensionando canvas para coincidir con la página...');
+
       
       // Obtener la aplicación para acceder al canvas y marginRect
       const { getAppInstance } = await import('../core/app.js');
@@ -689,14 +624,10 @@ export async function syncGlobalStatesWithCurrentPage() {
         setCurrentSize(pageSettings.paperSize);
         setIsVertical(pageSettings.orientation);
         
-        console.log('✅ Canvas redimensionado correctamente sin reorganizar imágenes');
-        console.log('✅ Variables globales actualizadas:', { 
-          newSize: pageSettings.paperSize, 
-          newOrientation: pageSettings.orientation 
-        });
+
       }
     } else {
-      console.log('➡️ No se necesita redimensionar el canvas');
+
       // Asegurar que las variables globales estén sincronizadas
       setCurrentSize(pageSettings.paperSize);
       setIsVertical(pageSettings.orientation);
@@ -704,30 +635,19 @@ export async function syncGlobalStatesWithCurrentPage() {
 
     // Sincronizar estados de imagen
     const { imageState } = await import('../image/imageUploadUtils.js');
-    console.log('🖼️ Estados de imagen antes:', {
-      status: imageState.arrangementStatus,
-      orientation: imageState.orientation,
-      order: imageState.order,
-      spacing: imageState.spacing
-    });
+
     
     imageState.arrangementStatus = pageSettings.arrangement.status;
     imageState.orientation = pageSettings.arrangement.orientation;
     imageState.order = pageSettings.arrangement.order;
     imageState.spacing = pageSettings.arrangement.spacing;
     
-    console.log('🖼️ Estados de imagen después:', {
-      status: imageState.arrangementStatus,
-      orientation: imageState.orientation,
-      order: imageState.order,
-      spacing: imageState.spacing
-    });
+
 
     // Sincronizar dimensiones personalizadas del grid
-    const { setCustomGridDimensions, getCustomGridDimensions } = await import('../layout/gridControls.js');
+    const { setCustomGridDimensions } = await import('../layout/gridControls.js');
     
-    console.log('🎯 Dimensiones personalizadas antes:', getCustomGridDimensions());
-    console.log('🎯 Estableciendo dimensiones personalizadas:', pageSettings.arrangement.customRows, pageSettings.arrangement.customCols);
+
     
     // Asegurar que las dimensiones sean null en lugar de undefined
     const customRows = pageSettings.arrangement.customRows ?? null;
@@ -735,8 +655,7 @@ export async function syncGlobalStatesWithCurrentPage() {
     
     setCustomGridDimensions(customRows, customCols);
     
-    console.log('🎯 Dimensiones personalizadas después:', getCustomGridDimensions());
-    console.log('✅ Estados sincronizados correctamente para la página actual');
+
   } catch (error) {
     console.warn('❌ Error sincronizando estados globales:', error);
   }
@@ -748,12 +667,12 @@ export async function syncGlobalStatesWithCurrentPage() {
 export async function updateUIButtonsForCurrentPage() {
   const currentPage = getCurrentPage();
   if (!currentPage?.pageSettings) {
-    console.log('❌ No hay página actual o pageSettings en updateUIButtonsForCurrentPage');
+
     return;
   }
 
   const { pageSettings } = currentPage;
-  console.log('🎨 Actualizando UI para página con configuración:', pageSettings);
+
 
   try {
     const { getAppInstance } = await import('../core/app.js');
@@ -766,7 +685,7 @@ export async function updateUIButtonsForCurrentPage() {
     if (app.modules.events) {
       const eventManager = app.modules.events;
       
-      console.log('🔘 Actualizando botones de UI básicos');
+
       eventManager.updateOrientationButtons(pageSettings.orientation);
       eventManager.updatePaperSizeButtons(pageSettings.paperSize);
       eventManager.updateLayoutOrientationButtons(pageSettings.arrangement.orientation);
@@ -776,7 +695,7 @@ export async function updateUIButtonsForCurrentPage() {
     if (app.modules.dom) {
       try {
         const { updateArrangementButtons } = await import('../utils/arrangementButtons.js');
-        console.log('🔘 Actualizando botones de arrangement para:', pageSettings.arrangement.status);
+
         updateArrangementButtons(pageSettings.arrangement.status, app.modules.dom);
       } catch (error) {
         console.warn('Error actualizando botones de arrangement:', error);
@@ -785,22 +704,16 @@ export async function updateUIButtonsForCurrentPage() {
 
     if (app.modules.canvas && app.modules.dom) {
       try {
-        const { toggleGridControlsVisibility, initializeGridControls, updateGridVisualization, getCustomGridDimensions } = await import('../layout/gridControls.js');
+        const { toggleGridControlsVisibility, initializeGridControls, updateGridVisualization } = await import('../layout/gridControls.js');
         const canvas = app.modules.canvas.getCanvas();
         const domManager = app.modules.dom;
         
-        console.log('🎛️ Actualizando grid-controls');
-        console.log('📊 Arrangement status:', pageSettings.arrangement.status);
-        console.log('📏 Orientación del papel:', pageSettings.orientation);
-        console.log('🎯 Dimensiones actuales antes de actualizar UI:', getCustomGridDimensions());
+
         
         if (pageSettings.arrangement.status === 'grid') {
-          console.log('✅ Es arrangement grid, inicializando controles');
           initializeGridControls(canvas, domManager, pageSettings.orientation);
-          console.log('🎨 Llamando updateGridVisualization con orientación:', pageSettings.orientation);
           updateGridVisualization(canvas, pageSettings.orientation);
         } else {
-          console.log('⏸️ No es arrangement grid, solo actualizando visibilidad');
           toggleGridControlsVisibility(canvas, domManager, pageSettings.orientation);
         }
       } catch (error) {
@@ -823,62 +736,8 @@ export async function saveCurrentStateToPage() {
   const currentSettings = await getCurrentGlobalSettingsAsync();
   currentPage.pageSettings = { ...currentSettings };
   
-  console.log('Estado guardado en página actual:', currentPage.pageSettings);
+
 }
 
-/**
- * Función helper para loggear el estado del scroll
- */
-function logScrollState() {
-  const pagesContainer = document.getElementById('pages-container');
-  if (pagesContainer) {
-    console.log('📊 SCROLL STATE:', {
-      scrollTop: pagesContainer.scrollTop,
-      scrollHeight: pagesContainer.scrollHeight,
-      clientHeight: pagesContainer.clientHeight,
-      maxScroll: pagesContainer.scrollHeight - pagesContainer.clientHeight
-    });
-    
-    // También loggear las posiciones de cada página
-    PAGE_STATE.pages.forEach((page, index) => {
-      const canvasContainer = page.canvasElement?.closest('.canvas-container');
-      if (canvasContainer) {
-        console.log(`📄 Página ${index + 1} (ID: ${page.pageId}) offsetTop:`, canvasContainer.offsetTop);
-      }
-    });
-    
-    // DEBUG ADICIONAL: Verificar la estructura real del DOM
-    console.log('🔍 DOM DEBUG: Verificando estructura real del pages-container:');
-    const allCanvasContainers = pagesContainer.querySelectorAll('.canvas-container');
-    allCanvasContainers.forEach((container, index) => {
-      const canvas = container.querySelector('canvas');
-      console.log(`🎯 DOM DEBUG: Container ${index + 1}:`, {
-        offsetTop: container.offsetTop,
-        offsetHeight: container.offsetHeight,
-        canvasId: canvas?.id || 'sin canvas',
-        classList: Array.from(container.classList),
-        computedStyle: {
-          position: getComputedStyle(container).position,
-          display: getComputedStyle(container).display,
-          marginTop: getComputedStyle(container).marginTop,
-          marginBottom: getComputedStyle(container).marginBottom
-        }
-      });
-    });
-    
-    // Forzar recálculo del layout
-    console.log('🔄 DOM DEBUG: Forzando recálculo del layout...');
-    pagesContainer.offsetHeight; // Trigger layout reflow
-    
-    // Verificar nuevamente después del recálculo
-    setTimeout(() => {
-      console.log('📊 DOM DEBUG: Posiciones después del recálculo forzado:');
-      allCanvasContainers.forEach((container, index) => {
-        console.log(`🎯 DOM DEBUG: Container ${index + 1} nuevo offsetTop:`, container.offsetTop);
-      });
-    }, 50);
-  } else {
-    console.warn('❌ No se encontró pages-container para logScrollState');
-  }
-}
+// Función de depuración de scroll removida para limpiar logs
 

@@ -47,7 +47,7 @@ export function downloadAllPagesAsPNG(allPages) {
     return;
   }
 
-  console.log(`Exportando ${allPages.length} páginas a PNG...`);
+  
 
   const originalStates = [];
   const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
@@ -90,5 +90,5 @@ export function downloadAllPagesAsPNG(allPages) {
     fabricCanvas.renderAll();
   });
 
-  console.log(`${allPages.length} archivos PNG generados exitosamente`);
+  
 } 

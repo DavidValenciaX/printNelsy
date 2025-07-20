@@ -43,8 +43,7 @@ function saveOriginalGroupState(group) {
     return;
   }
 
-  console.log(`[saveOriginalGroupState] Guardando estado del grupo ID: ${group.id}`);
-  console.log(`[saveOriginalGroupState] Propiedades del grupo - flipX: ${group.flipX}, flipY: ${group.flipY}`);
+  
 
   // Guardar las propiedades principales del grupo
   originalGroups[group.id] = {
@@ -86,7 +85,7 @@ function saveOriginalGroupState(group) {
     createdAt: new Date().toISOString()
   };
 
-  console.log(`[saveOriginalGroupState] Estado guardado:`, originalGroups[group.id]);
+  
 }
 
 /**
