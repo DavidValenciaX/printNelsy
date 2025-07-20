@@ -120,96 +120,100 @@ function updateAllPageTitles() {
 }
 
 /**
+ * Crea los elementos DOM para una nueva página
+ * @param {number} pageNumber - Número de la página
+ * @returns {Object} Objeto con los elementos creados
+ */
+function createPageElements(pageNumber) {
+  const canvasContainer = document.createElement('div');
+  canvasContainer.className = 'page-container';
+
+  const pageTitle = createPageTitle(pageNumber);
+  const newCanvasElement = document.createElement('canvas');
+  const canvasId = `canvas-page-${PAGE_STATE.nextPageId}`;
+  newCanvasElement.id = canvasId;
+
+  canvasContainer.appendChild(pageTitle);
+  canvasContainer.appendChild(newCanvasElement);
+
+  return { canvasContainer, newCanvasElement, canvasId };
+}
+
+/**
+ * Crea el objeto de página con toda la configuración
+ * @param {HTMLElement} newCanvasElement - Elemento canvas
+ * @param {fabric.Canvas} newFabricCanvas - Instancia de Fabric.js
+ * @param {Object} result - Resultado del redimensionamiento
+ * @param {Object} currentSettings - Configuración actual
+ * @returns {Object} Objeto de página
+ */
+function createPageObject(newCanvasElement, newFabricCanvas, result, currentSettings) {
+  return {
+    canvasElement: newCanvasElement,
+    fabricCanvas: newFabricCanvas,
+    marginRect: result.marginRect,
+    marginWidth: result.marginWidth,
+    pageId: PAGE_STATE.nextPageId,
+    pageSettings: { ...currentSettings }
+  };
+}
+
+/**
+ * Maneja la sincronización y scroll después de crear una página
+ * @param {number} pageIndex - Índice de la página
+ */
+async function handlePostPageCreation(pageIndex) {
+  try {
+    await syncGlobalStatesWithCurrentPage();
+    await updateUIButtonsForCurrentPage();
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    const targetScrollTop = await calculateScrollPositionSafely(pageIndex);
+    const pagesContainer = document.getElementById('pages-container');
+
+    if (pagesContainer) {
+      pagesContainer.scrollTo({
+        top: targetScrollTop,
+        behavior: 'smooth'
+      });
+    }
+  } catch (error) {
+    console.warn('Error sincronizando estados en nueva página:', error);
+  }
+}
+
+/**
  * Crea una nueva página en el canvas
  * @param {fabric.Canvas} currentCanvas - Instancia del canvas actual (para referencia)
  */
 export function createNewPage(currentCanvas) {
-  
-  
-  try {
-    // Obtener el contenedor padre de páginas
-    const pagesContainer = document.getElementById('pages-container');
-    if (!pagesContainer) {
-      console.error('No se encontró el contenedor de páginas');
-      return;
-    }
+  const pagesContainer = document.getElementById('pages-container');
+  if (!pagesContainer) {
+    console.error('No se encontró el contenedor de páginas');
+    return;
+  }
 
-    // Crear contenedor individual para el nuevo canvas
-    const canvasContainer = document.createElement('div');
-    canvasContainer.className = 'page-container';
-    
-    // Crear título de página
+  try {
     const pageNumber = PAGE_STATE.pages.length + 1;
-    const pageTitle = createPageTitle(pageNumber);
-    
-    // Crear nuevo elemento canvas
-    const newCanvasElement = document.createElement('canvas');
-    const canvasId = `canvas-page-${PAGE_STATE.nextPageId}`;
-    newCanvasElement.id = canvasId;
-    
-    // Añadir el título y el canvas al contenedor individual
-    canvasContainer.appendChild(pageTitle);
-    canvasContainer.appendChild(newCanvasElement);
-    
-    // Añadir el contenedor individual al contenedor padre
+    const { canvasContainer, newCanvasElement, canvasId } = createPageElements(pageNumber);
+
     pagesContainer.appendChild(canvasContainer);
-    
-    // Crear nueva instancia de Fabric.js para este canvas
+
     const newFabricCanvas = new fabric.Canvas(canvasId);
-    
-    // Obtener configuración actual para heredar en la nueva página
     const currentSettings = getCurrentGlobalSettings();
-    
-    // Aplicar redimensionamiento al nuevo canvas usando la configuración actual
     const result = resizeCanvas(currentSettings.paperSize, newFabricCanvas, null, currentSettings.orientation);
-    
-    // Configurar propiedades del canvas
+
     setupCanvasProperties(newFabricCanvas);
-    
-    // Crear objeto de página con configuración
-    const newPage = {
-      canvasElement: newCanvasElement,
-      fabricCanvas: newFabricCanvas,
-      marginRect: result.marginRect,
-      marginWidth: result.marginWidth,
-      pageId: PAGE_STATE.nextPageId,
-      pageSettings: { ...currentSettings } // Heredar configuración actual
-    };
-    
-    // Añadir a la lista de páginas
+
+    const newPage = createPageObject(newCanvasElement, newFabricCanvas, result, currentSettings);
+
     PAGE_STATE.pages.push(newPage);
     PAGE_STATE.nextPageId++;
-    
-    // Cambiar el índice actual a la nueva página
     PAGE_STATE.currentPageIndex = PAGE_STATE.pages.length - 1;
-    
 
-    
-    // Actualizar información de páginas en la UI
     updatePageInfo();
-    
-    // Sincronizar estados y UI para la nueva página ANTES del scroll
-    syncGlobalStatesWithCurrentPage()
-      .then(() => updateUIButtonsForCurrentPage())
-      .then(() => {
-        // Esperar un momento adicional para que el DOM se estabilice completamente
-        return new Promise(resolve => setTimeout(resolve, 150));
-      })
-      .then(() => {
-        // Hacer scroll después de que la sincronización esté completa
-        return calculateScrollPositionSafely(PAGE_STATE.currentPageIndex);
-      })
-      .then(targetScrollTop => {
-        const pagesContainer = document.getElementById('pages-container');
-        if (pagesContainer) {
-          pagesContainer.scrollTo({
-            top: targetScrollTop,
-            behavior: 'smooth'
-          });
-        }
-      })
-      .catch(error => console.warn('Error sincronizando estados en nueva página:', error));
-    
+    handlePostPageCreation(PAGE_STATE.currentPageIndex);
+
     return newPage;
     
   } catch (error) {
@@ -412,101 +416,111 @@ function calculateScrollPositionSafely(pageIndex) {
 }
 
 /**
+ * Calcula la posición centrada para un contenedor
+ * @param {number} containerTop - Posición superior del contenedor
+ * @param {number} containerHeight - Altura del contenedor
+ * @param {number} viewportHeight - Altura del viewport
+ * @param {number} maxScroll - Scroll máximo permitido
+ * @returns {number} Posición calculada
+ */
+function calculateCenteredPosition(containerTop, containerHeight, viewportHeight, maxScroll) {
+  if (containerHeight <= viewportHeight) {
+    const centeredPosition = containerTop - (viewportHeight - containerHeight) / 2;
+    return Math.max(0, Math.min(centeredPosition, maxScroll));
+  }
+  return Math.max(0, Math.min(containerTop, maxScroll));
+}
+
+/**
+ * Obtiene la altura de un contenedor, con fallback manual
+ * @param {HTMLElement} container - Elemento contenedor
+ * @returns {number} Altura calculada
+ */
+function getContainerHeight(container) {
+  if (container.offsetHeight > 0) {
+    return container.offsetHeight;
+  }
+
+  const title = container.querySelector('.page-title');
+  const canvas = container.querySelector('canvas');
+  const titleHeight = title ? title.offsetHeight : 30;
+  const canvasHeight = canvas ? canvas.offsetHeight : 600;
+
+  return titleHeight + canvasHeight;
+}
+
+/**
+ * Calcula la posición usando offsetTop (método preferido)
+ * @param {HTMLElement} targetContainer - Contenedor objetivo
+ * @param {HTMLElement} pagesContainer - Contenedor de páginas
+ * @returns {number|null} Posición calculada o null si no es válida
+ */
+function calculateUsingOffsetTop(targetContainer, pagesContainer) {
+  if (targetContainer.offsetTop <= 0) return null;
+
+  const containerTop = targetContainer.offsetTop;
+  const containerHeight = targetContainer.offsetHeight;
+  const viewportHeight = pagesContainer.clientHeight;
+  const maxScroll = pagesContainer.scrollHeight - pagesContainer.clientHeight;
+
+  return calculateCenteredPosition(containerTop, containerHeight, viewportHeight, maxScroll);
+}
+
+/**
+ * Calcula la posición manualmente (método fallback)
+ * @param {number} pageIndex - Índice de la página
+ * @param {NodeList} allCanvasContainers - Todos los contenedores
+ * @param {HTMLElement} targetContainer - Contenedor objetivo
+ * @param {HTMLElement} pagesContainer - Contenedor de páginas
+ * @returns {number} Posición calculada
+ */
+function calculateManually(pageIndex, allCanvasContainers, targetContainer, pagesContainer) {
+  const containerStyle = getComputedStyle(pagesContainer);
+  const gapValue = parseFloat(containerStyle.gap) || 20;
+  const paddingTop = parseFloat(containerStyle.paddingTop) || 8;
+  
+  let position = paddingTop;
+
+  for (let i = 0; i < pageIndex; i++) {
+    const container = allCanvasContainers[i];
+    if (container) {
+      const containerHeight = getContainerHeight(container);
+      position += containerHeight + gapValue;
+    }
+  }
+
+  const containerHeight = getContainerHeight(targetContainer);
+  const viewportHeight = pagesContainer.clientHeight;
+  const maxScroll = pagesContainer.scrollHeight - pagesContainer.clientHeight;
+
+  return calculateCenteredPosition(position, containerHeight, viewportHeight, maxScroll);
+}
+
+/**
  * Calcula la posición de scroll correcta para una página específica
- * Método alternativo cuando offsetTop no funciona correctamente
  * @param {number} pageIndex - Índice de la página (0-based)
  * @returns {number} Posición de scroll calculada para centrar la página
  */
 function calculateScrollPositionForPage(pageIndex) {
   const pagesContainer = document.getElementById('pages-container');
   if (!pagesContainer) return 0;
-  
+
   const allCanvasContainers = pagesContainer.querySelectorAll('.page-container');
   if (pageIndex < 0 || pageIndex >= allCanvasContainers.length) {
     return 0;
   }
 
   const targetContainer = allCanvasContainers[pageIndex];
-
   if (!targetContainer) return 0;
 
-  // Método 1: Intentar usar offsetTop si está disponible
-  if (targetContainer.offsetTop > 0) {
-    const containerTop = targetContainer.offsetTop;
-    const containerHeight = targetContainer.offsetHeight;
-    const viewportHeight = pagesContainer.clientHeight;
-    
-    // Si la página cabe completamente en el viewport, centrarla
-    if (containerHeight <= viewportHeight) {
+  // Intentar método preferido usando offsetTop
+  const offsetTopResult = calculateUsingOffsetTop(targetContainer, pagesContainer);
+  if (offsetTopResult !== null) {
+    return offsetTopResult;
+  }
 
-      const centeredPosition = containerTop - (viewportHeight - containerHeight) / 2;
-      
-      // Asegurar que no vaya fuera de los límites
-      const maxScroll = pagesContainer.scrollHeight - pagesContainer.clientHeight;
-
-      const minValue = Math.min(centeredPosition, maxScroll)
-
-      const finalPosition = Math.max(0, minValue);
-      
-      return finalPosition;
-    } else {
-      // Si la página es más grande que el viewport, mostrar desde el inicio
-      return Math.max(0, Math.min(containerTop, pagesContainer.scrollHeight - pagesContainer.clientHeight));
-    }
-  }
-  
-  // Método 2: Cálculo manual (fallback)
-  const containerStyle = getComputedStyle(pagesContainer);
-  const gapValue = parseFloat(containerStyle.gap) || 20;
-  const paddingTop = parseFloat(containerStyle.paddingTop) || 8;
-  
-  let position = paddingTop;
-  
-  // Sumar las alturas de todos los contenedores anteriores + el gap
-  for (let i = 0; i < pageIndex; i++) {
-    const container = allCanvasContainers[i];
-    if (container) {
-      const containerHeight = container.offsetHeight;
-      
-      if (containerHeight > 0) {
-        position += containerHeight + gapValue;
-      } else {
-        // Fallback: calcular altura manualmente
-        const title = container.querySelector('.page-title');
-        const canvas = container.querySelector('canvas');
-        const titleHeight = title ? title.offsetHeight : 30;
-        const canvasHeight = canvas ? canvas.offsetHeight : 600;
-        position += (titleHeight + canvasHeight) + gapValue;
-      }
-    }
-  }
-  
-  // Calcular altura del contenedor objetivo
-  let containerHeight = targetContainer.offsetHeight;
-  
-  if (containerHeight <= 0) {
-    const title = targetContainer.querySelector('.page-title');
-    const canvas = targetContainer.querySelector('canvas');
-    const titleHeight = title ? title.offsetHeight : 30;
-    const canvasHeight = canvas ? canvas.offsetHeight : 600;
-    containerHeight = titleHeight + canvasHeight;
-  }
-  
-  const viewportHeight = pagesContainer.clientHeight;
-  
-  // Si la página cabe completamente en el viewport, centrarla
-  let finalPosition;
-  if (containerHeight <= viewportHeight) {
-    const centeredPosition = position - (viewportHeight - containerHeight) / 2;
-    const maxScroll = pagesContainer.scrollHeight - pagesContainer.clientHeight;
-    finalPosition = Math.max(0, Math.min(centeredPosition, maxScroll));
-  } else {
-    // Si la página es más grande que el viewport, mostrar desde el inicio
-    const maxScroll = pagesContainer.scrollHeight - pagesContainer.clientHeight;
-    finalPosition = Math.max(0, Math.min(position, maxScroll));
-  }
-  
-  return finalPosition;
+  // Fallback: cálculo manual
+  return calculateManually(pageIndex, allCanvasContainers, targetContainer, pagesContainer);
 }
 
 /**
@@ -674,6 +688,62 @@ export function isLastPage() {
 }
 
 /**
+ * Maneja el redimensionamiento del canvas si es necesario
+ * @param {Object} pageSettings - Configuración de la página
+ * @param {Function} setCurrentSize - Función para establecer el tamaño
+ * @param {Function} setIsVertical - Función para establecer la orientación
+ */
+async function handleCanvasResize(pageSettings, setCurrentSize, setIsVertical) {
+  const { getCurrentSize, getIsVertical, resizeCanvasOnly } = await import('./canvasResizeUtils.js');
+
+  const currentSize = getCurrentSize();
+  const currentOrientation = getIsVertical();
+  const needsResize = currentSize !== pageSettings.paperSize || currentOrientation !== pageSettings.orientation;
+
+  if (needsResize) {
+    const { getAppInstance } = await import('../core/app.js');
+    const app = getAppInstance();
+
+    if (app?.modules?.canvas) {
+      const canvas = app.modules.canvas.getCanvas();
+      const currentMarginRect = app.modules.canvas.getMarginRect();
+
+      const result = resizeCanvasOnly(pageSettings.paperSize, canvas, currentMarginRect, pageSettings.orientation);
+      app.modules.canvas.updateMargins(result.marginRect, result.marginWidth);
+    }
+  }
+
+  setCurrentSize(pageSettings.paperSize);
+  setIsVertical(pageSettings.orientation);
+}
+
+/**
+ * Sincroniza los estados de imagen con la configuración de la página
+ * @param {Object} pageSettings - Configuración de la página
+ */
+async function syncImageStates(pageSettings) {
+  const { imageState } = await import('../image/imageUploadUtils.js');
+
+  imageState.arrangementStatus = pageSettings.arrangement.status;
+  imageState.orientation = pageSettings.arrangement.orientation;
+  imageState.order = pageSettings.arrangement.order;
+  imageState.spacing = pageSettings.arrangement.spacing;
+}
+
+/**
+ * Sincroniza las dimensiones del grid personalizado
+ * @param {Object} pageSettings - Configuración de la página
+ */
+async function syncGridDimensions(pageSettings) {
+  const { setCustomGridDimensions } = await import('../layout/gridControls.js');
+
+  const customRows = pageSettings.arrangement.customRows ?? null;
+  const customCols = pageSettings.arrangement.customCols ?? null;
+
+  setCustomGridDimensions(customRows, customCols);
+}
+
+/**
  * Sincroniza los estados globales con la configuración de la página actual
  * @returns {Promise<void>} Promesa que se resuelve cuando la sincronización está completa
  */
@@ -685,70 +755,62 @@ export async function syncGlobalStatesWithCurrentPage() {
 
   const { pageSettings } = currentPage;
 
-  
   try {
-    // Sincronizar estados de canvas
-    const { setCurrentSize, setIsVertical, getCurrentSize, getIsVertical, resizeCanvasOnly } = await import('./canvasResizeUtils.js');
-    
-    // Verificar si necesitamos redimensionar el canvas
-    const currentSize = getCurrentSize();
-    const currentOrientation = getIsVertical();
-    const needsResize = currentSize !== pageSettings.paperSize || currentOrientation !== pageSettings.orientation;
-    
-    
-    if (needsResize) {
+    const { setCurrentSize, setIsVertical } = await import('./canvasResizeUtils.js');
 
-      
-      // Obtener la aplicación para acceder al canvas y marginRect
-      const { getAppInstance } = await import('../core/app.js');
-      const app = getAppInstance();
-      
-      if (app?.modules?.canvas) {
-        const canvas = app.modules.canvas.getCanvas();
-        const currentMarginRect = app.modules.canvas.getMarginRect();
-        
-        // Usar resizeCanvasOnly para no reorganizar las imágenes
-        const result = resizeCanvasOnly(pageSettings.paperSize, canvas, currentMarginRect, pageSettings.orientation);
-        app.modules.canvas.updateMargins(result.marginRect, result.marginWidth);
-        
-        // IMPORTANTE: Actualizar las variables globales DESPUÉS del redimensionamiento
-        setCurrentSize(pageSettings.paperSize);
-        setIsVertical(pageSettings.orientation);
-        
-
-      }
-    } else {
-
-      // Asegurar que las variables globales estén sincronizadas
-      setCurrentSize(pageSettings.paperSize);
-      setIsVertical(pageSettings.orientation);
-    }
-
-    // Sincronizar estados de imagen
-    const { imageState } = await import('../image/imageUploadUtils.js');
-
-    
-    imageState.arrangementStatus = pageSettings.arrangement.status;
-    imageState.orientation = pageSettings.arrangement.orientation;
-    imageState.order = pageSettings.arrangement.order;
-    imageState.spacing = pageSettings.arrangement.spacing;
-    
-
-
-    // Sincronizar dimensiones personalizadas del grid
-    const { setCustomGridDimensions } = await import('../layout/gridControls.js');
-    
-
-    
-    // Asegurar que las dimensiones sean null en lugar de undefined
-    const customRows = pageSettings.arrangement.customRows ?? null;
-    const customCols = pageSettings.arrangement.customCols ?? null;
-    
-    setCustomGridDimensions(customRows, customCols);
-    
+    await handleCanvasResize(pageSettings, setCurrentSize, setIsVertical);
+    await syncImageStates(pageSettings);
+    await syncGridDimensions(pageSettings);
 
   } catch (error) {
     console.warn('❌ Error sincronizando estados globales:', error);
+  }
+}
+
+/**
+ * Actualiza los botones de eventos de la aplicación
+ * @param {Object} eventManager - Gestor de eventos
+ * @param {Object} pageSettings - Configuración de la página
+ */
+function updateEventButtons(eventManager, pageSettings) {
+  eventManager.updateOrientationButtons(pageSettings.orientation);
+  eventManager.updatePaperSizeButtons(pageSettings.paperSize);
+  eventManager.updateLayoutOrientationButtons(pageSettings.arrangement.orientation);
+  eventManager.updateOrderButtons(pageSettings.arrangement.order);
+}
+
+/**
+ * Actualiza los botones de arrangement
+ * @param {Object} domManager - Gestor del DOM
+ * @param {Object} pageSettings - Configuración de la página
+ */
+async function updateArrangementUI(domManager, pageSettings) {
+  try {
+    const { updateArrangementButtons } = await import('../utils/arrangementButtons.js');
+    updateArrangementButtons(pageSettings.arrangement.status, domManager);
+  } catch (error) {
+    console.warn('Error actualizando botones de arrangement:', error);
+  }
+}
+
+/**
+ * Actualiza los controles del grid
+ * @param {Object} canvas - Canvas de Fabric.js
+ * @param {Object} domManager - Gestor del DOM
+ * @param {Object} pageSettings - Configuración de la página
+ */
+async function updateGridControls(canvas, domManager, pageSettings) {
+  try {
+    const { toggleGridControlsVisibility, initializeGridControls, updateGridVisualization } = await import('../layout/gridControls.js');
+
+    if (pageSettings.arrangement.status === 'grid') {
+      initializeGridControls(canvas, domManager, pageSettings.orientation);
+      updateGridVisualization(canvas, pageSettings.orientation);
+    } else {
+      toggleGridControlsVisibility(canvas, domManager, pageSettings.orientation);
+    }
+  } catch (error) {
+    console.warn('Error actualizando grid-controls:', error);
   }
 }
 
@@ -758,12 +820,10 @@ export async function syncGlobalStatesWithCurrentPage() {
 export async function updateUIButtonsForCurrentPage() {
   const currentPage = getCurrentPage();
   if (!currentPage?.pageSettings) {
-
     return;
   }
 
   const { pageSettings } = currentPage;
-
 
   try {
     const { getAppInstance } = await import('../core/app.js');
@@ -774,42 +834,16 @@ export async function updateUIButtonsForCurrentPage() {
     }
 
     if (app.modules.events) {
-      const eventManager = app.modules.events;
-      
-
-      eventManager.updateOrientationButtons(pageSettings.orientation);
-      eventManager.updatePaperSizeButtons(pageSettings.paperSize);
-      eventManager.updateLayoutOrientationButtons(pageSettings.arrangement.orientation);
-      eventManager.updateOrderButtons(pageSettings.arrangement.order);
+      updateEventButtons(app.modules.events, pageSettings);
     }
 
     if (app.modules.dom) {
-      try {
-        const { updateArrangementButtons } = await import('../utils/arrangementButtons.js');
-
-        updateArrangementButtons(pageSettings.arrangement.status, app.modules.dom);
-      } catch (error) {
-        console.warn('Error actualizando botones de arrangement:', error);
-      }
+      await updateArrangementUI(app.modules.dom, pageSettings);
     }
 
     if (app.modules.canvas && app.modules.dom) {
-      try {
-        const { toggleGridControlsVisibility, initializeGridControls, updateGridVisualization } = await import('../layout/gridControls.js');
-        const canvas = app.modules.canvas.getCanvas();
-        const domManager = app.modules.dom;
-        
-
-        
-        if (pageSettings.arrangement.status === 'grid') {
-          initializeGridControls(canvas, domManager, pageSettings.orientation);
-          updateGridVisualization(canvas, pageSettings.orientation);
-        } else {
-          toggleGridControlsVisibility(canvas, domManager, pageSettings.orientation);
-        }
-      } catch (error) {
-        console.warn('Error actualizando grid-controls:', error);
-      }
+      const canvas = app.modules.canvas.getCanvas();
+      await updateGridControls(canvas, app.modules.dom, pageSettings);
     }
   } catch (error) {
     console.warn('Error obteniendo instancia de la aplicación:', error);
