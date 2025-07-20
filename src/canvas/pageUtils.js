@@ -346,7 +346,7 @@ export function deletePage(pageIndex) {
     
     // Remover elemento DOM completo (contenedor que incluye título y canvas)
     const canvasContainer = page?.canvasElement?.closest('.canvas-container');
-    if (canvasContainer && canvasContainer.parentNode) {
+    if (canvasContainer?.parentNode) {
       canvasContainer.parentNode.removeChild(canvasContainer);
     }
     
