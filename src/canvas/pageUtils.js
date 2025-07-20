@@ -201,7 +201,6 @@ export function createNewPage(currentCanvas) {
       .then(targetScrollTop => {
         const pagesContainer = document.getElementById('pages-container');
         if (pagesContainer) {
-          console.log(`🚀 Ejecutando scroll a página ${PAGE_STATE.currentPageIndex} con posición ${targetScrollTop}`);
           pagesContainer.scrollTo({
             top: targetScrollTop,
             behavior: 'smooth'
@@ -396,17 +395,13 @@ function calculateScrollPositionSafely(pageIndex) {
       requestAnimationFrame(() => { // Doble RAF para mayor estabilidad
         // Verificar si todos los contenedores tienen offsetTop válido
         const allContainers = pagesContainer.querySelectorAll('.page-container');
-        let allHaveValidOffsets = true;
         
         for (let i = 0; i <= pageIndex && i < allContainers.length; i++) {
           if (allContainers[i].offsetTop <= 0 && i > 0) {
-            allHaveValidOffsets = false;
             console.warn(`⚠️ Contenedor ${i} no tiene offsetTop válido: ${allContainers[i].offsetTop}`);
             break;
           }
         }
-        
-        console.log(`🔍 Verificación offsetTop para página ${pageIndex}: ${allHaveValidOffsets ? 'VÁLIDO' : 'INVÁLIDO'}`);
         
         const scrollPosition = calculateScrollPositionForPage(pageIndex);
         resolve(scrollPosition);
@@ -432,9 +427,6 @@ function calculateScrollPositionForPage(pageIndex) {
 
   const targetContainer = allCanvasContainers[pageIndex];
 
-  console.log("pageIndex", pageIndex);
-  console.log("targetContainer", targetContainer);
-
   if (!targetContainer) return 0;
 
   // Método 1: Intentar usar offsetTop si está disponible
@@ -446,38 +438,14 @@ function calculateScrollPositionForPage(pageIndex) {
     // Si la página cabe completamente en el viewport, centrarla
     if (containerHeight <= viewportHeight) {
 
-      console.log("containerTop", containerTop);
-
-      console.log("viewportHeight", viewportHeight);
-
-      console.log("containerHeight", containerHeight);
-
       const centeredPosition = containerTop - (viewportHeight - containerHeight) / 2;
-
-      console.log("containerTop - (viewportHeight - containerHeight) / 2", containerTop - (viewportHeight - containerHeight) / 2);
-      console.log("centeredPosition", centeredPosition);
       
       // Asegurar que no vaya fuera de los límites
       const maxScroll = pagesContainer.scrollHeight - pagesContainer.clientHeight;
 
-      console.log("maxScroll", maxScroll);
-
       const minValue = Math.min(centeredPosition, maxScroll)
 
-      console.log("minValue", minValue);
-
       const finalPosition = Math.max(0, minValue);
-      
-      console.log(`📍 SCROLL DEBUG (Método offsetTop) - Página ${pageIndex}:`, {
-        containerTop,
-        containerHeight,
-        viewportHeight,
-        centeredPosition,
-        maxScroll,
-        finalPosition,
-        scrollHeight: pagesContainer.scrollHeight,
-        clientHeight: pagesContainer.clientHeight
-      });
       
       return finalPosition;
     } else {
@@ -537,18 +505,6 @@ function calculateScrollPositionForPage(pageIndex) {
     finalPosition = Math.max(0, Math.min(position, maxScroll));
   }
   
-  console.log(`📍 SCROLL DEBUG (Método manual) - Página ${pageIndex}:`, {
-    position,
-    containerHeight,
-    viewportHeight,
-    centeredPosition: containerHeight <= viewportHeight ? position - (viewportHeight - containerHeight) / 2 : position,
-    maxScroll: pagesContainer.scrollHeight - pagesContainer.clientHeight,
-    finalPosition,
-    scrollHeight: pagesContainer.scrollHeight,
-    clientHeight: pagesContainer.clientHeight,
-    fitsInViewport: containerHeight <= viewportHeight
-  });
-  
   return finalPosition;
 }
 
@@ -570,7 +526,6 @@ export async function goToPreviousPage() {
     
     const pagesContainer = document.getElementById('pages-container');
     if (pagesContainer) {
-      console.log(`⬅️ Navegación a página anterior ${targetPageIndex} con scroll ${targetScrollTop}`);
       pagesContainer.scrollTo({
         top: targetScrollTop,
         behavior: 'smooth'
@@ -597,7 +552,6 @@ export async function goToNextPage() {
 
     const pagesContainer = document.getElementById('pages-container');
     if (pagesContainer) {
-      console.log(`➡️ Navegación a página siguiente ${targetPageIndex} con scroll ${targetScrollTop}`);
       pagesContainer.scrollTo({
         top: targetScrollTop,
         behavior: 'smooth'
