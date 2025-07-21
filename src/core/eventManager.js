@@ -403,6 +403,7 @@ export class EventManager {
 
   initializeCollageEvents() {
     this.addEventBinding('gridArrangeButton', 'click', async () => {
+      this.actions.resetCustomGridDimensions();
       this.actions.applyGridArrangement(this.canvasManager.getCanvas(), this.dom);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
       this.updateLayoutOrientationButtons(imageState.orientation);

@@ -6,7 +6,7 @@ import {
   setOrientation,
   setOrder
 } from '../image/imageUploadUtils.js';
-import { getCustomGridDimensions, initializeGridControls, resetCustomGridDimensions } from './gridControls.js';
+import { getCustomGridDimensions, initializeGridControls } from './gridControls.js';
 
 export function applyGridArrangement(canvas, domManager) {
   const images = canvas.getObjects().filter((obj) => obj.type === "image" || obj.type === "group");
@@ -17,9 +17,6 @@ export function applyGridArrangement(canvas, domManager) {
     });
     return;
   }
-  
-  // Primero, resetea las dimensiones personalizadas para forzar el recálculo
-  resetCustomGridDimensions();
 
   images.forEach((img) => canvas.remove(img));
 
