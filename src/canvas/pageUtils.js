@@ -114,6 +114,13 @@ function updateAllPageTitles() {
       const existingTitle = canvasContainer.querySelector('.page-title');
       if (existingTitle) {
         existingTitle.textContent = `Página ${index + 1}`;
+        
+        // Aplicar clase inactive a las páginas que no son la actual
+        if (index === PAGE_STATE.currentPageIndex) {
+          existingTitle.classList.remove('inactive');
+        } else {
+          existingTitle.classList.add('inactive');
+        }
       }
     }
   });
@@ -300,7 +307,7 @@ export function getCurrentPage() {
 export function setCurrentPage(index) {
   if (index >= 0 && index < PAGE_STATE.pages.length) {
     PAGE_STATE.currentPageIndex = index;
-
+    updatePageInfo(); // Actualiza la información de página y los títulos
   }
 }
 
@@ -355,6 +362,8 @@ export function initializePageState(mainCanvas, marginRect, marginWidth) {
       const existingTitle = pageContainer.querySelector('.page-title');
       if (!existingTitle) {
         const pageTitle = createPageTitle(1);
+        // La primera página siempre es activa
+        pageTitle.classList.remove('inactive');
         
         // Buscar el canvas-container que Fabric.js crea
         const canvasContainer = mainCanvasElement.closest('.canvas-container');
@@ -619,6 +628,9 @@ export function updatePageInfo() {
   if (deleteButton) {
     deleteButton.disabled = PAGE_STATE.pages.length <= 1;
   }
+  
+  // Actualizar los títulos de las páginas para reflejar la página activa
+  updateAllPageTitles();
 }
 
 /**

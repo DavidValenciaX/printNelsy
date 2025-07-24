@@ -127,7 +127,7 @@ imprimir_imagenes_fabric/
 
 ### 📋 Interacciones Avanzadas
 
-- **Copiar/Pegar mejorado**: 
+- **Copiar/Pegar mejorado**:
   - Soporte para Ctrl+C/Ctrl+V (portapapeles interno)
   - Ctrl+Shift+V para portapapeles del sistema
   - Detección inteligente de contenido más reciente
