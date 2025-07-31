@@ -24,10 +24,15 @@ import {
   initializeCrop, 
   confirmCrop, 
   exitCropMode,
+  createCanvasBackground,
+  disableOtherObjects,
+  restoreOtherObjects
+} from '../image/cropUtils.js';
+import {
   initializePerspectiveCrop,
   confirmPerspectiveCrop,
   exitPerspectiveCropMode
-} from '../image/cropUtils.js';
+} from '../image/perspectiveCropUtils.js';
 import { 
   resizeCanvas, 
   changeOrientation
@@ -164,4 +169,4 @@ export class ActionManager {
     window.zoomOut = this.zoomOut;
     window.applyZoom = this.applyZoom;
   }
-} 
+}
