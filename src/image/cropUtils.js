@@ -120,39 +120,52 @@ function confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton
     return;
   }
 
-  // Get the cropping rect and original image's ID
   const rect = cropRect;
   const img = activeImage;
   const originalId = img.id; // Save original ID
 
-  // Set the crop rect stroke to transparent so that it doesn't bleed into the final image
-  rect.set("stroke", "transparent");
+  // 1. Get the original image element from the fabric object
+  const originalImageElement = img.getElement();
 
-  // Create a background to fill the canvas with white color
-  createCanvasBackground(canvas);
+  // 2. Calculate the transformation from canvas coordinates to the image's local coordinates
+  const imgMatrix = img.calcTransformMatrix();
+  const invImgMatrix = fabric.util.invertTransform(imgMatrix);
 
-  // Hide other objects
-  canvas.getObjects().forEach((obj) => {
-    if (
-      obj !== cropRect &&
-      obj !== marginRect &&
-      obj !== activeImage &&
-      obj !== canvasBackground
-    ) {
-      obj.set({
-        opacity: 0,
-      });
-    }
-  });
+  // 3. Define the crop rectangle's corners in canvas coordinates
+  const cropTlPoint = new fabric.Point(rect.left, rect.top);
+  const cropBrPoint = new fabric.Point(rect.left + rect.getScaledWidth(), rect.top + rect.getScaledHeight());
 
-  // Create new cropped image
+  // 4. Transform the crop rectangle's corners to the image's local coordinates
+  const localTl = fabric.util.transformPoint(cropTlPoint, invImgMatrix);
+  const localBr = fabric.util.transformPoint(cropBrPoint, invImgMatrix);
+
+  // 5. Calculate the crop parameters (x, y, width, height) relative to the original image's dimensions
+  // This assumes the image's origin is at its center.
+  const cropX = localTl.x + img.width / 2;
+  const cropY = localTl.y + img.height / 2;
+  const cropWidth = localBr.x - localTl.x;
+  const cropHeight = localBr.y - localTl.y;
+
+  // 6. Create a temporary canvas to perform the high-quality crop
+  const tempCanvasEl = document.createElement('canvas');
+  tempCanvasEl.width = cropWidth;
+  tempCanvasEl.height = cropHeight;
+  const tempCtx = tempCanvasEl.getContext('2d');
+
+  // 7. Draw the cropped portion of the original image onto the temporary canvas
+  tempCtx.drawImage(
+    originalImageElement,
+    cropX, cropY,       // Start clipping from this point on the source image
+    cropWidth, cropHeight, // The width and height of the clipped part
+    0, 0,               // Place the clipped part at this point on the destination canvas
+    cropWidth, cropHeight  // The width and height to draw the image on the destination canvas
+  );
+
+  // 8. Get the data URL of the cropped image from the temporary canvas
+  const dataUrl = tempCanvasEl.toDataURL();
+
   const cropped = new Image();
-  cropped.src = canvas.toDataURL({
-    left: rect.left,
-    top: rect.top,
-    width: rect.width * rect.scaleX,
-    height: rect.height * rect.scaleY,
-  });
+  cropped.src = dataUrl;
 
   cropped.onload = function () {
     // Remove old image and crop rect
@@ -164,12 +177,19 @@ function confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton
 
     // Create and add new cropped image
     const newImage = new fabric.Image(cropped);
+
+    // Calculate the correct scale to make the new image fit the crop rectangle's size
+    const newScaleX = rect.getScaledWidth() / newImage.width;
+    const newScaleY = rect.getScaledHeight() / newImage.height;
+
     const newImageProps = {
       id: originalId, // Transfer the original ID
-      left: rect.left + (rect.width * rect.scaleX) / 2,
-      top: rect.top + (rect.height * rect.scaleY) / 2,
+      left: rect.left + rect.getScaledWidth() / 2,
+      top: rect.top + rect.getScaledHeight() / 2,
       originX: 'center',
       originY: 'center',
+      scaleX: newScaleX,
+      scaleY: newScaleY,
     };
     if (originalType === 'group' || wasOriginallyGroup) {
       newImageProps.originalType = 'group';
