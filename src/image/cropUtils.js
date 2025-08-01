@@ -124,90 +124,120 @@ function confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton
   const img = activeImage;
   const originalId = img.id; // Save original ID
 
-  // 1. Get the original image element from the fabric object
-  const originalImageElement = img.getElement();
+  // Guardar escala original para aplicarla al resultado
+  const originalScaleX = img.scaleX || 1;
+  const originalScaleY = img.scaleY || 1;
+  const originalFlipX = !!img.flipX;
+  const originalFlipY = !!img.flipY;
+  const originalSkewX = img.skewX || 0;
+  const originalSkewY = img.skewY || 0;
 
-  // 2. Calculate the transformation from canvas coordinates to the image's local coordinates
-  const imgMatrix = img.calcTransformMatrix();
-  const invImgMatrix = fabric.util.invertTransform(imgMatrix);
+  // Obtener elemento fuente (alta resolución)
+  const srcEl = img._originalElement || img.getElement?.() || img._element;
+  if (!srcEl) {
+    showInvalidSelectionWarning();
+    return;
+  }
 
-  // 3. Define the crop rectangle's corners in canvas coordinates
-  const cropTlPoint = new fabric.Point(rect.left, rect.top);
-  const cropBrPoint = new fabric.Point(rect.left + rect.getScaledWidth(), rect.top + rect.getScaledHeight());
+  // Matriz del objeto e inversa (incluye traslación, escala, rotación, skew)
+  const objMatrix = img.calcTransformMatrix();
+  const invMatrix = fabric.util.invertTransform(objMatrix);
 
-  // 4. Transform the crop rectangle's corners to the image's local coordinates
-  const localTl = fabric.util.transformPoint(cropTlPoint, invImgMatrix);
-  const localBr = fabric.util.transformPoint(cropBrPoint, invImgMatrix);
+  // Función para transformar punto canvas -> espacio local del objeto
+  const toLocal = (x, y) => fabric.util.transformPoint(new fabric.Point(x, y), invMatrix);
 
-  // 5. Calculate the crop parameters (x, y, width, height) relative to the original image's dimensions
-  // This assumes the image's origin is at its center.
-  const cropX = localTl.x + img.width / 2;
-  const cropY = localTl.y + img.height / 2;
-  const cropWidth = localBr.x - localTl.x;
-  const cropHeight = localBr.y - localTl.y;
+  // Esquinas del rectángulo de recorte en espacio canvas
+  const cornersCanvas = [
+    new fabric.Point(rect.left, rect.top),
+    new fabric.Point(rect.left + rect.getScaledWidth(), rect.top),
+    new fabric.Point(rect.left + rect.getScaledWidth(), rect.top + rect.getScaledHeight()),
+    new fabric.Point(rect.left, rect.top + rect.getScaledHeight())
+  ];
 
-  // 6. Create a temporary canvas to perform the high-quality crop
-  const tempCanvasEl = document.createElement('canvas');
-  tempCanvasEl.width = cropWidth;
-  tempCanvasEl.height = cropHeight;
-  const tempCtx = tempCanvasEl.getContext('2d');
+  // Pasar a espacio local del objeto
+  const localPts = cornersCanvas.map(p => toLocal(p.x, p.y));
 
-  // 7. Draw the cropped portion of the original image onto the temporary canvas
-  tempCtx.drawImage(
-    originalImageElement,
-    cropX, cropY,       // Start clipping from this point on the source image
-    cropWidth, cropHeight, // The width and height of the clipped part
-    0, 0,               // Place the clipped part at this point on the destination canvas
-    cropWidth, cropHeight  // The width and height to draw the image on the destination canvas
-  );
+  // Convertir a píxeles de la imagen fuente
+  const scaleToSourceX = (srcEl.naturalWidth || srcEl.width) / img.width;
+  const scaleToSourceY = (srcEl.naturalHeight || srcEl.height) / img.height;
 
-  // 8. Get the data URL of the cropped image from the temporary canvas
-  const dataUrl = tempCanvasEl.toDataURL();
+  const srcPts = localPts.map(p => new fabric.Point(
+    (p.x + img.width / 2) * scaleToSourceX,
+    (p.y + img.height / 2) * scaleToSourceY
+  ));
 
-  const cropped = new Image();
-  cropped.src = dataUrl;
+  // Bounding box del recorte en la imagen fuente
+  const minX = Math.max(0, Math.floor(Math.min(...srcPts.map(p => p.x))));
+  const minY = Math.max(0, Math.floor(Math.min(...srcPts.map(p => p.y))));
+  const maxX = Math.min((srcEl.naturalWidth || srcEl.width), Math.ceil(Math.max(...srcPts.map(p => p.x))));
+  const maxY = Math.min((srcEl.naturalHeight || srcEl.height), Math.ceil(Math.max(...srcPts.map(p => p.y))));
 
-  cropped.onload = function () {
-    // Remove old image and crop rect
+  const cropW = Math.max(1, maxX - minX);
+  const cropH = Math.max(1, maxY - minY);
+
+  if (cropW <= 1 || cropH <= 1) {
+    showInvalidSelectionWarning();
+    return;
+  }
+
+  // Canvas temporal a resolución nativa
+  const off = document.createElement('canvas');
+  off.width = cropW;
+  off.height = cropH;
+  const offCtx = off.getContext('2d');
+  offCtx.drawImage(srcEl, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+
+  // Crear imagen recortada
+  const newImgEl = new Image();
+  newImgEl.onload = function () {
+    const newImage = new fabric.Image(newImgEl);
+
+    // Quitar imagen original y el rectángulo de recorte
     canvas.remove(img);
     canvas.remove(rect);
 
     const originalType = img.type;
     const wasOriginallyGroup = img.originalType === 'group';
 
-    // Create and add new cropped image
-    const newImage = new fabric.Image(cropped);
-
-    // Calculate the correct scale to make the new image fit the crop rectangle's size
-    const newScaleX = rect.getScaledWidth() / newImage.width;
-    const newScaleY = rect.getScaledHeight() / newImage.height;
+    // Centro del rectángulo de recorte en canvas
+    const centerCanvas = new fabric.Point(
+      rect.left + rect.getScaledWidth() / 2,
+      rect.top + rect.getScaledHeight() / 2
+    );
 
     const newImageProps = {
-      id: originalId, // Transfer the original ID
-      left: rect.left + rect.getScaledWidth() / 2,
-      top: rect.top + rect.getScaledHeight() / 2,
+      id: originalId,
+      left: centerCanvas.x,
+      top: centerCanvas.y,
       originX: 'center',
       originY: 'center',
-      scaleX: newScaleX,
-      scaleY: newScaleY,
+      angle: img.angle || 0,
+      // Mantener transformaciones del original
+      scaleX: originalScaleX,
+      scaleY: originalScaleY,
+      flipX: originalFlipX,
+      flipY: originalFlipY,
+      skewX: originalSkewX,
+      skewY: originalSkewY
     };
+
     if (originalType === 'group' || wasOriginallyGroup) {
       newImageProps.originalType = 'group';
     }
+
     newImage.set(newImageProps);
 
-
-    // Set rotation control visibility based on checkbox state
-    newImage.setControlsVisibility({
-      mtr: rotateCheckbox.checked,
-    });
+    // Visibilidad del control de rotación según el checkbox
+    newImage.setControlsVisibility({ mtr: rotateCheckbox.checked });
 
     newImage.setCoords();
     canvas.add(newImage);
     canvas.renderAll();
-  };
 
-  exitCropMode(canvas, confirmCropButton, cancelCropButton, cropButton);
+    // Salir de modo recorte
+    exitCropMode(canvas, confirmCropButton, cancelCropButton, cropButton);
+  };
+  newImgEl.src = off.toDataURL('image/png');
 }
 
 function exitCropMode(canvas, confirmCropButton, cancelCropButton, cropButton) {
