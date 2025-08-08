@@ -122,122 +122,99 @@ function confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton
 
   const rect = cropRect;
   const img = activeImage;
-  const originalId = img.id; // Save original ID
+  const originalId = img.id;
 
-  // Guardar escala original para aplicarla al resultado
-  const originalScaleX = img.scaleX || 1;
-  const originalScaleY = img.scaleY || 1;
-  const originalFlipX = !!img.flipX;
-  const originalFlipY = !!img.flipY;
-  const originalSkewX = img.skewX || 0;
-  const originalSkewY = img.skewY || 0;
-
-  // Obtener elemento fuente (alta resolución)
+  // Elemento fuente (máxima resolución disponible)
   const srcEl = img._originalElement || img.getElement?.() || img._element;
   if (!srcEl) {
     showInvalidSelectionWarning();
     return;
   }
 
-  // Matriz del objeto e inversa (incluye traslación, escala, rotación, skew)
-  const objMatrix = img.calcTransformMatrix();
-  const invMatrix = fabric.util.invertTransform(objMatrix);
+  // Tamaños y factores de escala para ir de unidades canvas -> píxeles fuente
+  const imgNatW = (srcEl.naturalWidth || srcEl.width);
+  const imgNatH = (srcEl.naturalHeight || srcEl.height);
+  const scaledW = Math.max(1, img.getScaledWidth());
+  const scaledH = Math.max(1, img.getScaledHeight());
+  const factorX = imgNatW / scaledW;
+  const factorY = imgNatH / scaledH;
 
-  // Función para transformar punto canvas -> espacio local del objeto
-  const toLocal = (x, y) => fabric.util.transformPoint(new fabric.Point(x, y), invMatrix);
+  const cropWCanvas = rect.getScaledWidth();
+  const cropHCanvas = rect.getScaledHeight();
+  const offW = Math.max(1, Math.round(cropWCanvas * factorX));
+  const offH = Math.max(1, Math.round(cropHCanvas * factorY));
 
-  // Esquinas del rectángulo de recorte en espacio canvas
-  const cornersCanvas = [
-    new fabric.Point(rect.left, rect.top),
-    new fabric.Point(rect.left + rect.getScaledWidth(), rect.top),
-    new fabric.Point(rect.left + rect.getScaledWidth(), rect.top + rect.getScaledHeight()),
-    new fabric.Point(rect.left, rect.top + rect.getScaledHeight())
-  ];
-
-  // Pasar a espacio local del objeto
-  const localPts = cornersCanvas.map(p => toLocal(p.x, p.y));
-
-  // Convertir a píxeles de la imagen fuente
-  const scaleToSourceX = (srcEl.naturalWidth || srcEl.width) / img.width;
-  const scaleToSourceY = (srcEl.naturalHeight || srcEl.height) / img.height;
-
-  const srcPts = localPts.map(p => new fabric.Point(
-    (p.x + img.width / 2) * scaleToSourceX,
-    (p.y + img.height / 2) * scaleToSourceY
-  ));
-
-  // Bounding box del recorte en la imagen fuente
-  const minX = Math.max(0, Math.floor(Math.min(...srcPts.map(p => p.x))));
-  const minY = Math.max(0, Math.floor(Math.min(...srcPts.map(p => p.y))));
-  const maxX = Math.min((srcEl.naturalWidth || srcEl.width), Math.ceil(Math.max(...srcPts.map(p => p.x))));
-  const maxY = Math.min((srcEl.naturalHeight || srcEl.height), Math.ceil(Math.max(...srcPts.map(p => p.y))));
-
-  const cropW = Math.max(1, maxX - minX);
-  const cropH = Math.max(1, maxY - minY);
-
-  if (cropW <= 1 || cropH <= 1) {
+  if (offW <= 1 || offH <= 1) {
     showInvalidSelectionWarning();
     return;
   }
 
-  // Canvas temporal a resolución nativa
-  const off = document.createElement('canvas');
-  off.width = cropW;
-  off.height = cropH;
-  const offCtx = off.getContext('2d');
-  offCtx.drawImage(srcEl, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+  // Canvas temporal basado en Fabric para renderizar SOLO la imagen activa
+  const tmpCanvas = new fabric.StaticCanvas(null, {
+    width: offW,
+    height: offH,
+    enableRetinaScaling: false,
+  });
+  tmpCanvas.backgroundColor = 'white';
 
-  // Crear imagen recortada
-  const newImgEl = new Image();
-  newImgEl.onload = function () {
-    const newImage = new fabric.Image(newImgEl);
+  // Considerar el viewport actual (zoom/pan) del canvas principal
+  const vt = canvas.viewportTransform || [1, 0, 0, 1, 0, 0];
+  const scaledVT = [
+    vt[0] * factorX,
+    vt[1] * factorX,
+    vt[2] * factorY,
+    vt[3] * factorY,
+    (vt[4] - rect.left) * factorX,
+    (vt[5] - rect.top) * factorY,
+  ];
+  tmpCanvas.setViewportTransform(scaledVT);
 
-    // Quitar imagen original y el rectángulo de recorte
-    canvas.remove(img);
-    canvas.remove(rect);
+  // Clonar la imagen activa con todas sus transformaciones/efectos
+  img.clone((clone) => {
+    // Asegurar misma visibilidad de control luego en el resultado
+    tmpCanvas.add(clone);
+    tmpCanvas.renderAll();
 
-    const originalType = img.type;
-    const wasOriginallyGroup = img.originalType === 'group';
+    // Exportar exactamente la región recortada a alta resolución
+    const dataUrl = tmpCanvas.toDataURL({ format: 'png' });
 
-    // Centro del rectángulo de recorte en canvas
-    const centerCanvas = new fabric.Point(
-      rect.left + rect.getScaledWidth() / 2,
-      rect.top + rect.getScaledHeight() / 2
-    );
+    const newImgEl = new Image();
+    newImgEl.onload = function () {
+      // Eliminar original y rectángulo de recorte
+      canvas.remove(img);
+      canvas.remove(rect);
 
-    const newImageProps = {
-      id: originalId,
-      left: centerCanvas.x,
-      top: centerCanvas.y,
-      originX: 'center',
-      originY: 'center',
-      angle: img.angle || 0,
-      // Mantener transformaciones del original
-      scaleX: originalScaleX,
-      scaleY: originalScaleY,
-      flipX: originalFlipX,
-      flipY: originalFlipY,
-      skewX: originalSkewX,
-      skewY: originalSkewY
+      const originalType = img.type;
+      const wasOriginallyGroup = img.originalType === 'group';
+
+      // Colocar centrado donde estaba el recuadro, sin duplicar rotación
+      const newImage = new fabric.Image(newImgEl, {
+        id: originalId,
+        left: rect.left + cropWCanvas / 2,
+        top: rect.top + cropHCanvas / 2,
+        originX: 'center',
+        originY: 'center',
+        angle: 0,
+        // Escalamos inversamente para que el tamaño visual coincida con el rectángulo de recorte
+        scaleX: 1 / factorX,
+        scaleY: 1 / factorY,
+      });
+
+      if (originalType === 'group' || wasOriginallyGroup) {
+        newImage.set('originalType', 'group');
+      }
+
+      newImage.setControlsVisibility({ mtr: rotateCheckbox.checked });
+
+      newImage.setCoords();
+      canvas.add(newImage);
+      canvas.renderAll();
+
+      // Salir de modo recorte
+      exitCropMode(canvas, confirmCropButton, cancelCropButton, cropButton);
     };
-
-    if (originalType === 'group' || wasOriginallyGroup) {
-      newImageProps.originalType = 'group';
-    }
-
-    newImage.set(newImageProps);
-
-    // Visibilidad del control de rotación según el checkbox
-    newImage.setControlsVisibility({ mtr: rotateCheckbox.checked });
-
-    newImage.setCoords();
-    canvas.add(newImage);
-    canvas.renderAll();
-
-    // Salir de modo recorte
-    exitCropMode(canvas, confirmCropButton, cancelCropButton, cropButton);
-  };
-  newImgEl.src = off.toDataURL('image/png');
+    newImgEl.src = dataUrl;
+  });
 }
 
 function exitCropMode(canvas, confirmCropButton, cancelCropButton, cropButton) {
