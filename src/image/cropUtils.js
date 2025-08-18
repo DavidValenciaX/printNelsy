@@ -114,7 +114,7 @@ function createCanvasBackground(canvas) {
   canvas.sendToBack(canvasBackground);
 }
 
-function confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton, cancelCropButton, cropButton) {
+function confirmCrop(canvas, rotateCheckbox, confirmCropButton, cancelCropButton, cropButton) {
   if (!isCropping || !cropRect || !activeImage) {
     showNoObjectSelectedWarning();
     return;
@@ -123,6 +123,50 @@ function confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton
   const rect = cropRect;
   const img = activeImage;
   const originalId = img.id;
+
+  // === DEBUG LOGS - INICIO ===
+  console.log('=== DEBUG: CONFIRM CROP ===');
+  console.log('Canvas dimensions:', { width: canvas.width, height: canvas.height });
+  console.log('Canvas viewport transform:', canvas.viewportTransform);
+  
+  // Log imagen original
+  console.log('=== IMAGEN ORIGINAL ===');
+  console.log('ID:', img.id);
+  console.log('Tipo:', img.type);
+  console.log('Posición:', { left: img.left, top: img.top });
+  console.log('Dimensiones escaladas:', { 
+    width: img.getScaledWidth(), 
+    height: img.getScaledHeight() 
+  });
+  console.log('Escalas:', { scaleX: img.scaleX, scaleY: img.scaleY });
+  console.log('Rotación:', { angle: img.angle });
+  console.log('Origen:', { originX: img.originX, originY: img.originY });
+  console.log('Bounding rect:', img.getBoundingRect());
+  console.log('Coordenadas:', img.getCoords());
+  
+  // Log rectángulo de recorte
+  console.log('=== RECTÁNGULO DE RECORTE ===');
+  console.log('Posición:', { left: rect.left, top: rect.top });
+  console.log('Dimensiones:', { width: rect.width, height: rect.height });
+  console.log('Dimensiones escaladas:', { 
+    width: rect.getScaledWidth(), 
+    height: rect.getScaledHeight() 
+  });
+  console.log('Escalas:', { scaleX: rect.scaleX, scaleY: rect.scaleY });
+  console.log('Rotación:', { angle: rect.angle });
+  console.log('Origen:', { originX: rect.originX, originY: rect.originY });
+  console.log('Bounding rect:', rect.getBoundingRect());
+  console.log('Coordenadas:', rect.getCoords());
+  
+  // Log diferencias de posición
+  const imgBounds = img.getBoundingRect();
+  const rectBounds = rect.getBoundingRect();
+  console.log('=== DIFERENCIAS DE POSICIÓN ===');
+  console.log('Diferencia left:', rectBounds.left - imgBounds.left);
+  console.log('Diferencia top:', rectBounds.top - imgBounds.top);
+  console.log('Diferencia right:', rectBounds.left + rectBounds.width - (imgBounds.left + imgBounds.width));
+  console.log('Diferencia bottom:', rectBounds.top + rectBounds.height - (imgBounds.top + imgBounds.height));
+  // === DEBUG LOGS - FIN ===
 
   // Elemento fuente (máxima resolución disponible)
   const srcEl = img._originalElement || img.getElement?.() || img._element;
@@ -143,6 +187,15 @@ function confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton
   const cropHCanvas = rect.getScaledHeight();
   const offW = Math.max(1, Math.round(cropWCanvas * factorX));
   const offH = Math.max(1, Math.round(cropHCanvas * factorY));
+
+  // === DEBUG LOGS - FACTORES DE ESCALA ===
+  console.log('=== FACTORES DE ESCALA ===');
+  console.log('Dimensiones naturales imagen:', { width: imgNatW, height: imgNatH });
+  console.log('Dimensiones escaladas imagen:', { width: scaledW, height: scaledH });
+  console.log('Factores de escala:', { factorX, factorY });
+  console.log('Dimensiones recorte canvas:', { width: cropWCanvas, height: cropHCanvas });
+  console.log('Dimensiones recorte píxeles:', { width: offW, height: offH });
+  // === DEBUG LOGS - FIN ===
 
   if (offW <= 1 || offH <= 1) {
     showInvalidSelectionWarning();
@@ -168,6 +221,13 @@ function confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton
     (vt[5] - rect.top) * factorY,
   ];
   tmpCanvas.setViewportTransform(scaledVT);
+
+  // === DEBUG LOGS - VIEWPORT TRANSFORM ===
+  console.log('=== VIEWPORT TRANSFORM ===');
+  console.log('Original viewport transform:', vt);
+  console.log('Scaled viewport transform:', scaledVT);
+  console.log('Rect position used for offset:', { left: rect.left, top: rect.top });
+  // === DEBUG LOGS - FIN ===
 
   // Clonar la imagen activa con todas sus transformaciones/efectos
   img.clone((clone) => {
@@ -199,6 +259,19 @@ function confirmCrop(canvas, marginRect, rotateCheckbox, Swal, confirmCropButton
         scaleX: 1 / factorX,
         scaleY: 1 / factorY,
       });
+
+      // === DEBUG LOGS - NUEVA IMAGEN ===
+      console.log('=== NUEVA IMAGEN CREADA ===');
+      console.log('Posición calculada:', { 
+        left: rect.left + cropWCanvas / 2, 
+        top: rect.top + cropHCanvas / 2 
+      });
+      console.log('Escalas aplicadas:', { scaleX: 1 / factorX, scaleY: 1 / factorY });
+      console.log('Dimensiones naturales nueva imagen:', { 
+        width: newImgEl.naturalWidth, 
+        height: newImgEl.naturalHeight 
+      });
+      // === DEBUG LOGS - FIN ===
 
       if (originalType === 'group' || wasOriginallyGroup) {
         newImage.set('originalType', 'group');

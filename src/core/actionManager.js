@@ -23,10 +23,7 @@ import {
 import { 
   initializeCrop, 
   confirmCrop, 
-  exitCropMode,
-  createCanvasBackground,
-  disableOtherObjects,
-  restoreOtherObjects
+  exitCropMode
 } from '../image/cropUtils.js';
 import {
   initializePerspectiveCrop,

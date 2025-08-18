@@ -347,12 +347,10 @@ export class EventManager {
 
     this.addEventBinding('confirmCropButton', 'click', () => 
       this.actions.confirmCrop(
-        this.canvasManager.getCanvas(), 
-        this.canvasManager.getMarginRect(), 
-        this.dom.get('rotateCheckbox'), 
-        Swal, 
-        this.dom.get('confirmCropButton'), 
-        this.dom.get('cancelCropButton'), 
+        this.canvasManager.getCanvas(),
+        this.dom.get('rotateCheckbox'),
+        this.dom.get('confirmCropButton'),
+        this.dom.get('cancelCropButton'),
         this.dom.get('cropButton')
       )
     );
