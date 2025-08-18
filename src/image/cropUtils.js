@@ -233,10 +233,47 @@ function confirmCrop(canvas, rotateCheckbox, confirmCropButton, cancelCropButton
 
   // Clonar la imagen activa con todas sus transformaciones/efectos
   img.clone((clone) => {
+    // FIX: Forzar las propiedades del clon para que coincidan exactamente con las
+    // de la imagen original, evitando problemas de pérdida de precisión que
+    // ocurren a veces con el método .clone() de Fabric.js.
+    clone.set({
+      scaleX: img.scaleX,
+      scaleY: img.scaleY,
+      angle: img.angle,
+      flipX: img.flipX,
+      flipY: img.flipY,
+      skewX: img.skewX,
+      skewY: img.skewY,
+      left: img.left,
+      top: img.top,
+      originX: img.originX,
+      originY: img.originY,
+      filters: img.filters,
+    });
+
     // Asegurar misma visibilidad de control luego en el resultado
     tmpCanvas.add(clone);
     tmpCanvas.renderAll();
 
+    // === DEBUG LOGS - CANVAS TEMPORAL Y CLON ===
+    console.log('=== DEBUG: CANVAS TEMPORAL Y CLON ===');
+    console.log('Dimensiones tmpCanvas:', { 
+      width: tmpCanvas.width, 
+      height: tmpCanvas.height 
+    });
+    console.log('Viewport tmpCanvas:', tmpCanvas.viewportTransform);
+
+    console.log('--- CLON DE IMAGEN AÑADIDO ---');
+    console.log('Posición clon:', { left: clone.left, top: clone.top });
+    console.log('Dimensiones escaladas clon:', { 
+      width: clone.getScaledWidth(), 
+      height: clone.getScaledHeight() 
+    });
+    console.log('Escalas clon:', { scaleX: clone.scaleX, scaleY: clone.scaleY });
+    console.log('Rotación clon:', { angle: clone.angle });
+    console.log('Bounding rect clon (en tmpCanvas):', clone.getBoundingRect());
+    // === DEBUG LOGS - FIN ===
+    
     // Exportar exactamente la región recortada a alta resolución
     const dataUrl = tmpCanvas.toDataURL({ format: 'png' });
 
