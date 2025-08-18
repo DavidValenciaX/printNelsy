@@ -187,8 +187,8 @@ function confirmCrop(canvas, rotateCheckbox, confirmCropButton, cancelCropButton
 
   const cropWCanvas = rect.getScaledWidth();
   const cropHCanvas = rect.getScaledHeight();
-  const offW = Math.max(1, cropWCanvas * factorX);
-  const offH = Math.max(1, cropHCanvas * factorY);
+  const offW = Math.max(1, Math.round(cropWCanvas * factorX));
+  const offH = Math.max(1, Math.round(cropHCanvas * factorY));
 
   // === DEBUG LOGS - FACTORES DE ESCALA ===
   console.log('=== FACTORES DE ESCALA ===');
