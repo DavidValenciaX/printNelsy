@@ -57,15 +57,17 @@ function enterCropMode(imgObject, canvas, marginRect, confirmCropButton, cancelC
   // Get image bounding rect
   const bounds = imgObject.getBoundingRect();
 
+  const cropStrokeWidth = 1.5;
+
   // Create crop rect using bounds
   cropRect = new fabric.Rect({
     left: bounds.left,
     top: bounds.top,
-    width: bounds.width,
-    height: bounds.height,
+    width: bounds.width - cropStrokeWidth,
+    height: bounds.height - cropStrokeWidth,
     fill: "transparent",
     stroke: "blue",
-    strokeWidth: 1.5,
+    strokeWidth: cropStrokeWidth,
     strokeDashArray: [5, 5],
     absolutePositioned: true,
     transparentCorners: false,
@@ -185,8 +187,8 @@ function confirmCrop(canvas, rotateCheckbox, confirmCropButton, cancelCropButton
 
   const cropWCanvas = rect.getScaledWidth();
   const cropHCanvas = rect.getScaledHeight();
-  const offW = Math.max(1, Math.round(cropWCanvas * factorX));
-  const offH = Math.max(1, Math.round(cropHCanvas * factorY));
+  const offW = Math.max(1, cropWCanvas * factorX);
+  const offH = Math.max(1, cropHCanvas * factorY);
 
   // === DEBUG LOGS - FACTORES DE ESCALA ===
   console.log('=== FACTORES DE ESCALA ===');
