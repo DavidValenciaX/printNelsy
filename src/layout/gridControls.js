@@ -63,7 +63,11 @@ export function toggleGridControlsVisibility(canvas, domManager, isVerticalPaper
   const shouldShow = isGridArrangement;
 
   if (gridControlsGroup) {
-    gridControlsGroup.style.display = shouldShow ? 'flex' : 'none';
+    if (shouldShow) {
+      gridControlsGroup.classList.remove('disabled');
+    } else {
+      gridControlsGroup.classList.add('disabled');
+    }
   }
   updateGridVisualization(canvas, isVerticalPaper);
 }
