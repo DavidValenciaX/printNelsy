@@ -284,7 +284,9 @@ function placeImageWithRetry(img, idealArea, placedRects, config, marginRect) {
 }
 
 function calculateImageSize(img, idealArea, config) {
-  const area = idealArea * (0.55 + 1.1 * Math.random());
+  // The original range was (0.55 + 1.1 * Math.random()), creating a wide variance.
+  // This new range (0.8 to 1.2) produces more balanced sizes.
+  const area = idealArea * (0.8 + 0.4 * Math.random());
   const ar = img.height / img.width;
   let w = Math.sqrt(area / ar);
   let h = w * ar;
