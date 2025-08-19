@@ -1,7 +1,9 @@
 // Import all action functions
 import { zoomIn, zoomOut, applyZoom } from '../output/zoom.js';
 import { centerVertically, centerHorizontally } from '../transform/center.js';
-import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from '../layout/collageUtils.js';
+import { collageArrange } from '../layout/collageUtils.js';
+import { createMasonryColumnsCollage } from '../layout/masonryColumnsCollage.js';
+import { createMasonryRowsCollage } from '../layout/masonryRowsCollage.js';
 import { setImageSizeInCm } from '../image/imageSize.js';
 import { printCanvas, printAllPages } from '../output/printUtils.js';
 import { downloadAsPDF, downloadAllPagesAsPDF } from '../output/pdfUtils.js';

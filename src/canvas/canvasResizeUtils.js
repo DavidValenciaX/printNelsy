@@ -1,7 +1,9 @@
 import { fabric } from 'fabric';
 import Swal from 'sweetalert2';
 import { arrangeImages, sortImages } from '../transform/arrangeUtils.js';
-import { createMasonryColumnsCollage, createMasonryRowsCollage, collageArrange } from '../layout/collageUtils.js';
+import { collageArrange } from '../layout/collageUtils.js';
+import { createMasonryColumnsCollage } from '../layout/masonryColumnsCollage.js';
+import { createMasonryRowsCollage } from '../layout/masonryRowsCollage.js';
 import { constrainObjectToMargin } from './constraintUtils.js';
 import { updateMarginRect } from './marginRectManager.js';
 import { getCustomGridDimensions, updateGridVisualization } from '../layout/gridControls.js';
