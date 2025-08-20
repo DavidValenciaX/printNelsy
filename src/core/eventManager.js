@@ -434,7 +434,7 @@ export class EventManager {
     });
 
     this.addEventBinding('collageButton', 'click', async () => {
-      const newStatus = this.actions.collageArrange(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
+      const newStatus = this.actions.randomCollageArrange(this.canvasManager.getCanvas(), this.canvasManager.getMarginRect(), Swal);
       if (newStatus) this.actions.setArrangementStatus(newStatus);
       this.actions.toggleGridControlsVisibility(this.canvasManager.getCanvas(), this.dom);
       this.updateLayoutOrientationButtons();

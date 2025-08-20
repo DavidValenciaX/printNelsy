@@ -84,7 +84,7 @@ export class ActionManager {
   // Collage actions
   createMasonryColumnsCollage = createMasonryColumnsCollage;
   createMasonryRowsCollage = createMasonryRowsCollage;
-  collageArrange = randomCollageArrange;
+  randomCollageArrange = randomCollageArrange;
 
   // Size actions
   setImageSizeInCm = setImageSizeInCm;
