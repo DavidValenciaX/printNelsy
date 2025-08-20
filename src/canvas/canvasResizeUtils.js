@@ -1,7 +1,7 @@
 import { fabric } from 'fabric';
 import Swal from 'sweetalert2';
 import { arrangeImages, sortImages } from '../transform/arrangeUtils.js';
-import { collageArrange } from '../layout/collageUtils.js';
+import { randomCollageArrange } from '../layout/collageUtils.js';
 import { createMasonryColumnsCollage } from '../layout/masonryColumnsCollage.js';
 import { createMasonryRowsCollage } from '../layout/masonryRowsCollage.js';
 import { constrainObjectToMargin } from './constraintUtils.js';
@@ -77,7 +77,7 @@ function reAddAndArrangeImages(images, currentOrientation, currentOrder, canvas,
     },
     "collage": () => {
       images.forEach((img) => canvas.add(img));
-      const newStatus = collageArrange(canvas, marginRect, Swal);
+      const newStatus = randomCollageArrange(canvas, marginRect, Swal);
       if (newStatus) setArrangementStatus(newStatus);
     },
     "none": () => {

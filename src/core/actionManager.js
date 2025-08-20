@@ -1,7 +1,7 @@
 // Import all action functions
 import { zoomIn, zoomOut, applyZoom } from '../output/zoom.js';
 import { centerVertically, centerHorizontally } from '../transform/center.js';
-import { collageArrange } from '../layout/collageUtils.js';
+import { randomCollageArrange } from '../layout/collageUtils.js';
 import { createMasonryColumnsCollage } from '../layout/masonryColumnsCollage.js';
 import { createMasonryRowsCollage } from '../layout/masonryRowsCollage.js';
 import { setImageSizeInCm } from '../image/imageSize.js';
@@ -84,7 +84,7 @@ export class ActionManager {
   // Collage actions
   createMasonryColumnsCollage = createMasonryColumnsCollage;
   createMasonryRowsCollage = createMasonryRowsCollage;
-  collageArrange = collageArrange;
+  collageArrange = randomCollageArrange;
 
   // Size actions
   setImageSizeInCm = setImageSizeInCm;
