@@ -1,7 +1,7 @@
 import { fabric } from 'fabric';
 import Swal from 'sweetalert2';
 import { arrangeImages, sortImages } from '../transform/arrangeUtils.js';
-import { randomCollageArrange } from '../layout/collageUtils.js';
+import { randomCollageArrange } from '../layout/randomCollage.js';
 import { createMasonryColumnsCollage } from '../layout/masonryColumnsCollage.js';
 import { createMasonryRowsCollage } from '../layout/masonryRowsCollage.js';
 import { constrainObjectToMargin } from './constraintUtils.js';

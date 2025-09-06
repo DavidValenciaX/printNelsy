@@ -49,7 +49,7 @@ imprimir_imagenes_fabric/
 │   │   └── groupUtils.js           # Gestión de grupos de objetos
 │   │
 │   ├── 📁 layout/              # Layouts y collages
-│   │   ├── collageUtils.js         # Creación de collages
+│   │   ├── randomCollage.js        # Creación de collages aleatorios
 │   │   ├── layoutSelector.js       # Selección de layouts
 │   │   └── gridControls.js         # Controles de grid personalizable
 │   │
