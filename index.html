@@ -1,332 +1,731 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Asistente de impresión de Imágenes</title>
+        <link rel="stylesheet" href="/src/ui/icons.css" />
+        <link rel="stylesheet" href="/src/ui/style.css" />
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente de impresión de Imágenes</title>
-    <link rel="stylesheet" href="/src/ui/icons.css">
-    <link rel="stylesheet" href="/src/ui/style.css">
-    
-    <!-- Configuración de eventos pasivos - DEBE EJECUTARSE ANTES DE CUALQUIER SCRIPT -->
-    <script>
-        // Interceptar addEventListener para usar eventos pasivos cuando sea apropiado
-        const originalAddEventListener = EventTarget.prototype.addEventListener;
-        EventTarget.prototype.addEventListener = function(type, listener, options) {
-            // Para eventos de wheel, usar passive: true por defecto
-            if (type === 'wheel' && !options) {
-                options = { passive: true };
-            }
-            return originalAddEventListener.call(this, type, listener, options);
-        };
-        console.log('✅ Configuración de eventos pasivos aplicada desde HTML');
-    </script>
-</head>
+        <!-- Configuración de eventos pasivos - DEBE EJECUTARSE ANTES DE CUALQUIER SCRIPT -->
+        <script>
+            // Interceptar addEventListener para usar eventos pasivos cuando sea apropiado
+            const originalAddEventListener =
+                EventTarget.prototype.addEventListener;
+            EventTarget.prototype.addEventListener = function (
+                type,
+                listener,
+                options,
+            ) {
+                // Para eventos de wheel, usar passive: true por defecto
+                if (type === "wheel" && !options) {
+                    options = { passive: true };
+                }
+                return originalAddEventListener.call(
+                    this,
+                    type,
+                    listener,
+                    options,
+                );
+            };
+            console.log(
+                "✅ Configuración de eventos pasivos aplicada desde HTML",
+            );
+        </script>
+    </head>
 
-<body>
-    <div id="main-content">
-        <div class="main-container">
-            <!-- Left Sidebar -->
-            <div class="button-container">
+    <body>
+        <div id="main-content">
+            <div class="main-container">
+                <!-- Left Sidebar -->
+                <div class="button-container" id="leftSidebar">
+                    <!-- Tabs Header -->
+                    <div class="tabs-header">
+                        <button class="tab-button" data-tab="config">
+                            <i class="fas fa-cog"></i> Config
+                        </button>
+                        <button class="tab-button" data-tab="file">
+                            <i class="fas fa-file"></i> Archivo
+                        </button>
+                        <button class="tab-button" data-tab="page">
+                            <i class="fas fa-copy"></i> Página
+                        </button>
+                    </div>
 
-                <!-- Orientation -->
-                <div class="button-group">
-                    <div class="group-title">Orientación</div>
-                    <button type="button" class="orientation-button" id="verticalButton">
-                        <i class="fas fa-file button-icon"></i> Vertical
-                    </button>
-                    <button type="button" class="orientation-button" id="horizontalButton">
-                        <i class="fas fa-file rotate-90 button-icon"></i> Horizontal
-                    </button>
-                </div>
+                    <!-- Tabs Content -->
+                    <div class="tabs-content">
+                        <!-- Tab: Configuración -->
+                        <div class="tab-panel" data-panel="config">
+                            <!-- Orientation -->
+                            <div class="button-group">
+                                <div class="group-title">Orientación</div>
+                                <button
+                                    type="button"
+                                    class="orientation-button"
+                                    id="verticalButton"
+                                >
+                                    <i class="fas fa-file button-icon"></i>
+                                    Vertical
+                                </button>
+                                <button
+                                    type="button"
+                                    class="orientation-button"
+                                    id="horizontalButton"
+                                >
+                                    <i
+                                        class="fas fa-file rotate-90 button-icon"
+                                    ></i>
+                                    Horizontal
+                                </button>
+                            </div>
 
-                <!-- File Operations -->
-                <div class="button-group">
-                    <div class="group-title">Archivo</div>
-                    <label for="imageLoader" class="control-button">
-                        <i class="fas fa-upload button-icon"></i> Cargar imágenes
-                    </label>
-                    <input type="file" id="imageLoader" accept="image/*" multiple aria-label="Cargar imágenes" />
-                    
-                    <!-- Botones para página actual -->
-                    <button type="button" id="downloadPdfButton" class="control-button">
-                        <i class="fas fa-file-pdf button-icon"></i> PDF página actual
-                    </button>
-                    <button type="button" id="downloadPngButton" class="control-button">
-                        <i class="fas fa-file-image button-icon"></i> PNG página actual
-                    </button>
-                    <button type="button" id="printButton" class="control-button">
-                        <i class="fas fa-print button-icon"></i> Imprimir página actual
-                    </button>
-                    
-                    <!-- Botones para todas las páginas -->
-                    <button type="button" id="printAllPagesButton" class="control-button">
-                        <i class="fas fa-print button-icon"></i> Imprimir todas las páginas
-                    </button>
-                    <button type="button" id="downloadAllPdfButton" class="control-button">
-                        <i class="fas fa-file-pdf button-icon"></i> PDF de todas las páginas
-                    </button>
-                    <button type="button" id="downloadAllPngButton" class="control-button">
-                        <i class="fas fa-file-image button-icon"></i> PNG de todas las páginas
-                    </button>
-                </div>
-
-                <!-- Paper Size -->
-                <div class="button-group">
-                    <div class="group-title">Tamaño de Papel</div>
-                    <button type="button" class="size-button" id="cartaButton">
-                        <i class="fas fa-file button-icon"></i> CARTA
-                    </button>
-                    <button type="button" class="size-button" id="oficioButton">
-                        <i class="fas fa-file-alt button-icon"></i> OFICIO
-                    </button>
-                    <button type="button" class="size-button" id="a4Button">
-                        <i class="fas fa-file-invoice button-icon"></i> A4
-                    </button>
-                </div>
-
-                <div class="button-group">
-                    <div class="group-title">Página</div>
-                    <button type="button" id="newPageButton" class="control-button">
-                        <i class="fas fa-plus button-icon"></i>Nueva página
-                    </button>
-                    <div class="page-navigation">
-                        <div class="page-info">
-                            <span id="pageInfo">Página 1 de 1</span>
+                            <!-- Paper Size -->
+                            <div class="button-group">
+                                <div class="group-title">Tamaño de Papel</div>
+                                <button
+                                    type="button"
+                                    class="size-button"
+                                    id="cartaButton"
+                                >
+                                    <i class="fas fa-file button-icon"></i>
+                                    CARTA
+                                </button>
+                                <button
+                                    type="button"
+                                    class="size-button"
+                                    id="oficioButton"
+                                >
+                                    <i class="fas fa-file-alt button-icon"></i>
+                                    OFICIO
+                                </button>
+                                <button
+                                    type="button"
+                                    class="size-button"
+                                    id="a4Button"
+                                >
+                                    <i
+                                        class="fas fa-file-invoice button-icon"
+                                    ></i>
+                                    A4
+                                </button>
+                            </div>
                         </div>
-                        <div class="page-controls">
-                            <button type="button" id="prevPageButton" class="page-nav-button" disabled title="Página anterior">
-                                <i class="fas fa-chevron-up"></i>
-                            </button>
-                            <button type="button" id="nextPageButton" class="page-nav-button" disabled title="Página siguiente">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
+
+                        <!-- Tab: Archivo -->
+                        <div class="tab-panel" data-panel="file">
+                            <!-- File Operations -->
+                            <div class="button-group">
+                                <div class="group-title">Cargar</div>
+                                <label for="imageLoader" class="control-button">
+                                    <i class="fas fa-upload button-icon"></i>
+                                    Cargar imágenes
+                                </label>
+                                <input
+                                    type="file"
+                                    id="imageLoader"
+                                    accept="image/*"
+                                    multiple
+                                    aria-label="Cargar imágenes"
+                                />
+                            </div>
+
+                            <div class="button-group">
+                                <div class="group-title">Página Actual</div>
+                                <button
+                                    type="button"
+                                    id="downloadPdfButton"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-file-pdf button-icon"></i>
+                                    PDF página actual
+                                </button>
+                                <button
+                                    type="button"
+                                    id="downloadPngButton"
+                                    class="control-button"
+                                >
+                                    <i
+                                        class="fas fa-file-image button-icon"
+                                    ></i>
+                                    PNG página actual
+                                </button>
+                                <button
+                                    type="button"
+                                    id="printButton"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-print button-icon"></i>
+                                    Imprimir actual
+                                </button>
+                            </div>
+
+                            <div class="button-group">
+                                <div class="group-title">Todas las Páginas</div>
+                                <button
+                                    type="button"
+                                    id="printAllPagesButton"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-print button-icon"></i>
+                                    Imprimir todas
+                                </button>
+                                <button
+                                    type="button"
+                                    id="downloadAllPdfButton"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-file-pdf button-icon"></i>
+                                    PDF todas
+                                </button>
+                                <button
+                                    type="button"
+                                    id="downloadAllPngButton"
+                                    class="control-button"
+                                >
+                                    <i
+                                        class="fas fa-file-image button-icon"
+                                    ></i>
+                                    PNG todas
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Página -->
+                        <div class="tab-panel" data-panel="page">
+                            <div class="button-group">
+                                <div class="group-title">
+                                    Gestión de Páginas
+                                </div>
+                                <button
+                                    type="button"
+                                    id="newPageButton"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-plus button-icon"></i>
+                                    Nueva página
+                                </button>
+                                <div class="page-navigation">
+                                    <div class="page-info">
+                                        <span id="pageInfo">Página 1 de 1</span>
+                                    </div>
+                                    <div class="page-controls">
+                                        <button
+                                            type="button"
+                                            id="prevPageButton"
+                                            class="page-nav-button"
+                                            disabled
+                                            title="Página anterior"
+                                        >
+                                            <i class="fas fa-chevron-up"></i>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            id="nextPageButton"
+                                            class="page-nav-button"
+                                            disabled
+                                            title="Página siguiente"
+                                        >
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    id="deletePageButton"
+                                    class="control-button danger-button"
+                                    disabled
+                                >
+                                    <i class="fas fa-trash button-icon"></i>
+                                    Eliminar página
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <button type="button" id="deletePageButton" class="control-button danger-button" disabled>
-                        <i class="fas fa-trash button-icon"></i>Eliminar página
-                    </button>
                 </div>
 
-            </div>
-
-            <!-- Canvas -->
-            <div id="pages-container">
-                <div class="page-container">
-                    <canvas id="canvas"></canvas>
-                </div>
-            </div>
-
-            <!-- Right Sidebar -->
-            <div class="button-container">
-
-                <!-- arrange images -->
-                <div class="button-group">
-                    <div class="group-title">Organizar imágenes</div>
-                    <button type="button" id="gridArrangeButton" class="control-button arrangement-button">
-                        <i class="fas fa-th button-icon"></i> Organizar en Cuadrícula
-                    </button>
-                    <button type="button" id="columnsCollageButton" class="control-button arrangement-button">
-                        <i class="mdi mdi-view-dashboard button-icon"></i> Crear Collage de Columnas
-                    </button>
-                    <button type="button" id="rowsCollageButton" class="control-button arrangement-button">
-                        <i class="mdi mdi-view-dashboard-variant rotate-90 button-icon"></i> Crear Collage de Filas
-                    </button>
-                    <button type="button" id="collageButton" class="control-button arrangement-button">
-                        <i class="mdi mdi-view-quilt button-icon"></i> Crear Collage Aleatorio
-                    </button>
-                </div>
-
-                <!-- Grid Controls -->
-                <div class="button-group" id="gridControlsGroup">
-                    <div class="group-title">Controles de Cuadrícula</div>
-                    <div class="grid-control-row">
-                        <label for="rowsDisplay">Filas:</label>
-                        <button type="button" id="decreaseRowsButton" class="grid-control-button" title="Disminuir filas">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                        <span id="rowsDisplay" class="grid-display">1</span>
-                        <button type="button" id="increaseRowsButton" class="grid-control-button" title="Aumentar filas">
-                            <i class="fas fa-plus"></i>
-                        </button>
+                <!-- Canvas -->
+                <div id="pages-container">
+                    <div class="page-container">
+                        <canvas id="canvas"></canvas>
                     </div>
-                    <div class="grid-control-row">
-                        <label for="colsDisplay">Columnas:</label>
-                        <button type="button" id="decreaseColsButton" class="grid-control-button" title="Disminuir columnas">
-                            <i class="fas fa-minus"></i>
+                </div>
+
+                <!-- Right Sidebar -->
+                <div class="button-container" id="rightSidebar">
+                    <!-- Tabs Header -->
+                    <div class="tabs-header">
+                        <button class="tab-button" data-tab="arrange">
+                            <i class="fas fa-th"></i> Organizar
                         </button>
-                        <span id="colsDisplay" class="grid-display">1</span>
-                        <button type="button" id="increaseColsButton" class="grid-control-button" title="Aumentar columnas">
-                            <i class="fas fa-plus"></i>
+                        <button class="tab-button" data-tab="edit">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="tab-button" data-tab="advanced">
+                            <i class="fas fa-cogs"></i> Avanzado
                         </button>
                     </div>
 
-                    <div class="grid-control-row">
-                        <label for="spacingRange">Espaciado:</label>
-                        <input type="range" id="spacingRange" min="0" max="100" value="20" class="grid-control-slider">
-                        <span id="spacingDisplay" class="grid-display">20</span>
+                    <!-- Tabs Content -->
+                    <div class="tabs-content">
+                        <!-- Tab: Organizar -->
+                        <div class="tab-panel" data-panel="arrange">
+                            <!-- arrange images -->
+                            <div class="button-group">
+                                <div class="group-title">
+                                    Organizar imágenes
+                                </div>
+                                <button
+                                    type="button"
+                                    id="gridArrangeButton"
+                                    class="control-button arrangement-button"
+                                >
+                                    <i class="fas fa-th button-icon"></i>
+                                    Cuadrícula
+                                </button>
+                                <button
+                                    type="button"
+                                    id="columnsCollageButton"
+                                    class="control-button arrangement-button"
+                                >
+                                    <i
+                                        class="mdi mdi-view-dashboard button-icon"
+                                    ></i>
+                                    Collage Columnas
+                                </button>
+                                <button
+                                    type="button"
+                                    id="rowsCollageButton"
+                                    class="control-button arrangement-button"
+                                >
+                                    <i
+                                        class="mdi mdi-view-dashboard-variant rotate-90 button-icon"
+                                    ></i>
+                                    Collage Filas
+                                </button>
+                                <button
+                                    type="button"
+                                    id="collageButton"
+                                    class="control-button arrangement-button"
+                                >
+                                    <i
+                                        class="mdi mdi-view-quilt button-icon"
+                                    ></i>
+                                    Collage Aleatorio
+                                </button>
+                            </div>
+
+                            <!-- Grid Controls -->
+                            <div class="button-group" id="gridControlsGroup">
+                                <div class="group-title">
+                                    Controles de Cuadrícula
+                                </div>
+                                <div class="grid-control-row">
+                                    <label for="rowsDisplay">Filas:</label>
+                                    <button
+                                        type="button"
+                                        id="decreaseRowsButton"
+                                        class="grid-control-button"
+                                        title="Disminuir filas"
+                                    >
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <span id="rowsDisplay" class="grid-display"
+                                        >1</span
+                                    >
+                                    <button
+                                        type="button"
+                                        id="increaseRowsButton"
+                                        class="grid-control-button"
+                                        title="Aumentar filas"
+                                    >
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="grid-control-row">
+                                    <label for="colsDisplay">Columnas:</label>
+                                    <button
+                                        type="button"
+                                        id="decreaseColsButton"
+                                        class="grid-control-button"
+                                        title="Disminuir columnas"
+                                    >
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <span id="colsDisplay" class="grid-display"
+                                        >1</span
+                                    >
+                                    <button
+                                        type="button"
+                                        id="increaseColsButton"
+                                        class="grid-control-button"
+                                        title="Aumentar columnas"
+                                    >
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+
+                                <div class="grid-control-row">
+                                    <label for="spacingRange">Espaciado:</label>
+                                    <input
+                                        type="range"
+                                        id="spacingRange"
+                                        min="0"
+                                        max="100"
+                                        value="20"
+                                        class="grid-control-slider"
+                                    />
+                                    <span
+                                        id="spacingDisplay"
+                                        class="grid-display"
+                                        >20</span
+                                    >
+                                </div>
+
+                                <div class="group-title">Orientación</div>
+                                <button
+                                    type="button"
+                                    id="rowsLayoutButton"
+                                    class="control-button arrangement-button"
+                                >
+                                    <i
+                                        class="mdi mdi-table-arrow-right button-icon"
+                                    ></i>
+                                    Filas
+                                </button>
+                                <button
+                                    type="button"
+                                    id="colsLayoutButton"
+                                    class="control-button arrangement-button"
+                                >
+                                    <i
+                                        class="mdi mdi-table-arrow-down button-icon"
+                                    ></i>
+                                    Columnas
+                                </button>
+
+                                <div class="group-title" id="orderGroupTitle">
+                                    Orden
+                                </div>
+                                <button
+                                    type="button"
+                                    id="forwardOrderButton"
+                                    class="control-button arrangement-button"
+                                >
+                                    <i
+                                        class="fa-solid fa-arrow-right button-icon"
+                                    ></i>
+                                    Adelante
+                                </button>
+                                <button
+                                    type="button"
+                                    id="reverseOrderButton"
+                                    class="control-button arrangement-button"
+                                >
+                                    <i
+                                        class="fa-solid fa-arrow-left button-icon"
+                                    ></i>
+                                    Atrás
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Editar -->
+                        <div class="tab-panel" data-panel="edit">
+                            <!-- crop image -->
+                            <div class="button-group">
+                                <div class="group-title">Recorte</div>
+                                <button
+                                    type="button"
+                                    id="cropButton"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-crop button-icon"></i>
+                                    Recortar
+                                </button>
+                                <button
+                                    type="button"
+                                    id="perspectiveCropButton"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-crop-alt button-icon"></i>
+                                    Perspectiva
+                                </button>
+                                <button
+                                    type="button"
+                                    id="confirmCrop"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-check button-icon"></i>
+                                    Confirmar
+                                </button>
+                                <button
+                                    type="button"
+                                    id="confirmPerspectiveCrop"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-check button-icon"></i>
+                                    Confirmar
+                                </button>
+                                <button
+                                    type="button"
+                                    id="cancelCrop"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-times button-icon"></i>
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="button"
+                                    id="cancelPerspectiveCrop"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-times button-icon"></i>
+                                    Cancelar
+                                </button>
+                            </div>
+
+                            <!-- rotate images -->
+                            <div class="button-group">
+                                <div class="group-title">Rotar</div>
+                                <button
+                                    type="button"
+                                    id="rotateButton+90"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-redo button-icon"></i> 90°
+                                    derecha
+                                </button>
+                                <button
+                                    type="button"
+                                    id="rotateButton-90"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-undo button-icon"></i> 90°
+                                    izquierda
+                                </button>
+                                <div class="control-group">
+                                    <input type="checkbox" id="rotateControl" />
+                                    <label for="rotateControl"
+                                        >Rotación libre</label
+                                    >
+                                </div>
+                            </div>
+
+                            <!-- center images -->
+                            <div class="button-group">
+                                <div class="group-title">Centrar</div>
+                                <button
+                                    type="button"
+                                    id="centerVerticallyButton"
+                                    class="control-button"
+                                >
+                                    <i
+                                        class="fas fa-arrows-alt-v button-icon"
+                                    ></i>
+                                    Vertical
+                                </button>
+                                <button
+                                    type="button"
+                                    id="centerHorizontallyButton"
+                                    class="control-button"
+                                >
+                                    <i
+                                        class="fas fa-arrows-alt-h button-icon"
+                                    ></i>
+                                    Horizontal
+                                </button>
+                            </div>
+
+                            <!-- flip images -->
+                            <div class="button-group">
+                                <div class="group-title">Voltear</div>
+                                <button
+                                    type="button"
+                                    id="flipVerticalButton"
+                                    class="control-button"
+                                >
+                                    <i
+                                        class="bi bi-symmetry-vertical button-icon"
+                                    ></i>
+                                    Vertical
+                                </button>
+                                <button
+                                    type="button"
+                                    id="flipHorizontalButton"
+                                    class="control-button"
+                                >
+                                    <i
+                                        class="bi bi-symmetry-horizontal button-icon"
+                                    ></i>
+                                    Horizontal
+                                </button>
+                            </div>
+
+                            <!-- Scale Image -->
+                            <div class="button-group">
+                                <div class="group-title">Escalar</div>
+                                <button
+                                    type="button"
+                                    id="scaleUpButton"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-expand button-icon"></i>
+                                    Ampliar
+                                </button>
+                                <button
+                                    type="button"
+                                    id="scaleDownButton"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-compress button-icon"></i>
+                                    Reducir
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Avanzado -->
+                        <div class="tab-panel" data-panel="advanced">
+                            <!-- Group/Ungroup Objects -->
+                            <div class="button-group">
+                                <div class="group-title">Agrupar</div>
+                                <button
+                                    type="button"
+                                    id="groupButton"
+                                    class="control-button"
+                                    disabled
+                                >
+                                    <i
+                                        class="fas fa-object-group button-icon"
+                                    ></i>
+                                    Agrupar
+                                </button>
+                                <button
+                                    type="button"
+                                    id="ungroupButton"
+                                    class="control-button"
+                                    disabled
+                                >
+                                    <i
+                                        class="fas fa-object-ungroup button-icon"
+                                    ></i>
+                                    Desagrupar
+                                </button>
+                            </div>
+
+                            <!-- Set Size in cm -->
+                            <div class="button-group">
+                                <div class="group-title">Tamaño (cm)</div>
+                                <input
+                                    type="number"
+                                    id="widthInput"
+                                    placeholder="Ancho en cm"
+                                    step="0.1"
+                                />
+                                <input
+                                    type="number"
+                                    id="heightInput"
+                                    placeholder="Alto en cm"
+                                    step="0.1"
+                                />
+                                <div class="control-group">
+                                    <input
+                                        type="checkbox"
+                                        id="maintainAspectCheckbox"
+                                    />
+                                    <label for="maintainAspectCheckbox"
+                                        >Mantener aspecto</label
+                                    >
+                                </div>
+                                <button
+                                    type="button"
+                                    id="setSizeButton"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-ruler button-icon"></i>
+                                    Establecer tamaño
+                                </button>
+                            </div>
+
+                            <!-- Color de Imagen -->
+                            <div class="button-group">
+                                <div class="group-title">Color</div>
+                                <button
+                                    type="button"
+                                    id="grayScaleButton"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-adjust button-icon"></i>
+                                    Blanco y Negro
+                                </button>
+                            </div>
+
+                            <!-- Copiar y Pegar -->
+                            <div class="button-group">
+                                <div class="group-title">Copiar/Pegar</div>
+                                <button
+                                    type="button"
+                                    id="copyButton"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-copy button-icon"></i>
+                                    Copiar
+                                </button>
+                                <button
+                                    type="button"
+                                    id="pasteButton"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-paste button-icon"></i>
+                                    Pegar
+                                </button>
+                            </div>
+
+                            <!-- Danger Zone -->
+                            <div class="button-group">
+                                <div class="group-title">Operaciones</div>
+                                <button
+                                    type="button"
+                                    id="resetImageButton"
+                                    class="control-button"
+                                >
+                                    <i class="fas fa-undo button-icon"></i>
+                                    Restablecer
+                                </button>
+                                <button
+                                    type="button"
+                                    id="deleteButton"
+                                    class="control-button danger-button"
+                                >
+                                    <i class="fas fa-trash button-icon"></i>
+                                    Eliminar
+                                </button>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="group-title">Orientación de Cuadrícula</div>
-                    <button type="button" id="rowsLayoutButton" class="control-button arrangement-button">
-                        <i class="mdi mdi-table-arrow-right button-icon"></i> Filas
-                    </button>
-                    <button type="button" id="colsLayoutButton" class="control-button arrangement-button">
-                        <i class="mdi mdi-table-arrow-down button-icon"></i> Columnas
-                    </button>
-
-                    <div class="group-title" id="orderGroupTitle">Orden de Imágenes</div>
-                    <button type="button" id="forwardOrderButton" class="control-button arrangement-button">
-                        <i class="fa-solid fa-arrow-right button-icon"></i> Hacia adelante
-                    </button>
-                    <button type="button" id="reverseOrderButton" class="control-button arrangement-button">
-                        <i class="fa-solid fa-arrow-left button-icon"></i> Hacia atrás
-                    </button>
-
                 </div>
-
-                <!-- crop image -->
-                <div class="button-group">
-                    <div class="group-title">Recorte de Imagen</div>
-                    <button type="button" id="cropButton" class="control-button">
-                        <i class="fas fa-crop button-icon"></i> Recortar imagen
-                    </button>
-                    <button type="button" id="perspectiveCropButton" class="control-button">
-                        <i class="fas fa-crop-alt button-icon"></i> Recorte en perspectiva
-                    </button>
-                    <button type="button" id="confirmCrop" class="control-button">
-                        <i class="fas fa-check button-icon"></i> Confirmar
-                    </button>
-                    <button type="button" id="confirmPerspectiveCrop" class="control-button">
-                        <i class="fas fa-check button-icon"></i> Confirmar perspectiva
-                    </button>
-                    <button type="button" id="cancelCrop" class="control-button">
-                        <i class="fas fa-times button-icon"></i> Cancelar
-                    </button>
-                    <button type="button" id="cancelPerspectiveCrop" class="control-button">
-                        <i class="fas fa-times button-icon"></i> Cancelar perspectiva
-                    </button>
-                </div>
-
-                <!-- rotate images -->
-                <div class="button-group">
-                    <div class="group-title">Rotar imágenes</div>
-                    <button type="button" id="rotateButton+90" class="control-button">
-                        <i class="fas fa-redo button-icon"></i> Girar 90° derecha
-                    </button>
-                    <button type="button" id="rotateButton-90" class="control-button">
-                        <i class="fas fa-undo button-icon"></i> Girar 90° izquierda
-                    </button>
-                    <div class="control-group">
-                        <input type="checkbox" id="rotateControl" />
-                        <label for="rotateControl">Permitir rotación libre</label>
-                    </div>
-                </div>
-
-                <!-- center images -->
-                <div class="button-group">
-                    <div class="group-title">Centrar imágenes</div>
-                    <button type="button" id="centerVerticallyButton" class="control-button">
-                        <i class="fas fa-arrows-alt-v button-icon"></i> Centrar vertical
-                    </button>
-                    <button type="button" id="centerHorizontallyButton" class="control-button">
-                        <i class="fas fa-arrows-alt-h button-icon"></i> Centrar horizontal
-                    </button>
-                </div>
-
-                <!-- flip images -->
-                <div class="button-group">
-                    <div class="group-title">Voltear imágenes</div>
-                    <button type="button" id="flipVerticalButton" class="control-button">
-                        <i class="bi bi-symmetry-vertical button-icon"></i> Voltear Vertical
-                    </button>
-                    <button type="button" id="flipHorizontalButton" class="control-button">
-                        <i class="bi bi-symmetry-horizontal button-icon"></i> Voltear Horizontal
-                    </button>
-                </div>
-
-                <!-- Scale Image -->
-                <div class="button-group">
-                    <div class="group-title">Escalar imágenes</div>
-                    <button type="button" id="scaleUpButton" class="control-button">
-                        <i class="fas fa-expand button-icon"></i> Ampliar imagen
-                    </button>
-                    <button type="button" id="scaleDownButton" class="control-button">
-                        <i class="fas fa-compress button-icon"></i> Reducir imagen
-                    </button>
-                </div>
-
-                <!-- Group/Ungroup Objects -->
-                <div class="button-group">
-                    <div class="group-title">Agrupar objetos</div>
-                    <button type="button" id="groupButton" class="control-button" disabled>
-                        <i class="fas fa-object-group button-icon"></i> Agrupar selección
-                    </button>
-                    <button type="button" id="ungroupButton" class="control-button" disabled>
-                        <i class="fas fa-object-ungroup button-icon"></i> Desagrupar
-                    </button>
-                </div>
-
-                <!-- Set Size in cm -->
-                <div class="button-group">
-                    <div class="group-title">Establecer tamaño en cm</div>
-                    <input type="number" id="widthInput" placeholder="Ancho en cm" step="0.1" />
-                    <input type="number" id="heightInput" placeholder="Alto en cm" step="0.1" />
-                    <!-- Nuevo checkbox para mantener la relación de aspecto -->
-                    <div class="control-group">
-                        <input type="checkbox" id="maintainAspectCheckbox" />
-                        <label for="maintainAspectCheckbox">Mantener relación de aspecto</label>
-                    </div>
-                    <button type="button" id="setSizeButton" class="control-button">
-                        <i class="fas fa-ruler button-icon"></i> Establecer tamaño
-                    </button>
-                </div>
-
-                <!-- Color de Imagen -->
-                <div class="button-group">
-                    <div class="group-title">Color de Imagen</div>
-                    <button type="button" id="grayScaleButton" class="control-button">
-                        <i class="fas fa-adjust button-icon"></i> Convertir a B/N
-                    </button>
-                </div>
-
-                <!-- Copiar y Pegar -->
-                <div class="button-group">
-                    <div class="group-title">Copiar/Pegar imágenes</div>
-                    <button type="button" id="copyButton" class="control-button">
-                        <i class="fas fa-copy button-icon"></i> Copiar (Ctrl+C)
-                    </button>
-                    <button type="button" id="pasteButton" class="control-button">
-                        <i class="fas fa-paste button-icon"></i> Pegar (Ctrl+V)
-                    </button>
-                </div>
-
-                <!-- Danger Zone -->
-                <div class="button-group">
-                    <div class="group-title">Operaciones de Imagen</div>
-                    <button type="button" id="resetImageButton" class="control-button">
-                        <i class="fas fa-undo button-icon"></i> Restablecer imagen
-                    </button>
-                    <button type="button" id="deleteButton" class="control-button danger-button">
-                        <i class="fas fa-trash button-icon"></i> Eliminar imagen
-                    </button>
-                </div>
-
             </div>
         </div>
-    </div>
 
-    <div class="zoom-controls">
-        <button type="button" class="zoom-button" onclick="zoomIn()" title="Aumentar zoom">
-            <i class="fas fa-search-plus"></i>
-        </button>
-        <button type="button" class="zoom-button" onclick="zoomOut()" title="Reducir zoom">
-            <i class="fas fa-search-minus"></i>
-        </button>
-    </div>
+        <div class="zoom-controls">
+            <button
+                type="button"
+                class="zoom-button"
+                onclick="zoomIn()"
+                title="Aumentar zoom"
+            >
+                <i class="fas fa-search-plus"></i>
+            </button>
+            <button
+                type="button"
+                class="zoom-button"
+                onclick="zoomOut()"
+                title="Reducir zoom"
+            >
+                <i class="fas fa-search-minus"></i>
+            </button>
+        </div>
 
-    <script type="module" src="/src/core/script.js"></script>
-
-</body>
-
+        <script type="module" src="/src/ui/tabManager.js"></script>
+        <script type="module" src="/src/core/script.js"></script>
+    </body>
 </html>
