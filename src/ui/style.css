@@ -583,3 +583,115 @@ button:disabled {
 button:disabled:hover {
     transform: none !important;
 }
+
+/* ================ RESPONSIVE < 1200px ================ */
+@media (max-width: 1200px) {
+    .main-container {
+        flex-direction: column;
+        height: auto;
+        max-height: none;
+    }
+
+    #pages-container {
+        order: 0;
+        height: auto;
+        max-height: none;
+        padding: 0.75rem;
+        gap: 1rem;
+    }
+
+    .page-container {
+        width: 100%;
+    }
+
+    /* Mostrar una sola sección de pestañas debajo del canvas */
+    #bottomTabs {
+        order: 1;
+        width: 100%;
+        flex: 0 0 auto;
+    }
+
+    /* Ocultar los paneles originales cuando se usa la sección combinada */
+    #leftSidebar,
+    #rightSidebar {
+        display: none;
+    }
+
+    .button-container {
+        height: auto;
+    }
+
+    .page-title {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .tabs-header {
+        padding: 0.25rem;
+        gap: 0.25rem;
+        flex-wrap: wrap;
+    }
+
+    .tab-button {
+        font-size: 0.7rem;
+        padding: 0.5rem 0.5rem;
+    }
+
+    .tabs-content {
+        padding: 0.75rem;
+    }
+
+    .button-group {
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .size-button,
+    .control-button,
+    .orientation-button,
+    .arrangement-button {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+
+    .grid-control-row {
+        padding: 0.5rem;
+    }
+
+    .grid-control-button {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: 0.7rem;
+    }
+
+    .zoom-controls {
+        bottom: 1rem;
+        right: 1rem;
+        gap: 0.5rem;
+    }
+
+    .zoom-button {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    .zoom-button i {
+        font-size: 1.5rem;
+    }
+
+    .page-navigation {
+        padding: 0.5rem;
+    }
+
+    .page-nav-button {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+}
+
+/* En pantallas grandes ocultar el contenedor de pestañas combinadas */
+@media (min-width: 1201px) {
+    #bottomTabs {
+        display: none;
+    }
+}

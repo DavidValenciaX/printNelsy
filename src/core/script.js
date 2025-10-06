@@ -14,7 +14,7 @@ import { initializeApp, getAppInstance } from "./app.js";
 import favicon from "@fortawesome/fontawesome-free/svgs/solid/print.svg";
 
 // Importar el sistema de tabs
-import { initializeTabManagers } from "../ui/tabManager.js";
+import { TabManager, initializeTabManagers } from "../ui/tabManager.js";
 // Redimensionado responsive
 import { responsiveResizeAllPages } from "../canvas/pageUtils.js";
 
@@ -31,8 +31,140 @@ document.addEventListener("DOMContentLoaded", async () => {
     const app = await initializeApp();
 
     // Inicializar el sistema de tabs
-    const tabManagers = initializeTabManagers();
+    let tabManagers = initializeTabManagers();
     console.log("✅ Sistema de tabs inicializado");
+
+    // Unificar pestañas en una sola sección debajo del canvas en pantallas pequeñas
+    const SMALL_WIDTH = 1200;
+
+    function createCombinedTabsContainer() {
+      const pagesContainer = document.getElementById("pages-container");
+      if (!pagesContainer) return null;
+
+      let bottomTabs = document.getElementById("bottomTabs");
+      if (!bottomTabs) {
+        bottomTabs = document.createElement("div");
+        bottomTabs.id = "bottomTabs";
+        bottomTabs.className = "button-container";
+
+        const header = document.createElement("div");
+        header.className = "tabs-header";
+        const content = document.createElement("div");
+        content.className = "tabs-content";
+
+        bottomTabs.appendChild(header);
+        bottomTabs.appendChild(content);
+
+        pagesContainer.insertAdjacentElement("afterend", bottomTabs);
+      }
+      return bottomTabs;
+    }
+
+    function moveTabsToCombined(sidebar, combined, origin) {
+      if (!sidebar || !combined) return;
+      const header = sidebar.querySelector(".tabs-header");
+      const content = sidebar.querySelector(".tabs-content");
+      const combinedHeader = combined.querySelector(".tabs-header");
+      const combinedContent = combined.querySelector(".tabs-content");
+
+      if (!header || !content || !combinedHeader || !combinedContent) return;
+
+      Array.from(header.querySelectorAll(".tab-button")).forEach((btn) => {
+        btn.setAttribute("data-origin", origin);
+        combinedHeader.appendChild(btn);
+      });
+
+      Array.from(content.querySelectorAll(".tab-panel")).forEach((panel) => {
+        panel.setAttribute("data-origin", origin);
+        combinedContent.appendChild(panel);
+      });
+    }
+
+    function moveTabsBackFromCombined(combined) {
+      if (!combined) return;
+      const left = document.getElementById("leftSidebar");
+      const right = document.getElementById("rightSidebar");
+      if (!left || !right) return;
+
+      const leftHeader = left.querySelector(".tabs-header");
+      const leftContent = left.querySelector(".tabs-content");
+      const rightHeader = right.querySelector(".tabs-header");
+      const rightContent = right.querySelector(".tabs-content");
+
+      const combinedHeader = combined.querySelector(".tabs-header");
+      const combinedContent = combined.querySelector(".tabs-content");
+
+      if (!leftHeader || !leftContent || !rightHeader || !rightContent || !combinedHeader || !combinedContent) return;
+
+      Array.from(combinedHeader.querySelectorAll(".tab-button")).forEach((btn) => {
+        const origin = btn.getAttribute("data-origin");
+        if (origin === "left") leftHeader.appendChild(btn);
+        else if (origin === "right") rightHeader.appendChild(btn);
+        btn.removeAttribute("data-origin");
+      });
+
+      Array.from(combinedContent.querySelectorAll(".tab-panel")).forEach((panel) => {
+        const origin = panel.getAttribute("data-origin");
+        if (origin === "left") leftContent.appendChild(panel);
+        else if (origin === "right") rightContent.appendChild(panel);
+        panel.removeAttribute("data-origin");
+      });
+    }
+
+    let combinedTabsManager = null;
+
+    function enableCombinedTabs() {
+      if (combinedTabsManager) return;
+      const leftSidebar = document.getElementById("leftSidebar");
+      const rightSidebar = document.getElementById("rightSidebar");
+      if (!leftSidebar || !rightSidebar) return;
+
+      try {
+        tabManagers.left?.destroy();
+        tabManagers.right?.destroy();
+      } catch (e) {
+        console.warn("No se pudieron destruir los managers anteriores:", e);
+      }
+
+      const combined = createCombinedTabsContainer();
+      if (!combined) return;
+
+      moveTabsToCombined(leftSidebar, combined, "left");
+      moveTabsToCombined(rightSidebar, combined, "right");
+
+      leftSidebar.style.display = "none";
+      rightSidebar.style.display = "none";
+
+      combinedTabsManager = new TabManager("bottomTabs");
+      combinedTabsManager.restoreLastActiveTab();
+      console.log("✅ Pestañas combinadas debajo del canvas");
+    }
+
+    function disableCombinedTabs() {
+      const leftSidebar = document.getElementById("leftSidebar");
+      const rightSidebar = document.getElementById("rightSidebar");
+      const combined = document.getElementById("bottomTabs");
+
+      if (!combined) return;
+
+      try { combinedTabsManager?.destroy(); } catch (e) {}
+      combinedTabsManager = null;
+
+      moveTabsBackFromCombined(combined);
+
+      if (leftSidebar) leftSidebar.style.display = "";
+      if (rightSidebar) rightSidebar.style.display = "";
+
+      combined.remove();
+
+      tabManagers = initializeTabManagers();
+      console.log("↩️ Pestañas restauradas en paneles izquierdo y derecho");
+    }
+
+    // Estado inicial
+    if (window.innerWidth <= SMALL_WIDTH) {
+      enableCombinedTabs();
+    }
 
     // Verificar que la aplicación se inicializó correctamente
     if (app.isHealthy()) {
@@ -96,6 +228,101 @@ function debounce(fn, delay = 100) {
 }
 
 // Redimensionado responsive en cambios de tamaño de ventana
+// Redimensionado responsive + combinación/restauración de pestañas en cambios de tamaño
 window.addEventListener('resize', debounce(() => {
   responsiveResizeAllPages();
+  const SMALL_WIDTH = 1200;
+  // Ejecutar combinación/restauración según ancho
+  if (window.innerWidth <= SMALL_WIDTH) {
+    // Ejecutar dentro de DOMContentLoaded para acceso a managers; si aún no están, ignorar
+    if (document.getElementById('bottomTabs')) {
+      // ya combinado; nada
+    } else {
+      // Intentar combinar si el app ya inicializó
+      const event = new Event('combineTabsRequest');
+      window.dispatchEvent(event);
+    }
+  } else {
+    // Si existe combinado, solicitar restauración
+    if (document.getElementById('bottomTabs')) {
+      const event = new Event('restoreTabsRequest');
+      window.dispatchEvent(event);
+    }
+  }
 }, 150));
+
+// Hooks simples para permitir que el bloque de inicialización escuche solicitudes
+window.addEventListener('combineTabsRequest', () => {
+  try {
+    // Buscar funciones definidas en el ámbito de DOMContentLoaded a través de atributos en window
+    // Como fallback, se intenta combinar desde aquí si ya existen los sidebars
+    const leftSidebar = document.getElementById('leftSidebar');
+    const rightSidebar = document.getElementById('rightSidebar');
+    const pagesContainer = document.getElementById('pages-container');
+    if (!leftSidebar || !rightSidebar || !pagesContainer) return;
+    // Si ya existe, no repetir
+    if (document.getElementById('bottomTabs')) return;
+    // Crear contenedor combinado básico
+    const bottomTabs = document.createElement('div');
+    bottomTabs.id = 'bottomTabs';
+    bottomTabs.className = 'button-container';
+    const header = document.createElement('div');
+    header.className = 'tabs-header';
+    const content = document.createElement('div');
+    content.className = 'tabs-content';
+    bottomTabs.appendChild(header);
+    bottomTabs.appendChild(content);
+    pagesContainer.insertAdjacentElement('afterend', bottomTabs);
+    // Mover elementos
+    [
+      { el: leftSidebar, origin: 'left' },
+      { el: rightSidebar, origin: 'right' }
+    ].forEach(({ el, origin }) => {
+      const h = el.querySelector('.tabs-header');
+      const c = el.querySelector('.tabs-content');
+      if (h && c) {
+        Array.from(h.querySelectorAll('.tab-button')).forEach((btn) => {
+          btn.setAttribute('data-origin', origin);
+          header.appendChild(btn);
+        });
+        Array.from(c.querySelectorAll('.tab-panel')).forEach((panel) => {
+          panel.setAttribute('data-origin', origin);
+          content.appendChild(panel);
+        });
+      }
+      el.style.display = 'none';
+    });
+    // Inicializar manager simple
+    try { new TabManager('bottomTabs'); } catch (e) {}
+  } catch (e) {}
+});
+
+window.addEventListener('restoreTabsRequest', () => {
+  try {
+    const combined = document.getElementById('bottomTabs');
+    const left = document.getElementById('leftSidebar');
+    const right = document.getElementById('rightSidebar');
+    if (!combined || !left || !right) return;
+    const leftHeader = left.querySelector('.tabs-header');
+    const leftContent = left.querySelector('.tabs-content');
+    const rightHeader = right.querySelector('.tabs-header');
+    const rightContent = right.querySelector('.tabs-content');
+    const combinedHeader = combined.querySelector('.tabs-header');
+    const combinedContent = combined.querySelector('.tabs-content');
+    Array.from(combinedHeader.querySelectorAll('.tab-button')).forEach((btn) => {
+      const origin = btn.getAttribute('data-origin');
+      if (origin === 'left') leftHeader.appendChild(btn);
+      else if (origin === 'right') rightHeader.appendChild(btn);
+      btn.removeAttribute('data-origin');
+    });
+    Array.from(combinedContent.querySelectorAll('.tab-panel')).forEach((panel) => {
+      const origin = panel.getAttribute('data-origin');
+      if (origin === 'left') leftContent.appendChild(panel);
+      else if (origin === 'right') rightContent.appendChild(panel);
+      panel.removeAttribute('data-origin');
+    });
+    left.style.display = '';
+    right.style.display = '';
+    combined.remove();
+  } catch (e) {}
+});
