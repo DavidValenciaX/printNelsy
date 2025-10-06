@@ -94,38 +94,6 @@ function reAddAndArrangeImages(images, currentOrientation, currentOrder, canvas,
   updateGridVisualization(canvas, isVertical);
 }
 
-function getPagesContainerWidth() {
-  const pagesContainer = document.getElementById('pages-container');
-  if (pagesContainer && pagesContainer.clientWidth > 0) return pagesContainer.clientWidth;
-  return window.innerWidth || 1024;
-}
-
-/**
- * Calcula un factor de escala responsive basado en el ancho disponible
- * Mantiene proporción y solo reduce, nunca supera escala 1
- * @param {string} size - Tamaño del papel
- * @param {boolean} vertical - Orientación (true = vertical)
- * @returns {number} factor de escala
- */
-export function getResponsiveScale(size, vertical = isVertical) {
-  const containerWidth = getPagesContainerWidth();
-  // Acolchado/bordes aproximados dentro de pages-container y page-container
-  const horizontalGutters = 48; // px
-  const availableWidth = Math.max(0, containerWidth - horizontalGutters);
-
-  let baseWidth = paperSizes[size].width;
-  let baseHeight = paperSizes[size].height;
-  if (!vertical) {
-    // horizontal: intercambiar dimensiones
-    [baseWidth, baseHeight] = [baseHeight, baseWidth];
-  }
-
-  const rawScale = availableWidth / baseWidth;
-  // Limitar entre 0.2 y 1 para evitar escalas demasiado pequeñas o superiores a 100%
-  const clamped = Math.max(0.2, Math.min(1, rawScale));
-  return Number.isFinite(clamped) ? clamped : 0.3;
-}
-
 export function resizeCanvas(size, canvas, marginRect, orientation = isVertical) {
   // Store current canvas state
   const images = canvas.getObjects().filter((obj) => obj.type === "image" || obj.type === "group");
@@ -138,7 +106,7 @@ export function resizeCanvas(size, canvas, marginRect, orientation = isVertical)
   // Update canvas dimensions
   currentSize = size;
   isVertical = orientation;
-  const scale = getResponsiveScale(size, orientation);
+  const scale = 0.3;
   let width = paperSizes[size].width;
   let height = paperSizes[size].height;
 
@@ -199,7 +167,7 @@ export function resizeCanvasOnly(size, canvas, marginRect, orientation = isVerti
   // NO MODIFICAR las variables globales aquí - esto es solo para redimensionar un canvas específico
   // Las variables globales se actualizan en syncGlobalStatesWithCurrentPage
   const targetOrientation = orientation;
-  const scale = getResponsiveScale(size, targetOrientation);
+  const scale = 0.3;
   let width = paperSizes[size].width;
   let height = paperSizes[size].height;
 
@@ -240,4 +208,4 @@ export function resizeCanvasOnly(size, canvas, marginRect, orientation = isVerti
 }
 
 // Exportar constantes y variables para uso externo
-export { paperSizes, dpi, marginInches, marginPixels };
+export { paperSizes, dpi, marginInches, marginPixels }; 
