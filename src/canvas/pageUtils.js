@@ -706,7 +706,7 @@ export function isLastPage() {
  * @param {Function} setIsVertical - Función para establecer la orientación
  */
 async function handleCanvasResize(pageSettings, setCurrentSize, setIsVertical) {
-  const { getCurrentSize, getIsVertical, resizeCanvasOnly } = await import('./canvasResizeUtils.js');
+  const { getCurrentSize, getIsVertical, resizeCanvas } = await import('./canvasResizeUtils.js');
 
   const currentSize = getCurrentSize();
   const currentOrientation = getIsVertical();
@@ -720,7 +720,7 @@ async function handleCanvasResize(pageSettings, setCurrentSize, setIsVertical) {
       const canvas = app.modules.canvas.getCanvas();
       const currentMarginRect = app.modules.canvas.getMarginRect();
 
-      const result = resizeCanvasOnly(pageSettings.paperSize, canvas, currentMarginRect, pageSettings.orientation);
+      const result = resizeCanvas(pageSettings.paperSize, canvas, currentMarginRect, pageSettings.orientation);
       app.modules.canvas.updateMargins(result.marginRect, result.marginWidth);
     }
   }
@@ -784,12 +784,12 @@ export async function syncGlobalStatesWithCurrentPage() {
  */
 export async function responsiveResizeAllPages() {
   try {
-    const { resizeCanvasOnly } = await import('./canvasResizeUtils.js');
+    const { resizeCanvas } = await import('./canvasResizeUtils.js');
     const { getAppInstance } = await import('../core/app.js');
     const app = getAppInstance();
 
     PAGE_STATE.pages.forEach((page, index) => {
-      const result = resizeCanvasOnly(
+      const result = resizeCanvas(
         page.pageSettings.paperSize,
         page.fabricCanvas,
         page.marginRect,
