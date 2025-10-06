@@ -94,6 +94,79 @@ function reAddAndArrangeImages(images, currentOrientation, currentOrder, canvas,
   updateGridVisualization(canvas, isVertical);
 }
 
+// Calcula una escala responsive basada en el ancho disponible del viewport,
+// descontando sidebars y paddings relevantes. Evita medir elementos que
+// dependen del tamaño del canvas para no crear retroalimentación.
+function getContainerAvailableWidth(canvas) {
+  try {
+    const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+
+    // Medir sidebars solo si están visibles
+    const leftSidebar = document.getElementById('leftSidebar');
+    const rightSidebar = document.getElementById('rightSidebar');
+    const isVisible = (el) => {
+      if (!el) return false;
+      const cs = getComputedStyle(el);
+      return cs.display !== 'none' && cs.visibility !== 'hidden';
+    };
+    const leftW = isVisible(leftSidebar) ? leftSidebar.getBoundingClientRect().width : 0;
+    const rightW = isVisible(rightSidebar) ? rightSidebar.getBoundingClientRect().width : 0;
+
+    // Paddings de contenedores principales
+    const mainContent = document.getElementById('main-content');
+    const mainPadding = mainContent ? (() => {
+      const cs = getComputedStyle(mainContent);
+      return (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+    })() : 0;
+
+    const pagesContainer = document.getElementById('pages-container');
+    const pagesPadding = pagesContainer ? (() => {
+      const cs = getComputedStyle(pagesContainer);
+      return (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+    })() : 0;
+
+    // Gap aproximado entre columnas dentro de .main-container
+    const MAIN_GAP_APPROX = 16; // 1rem aprox
+
+    // Calcular ancho disponible partiendo del viewport
+    let available = viewportWidth - leftW - rightW - mainPadding - pagesPadding - MAIN_GAP_APPROX;
+
+    // Normalizar: no permitir negativos y nunca exceder el viewport real
+    // Evitamos el mínimo fijo (p.e. 480) para que en móviles muy estrechos
+    // el canvas pueda adaptarse sin desbordar.
+    available = Math.max(0, Math.min(available, viewportWidth - 16));
+
+    console.debug('[Canvas] Medición de ancho disponible (viewport-based)', {
+      viewportWidth,
+      available,
+      leftSidebarWidth: leftW,
+      rightSidebarWidth: rightW,
+      mainPadding,
+      pagesPadding,
+      pagesContainerClientWidth: pagesContainer?.clientWidth || null
+    });
+    return available || viewportWidth - 16;
+  } catch (e) {
+    console.debug('[Canvas] getContainerAvailableWidth error', e);
+    const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    return Math.max(0, vw - 16);
+  }
+}
+
+function getResponsiveScaleForWidth(paperWidthPx, canvas) {
+  const baseScale = 0.3; // escala preferida para pantallas amplias
+  const SMALL_WIDTH = 1200;
+  const available = getContainerAvailableWidth(canvas);
+
+  if ((window.innerWidth || available) <= SMALL_WIDTH) {
+    // En pantallas pequeñas, llenar el ancho del contenedor manteniendo proporción
+    return Math.min(available / paperWidthPx, 1);
+  }
+
+  // En pantallas grandes, usar la escala base pero nunca desbordar el contenedor
+  return Math.min(baseScale, available / paperWidthPx);
+}
+
 export function resizeCanvas(size, canvas, marginRect, orientation = isVertical) {
   // Store current canvas state
   const images = canvas.getObjects().filter((obj) => obj.type === "image" || obj.type === "group");
@@ -106,7 +179,6 @@ export function resizeCanvas(size, canvas, marginRect, orientation = isVertical)
   // Update canvas dimensions
   currentSize = size;
   isVertical = orientation;
-  const scale = 0.3;
   let width = paperSizes[size].width;
   let height = paperSizes[size].height;
 
@@ -114,6 +186,19 @@ export function resizeCanvas(size, canvas, marginRect, orientation = isVertical)
     [width, height] = [height, width];
   }
 
+  const scale = getResponsiveScaleForWidth(width, canvas);
+  const availableWidth = getContainerAvailableWidth(canvas);
+  console.info('[Canvas] Escala responsive aplicada', {
+    paperSize: size,
+    orientation: isVertical ? 'vertical' : 'horizontal',
+    dpi,
+    paperWidthPx: width,
+    paperHeightPx: height,
+    availableContainerWidthPx: availableWidth,
+    scale,
+    canvasWidthPx: Math.round(width * scale),
+    canvasHeightPx: Math.round(height * scale)
+  });
   canvas.setWidth(width * scale);
   canvas.setHeight(height * scale);
 
@@ -167,7 +252,6 @@ export function resizeCanvasOnly(size, canvas, marginRect, orientation = isVerti
   // NO MODIFICAR las variables globales aquí - esto es solo para redimensionar un canvas específico
   // Las variables globales se actualizan en syncGlobalStatesWithCurrentPage
   const targetOrientation = orientation;
-  const scale = 0.3;
   let width = paperSizes[size].width;
   let height = paperSizes[size].height;
 
@@ -175,6 +259,19 @@ export function resizeCanvasOnly(size, canvas, marginRect, orientation = isVerti
     [width, height] = [height, width];
   }
 
+  const scale = getResponsiveScaleForWidth(width, canvas);
+  const availableWidth = getContainerAvailableWidth(canvas);
+  console.info('[Canvas] Escala responsive aplicada (solo canvas)', {
+    paperSize: size,
+    orientation: targetOrientation ? 'vertical' : 'horizontal',
+    dpi,
+    paperWidthPx: width,
+    paperHeightPx: height,
+    availableContainerWidthPx: availableWidth,
+    scale,
+    canvasWidthPx: Math.round(width * scale),
+    canvasHeightPx: Math.round(height * scale)
+  });
   canvas.setWidth(width * scale);
   canvas.setHeight(height * scale);
 
@@ -208,4 +305,4 @@ export function resizeCanvasOnly(size, canvas, marginRect, orientation = isVerti
 }
 
 // Exportar constantes y variables para uso externo
-export { paperSizes, dpi, marginInches, marginPixels }; 
+export { paperSizes, dpi, marginInches, marginPixels };
