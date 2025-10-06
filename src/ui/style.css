@@ -44,8 +44,6 @@ body {
     height: calc(100vh - 2rem);
     max-height: calc(100vh - 2rem);
     overflow: hidden;
-    width: 100%;
-    max-width: 1800px;
 }
 
 #pages-container {
@@ -93,8 +91,6 @@ body {
 .button-container {
     display: flex;
     flex-direction: column;
-    min-width: 320px;
-    max-width: 320px;
     height: 100%;
     overflow: hidden;
     background-color: #f8f9fa;
