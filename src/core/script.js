@@ -15,6 +15,8 @@ import favicon from "@fortawesome/fontawesome-free/svgs/solid/print.svg";
 
 // Importar el sistema de tabs
 import { initializeTabManagers } from "../ui/tabManager.js";
+// Redimensionado responsive
+import { responsiveResizeAllPages } from "../canvas/pageUtils.js";
 
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener("DOMContentLoaded", async () => {
@@ -45,6 +47,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
       console.error("❌ Application failed to start properly");
     }
+
+    // Ajuste responsive inicial
+    responsiveResizeAllPages();
   } catch (error) {
     console.error("💥 Fatal error during application initialization:", error);
 
@@ -80,3 +85,17 @@ window.addEventListener("beforeunload", () => {
     app.destroy();
   }
 });
+
+// Debounce util simple
+function debounce(fn, delay = 100) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
+  };
+}
+
+// Redimensionado responsive en cambios de tamaño de ventana
+window.addEventListener('resize', debounce(() => {
+  responsiveResizeAllPages();
+}, 150));

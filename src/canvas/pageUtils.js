@@ -780,6 +780,36 @@ export async function syncGlobalStatesWithCurrentPage() {
 }
 
 /**
+ * Redimensiona todas las páginas de forma responsive cuando cambia el tamaño de la ventana
+ */
+export async function responsiveResizeAllPages() {
+  try {
+    const { resizeCanvasOnly } = await import('./canvasResizeUtils.js');
+    const { getAppInstance } = await import('../core/app.js');
+    const app = getAppInstance();
+
+    PAGE_STATE.pages.forEach((page, index) => {
+      const result = resizeCanvasOnly(
+        page.pageSettings.paperSize,
+        page.fabricCanvas,
+        page.marginRect,
+        page.pageSettings.orientation
+      );
+
+      page.marginRect = result.marginRect;
+      page.marginWidth = result.marginWidth;
+
+      // Mantener sincronizado el canvas principal con los nuevos márgenes
+      if (app?.modules?.canvas && PAGE_STATE.currentPageIndex === index) {
+        app.modules.canvas.updateMargins(result.marginRect, result.marginWidth);
+      }
+    });
+  } catch (error) {
+    console.warn('Error en responsiveResizeAllPages:', error);
+  }
+}
+
+/**
  * Actualiza los botones de eventos de la aplicación
  * @param {Object} eventManager - Gestor de eventos
  * @param {Object} pageSettings - Configuración de la página
