@@ -292,8 +292,28 @@ window.addEventListener('combineTabsRequest', () => {
       }
       el.style.display = 'none';
     });
-    // Inicializar manager simple
-    try { new TabManager('bottomTabs'); } catch (e) {}
+
+    // Limpiar clases 'active' y listeners previos en el contenedor combinado
+    const combinedHeader = bottomTabs.querySelector('.tabs-header');
+    const combinedContent = bottomTabs.querySelector('.tabs-content');
+    combinedHeader.querySelectorAll('.tab-button').forEach((btn) => {
+      btn.classList.remove('active');
+      const clone = btn.cloneNode(true);
+      // conservar atributos
+      Array.from(btn.attributes).forEach(attr => {
+        if (!clone.hasAttribute(attr.name)) clone.setAttribute(attr.name, attr.value);
+      });
+      btn.replaceWith(clone);
+    });
+    combinedContent.querySelectorAll('.tab-panel').forEach((panel) => {
+      panel.classList.remove('active');
+    });
+
+    // Inicializar manager simple (único) para las pestañas combinadas
+    try {
+      const tm = new TabManager('bottomTabs');
+      tm.restoreLastActiveTab();
+    } catch (e) {}
   } catch (e) {}
 });
 
@@ -324,5 +344,30 @@ window.addEventListener('restoreTabsRequest', () => {
     left.style.display = '';
     right.style.display = '';
     combined.remove();
+
+    // Limpiar clases 'active' y listeners duplicados en ambos contenedores
+    [left, right].forEach((container) => {
+      const header = container.querySelector('.tabs-header');
+      const content = container.querySelector('.tabs-content');
+      header?.querySelectorAll('.tab-button').forEach((btn) => {
+        btn.classList.remove('active');
+        const clone = btn.cloneNode(true);
+        Array.from(btn.attributes).forEach(attr => {
+          if (!clone.hasAttribute(attr.name)) clone.setAttribute(attr.name, attr.value);
+        });
+        btn.replaceWith(clone);
+      });
+      content?.querySelectorAll('.tab-panel').forEach((panel) => {
+        panel.classList.remove('active');
+      });
+    });
+
+    // Re-inicializar los TabManagers para cada sidebar asegurando una tab activa
+    try {
+      const leftTM = new TabManager('leftSidebar');
+      const rightTM = new TabManager('rightSidebar');
+      leftTM.restoreLastActiveTab();
+      rightTM.restoreLastActiveTab();
+    } catch (e) {}
   } catch (e) {}
 });
