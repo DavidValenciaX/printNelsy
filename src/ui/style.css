@@ -175,6 +175,13 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+/* Contenedor dinámico de botones de tamaño de papel */
+#paperSizeButtons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
 .group-title {
     font-size: 0.8rem;
     font-weight: 700;
@@ -644,6 +651,11 @@ button:disabled:hover {
     .button-group {
         gap: 0.5rem;
         padding: 0.75rem;
+    }
+
+    /* Ajuste responsivo del contenedor de tamaños de papel */
+    #paperSizeButtons {
+        gap: 0.5rem;
     }
 
     .size-button,

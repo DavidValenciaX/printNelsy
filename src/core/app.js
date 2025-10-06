@@ -40,6 +40,12 @@ export class PrintImageApp {
   initializeModules() {
     // Initialize DOM Manager
     this.modules.dom = new DOMManager();
+    // Render dynamic paper size buttons before events are bound
+    try {
+      this.modules.dom.renderPaperSizeButtons();
+    } catch (e) {
+      console.warn('Paper size buttons rendering failed:', e);
+    }
     
     // Initialize Canvas Manager
     const canvasElement = this.modules.dom.get('canvasElement');
@@ -184,4 +190,4 @@ export function destroyApp() {
     appInstance.destroy();
     appInstance = null;
   }
-} 
+}

@@ -1,3 +1,4 @@
+import { paperSizes } from '../canvas/canvasResizeUtils.js';
 /**
  * Gestiona todas las referencias DOM de la aplicación
  */
@@ -32,6 +33,9 @@ export class DOMManager {
       cartaButton: document.getElementById("cartaButton"),
       oficioButton: document.getElementById("oficioButton"),
       a4Button: document.getElementById("a4Button"),
+
+      // Dynamic paper size buttons container
+      paperSizeButtonsContainer: document.getElementById("paperSizeButtons"),
 
       // Size controls
       scaleUpButton: document.getElementById("scaleUpButton"),
@@ -114,4 +118,27 @@ export class DOMManager {
     this.elements[key] = document.getElementById(selector) || document.querySelector(selector);
     return this.elements[key];
   }
-} 
+
+  /**
+   * Renderiza dinámicamente los botones de tamaños de papel desde paperSizes
+   */
+  renderPaperSizeButtons() {
+    const container = this.elements.paperSizeButtonsContainer || document.getElementById('paperSizeButtons');
+    if (!container) return;
+
+    // Limpiar contenedor por si acaso
+    container.innerHTML = '';
+
+    Object.keys(paperSizes).forEach((sizeKey) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'size-button';
+      button.id = `${sizeKey}Button`;
+      button.innerHTML = `<i class="fas fa-file button-icon"></i> ${sizeKey.toUpperCase()}`;
+      container.appendChild(button);
+
+      // Registrar el elemento inmediatamente para futuros bindings
+      this.elements[`${sizeKey}Button`] = button;
+    });
+  }
+}

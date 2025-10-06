@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import { imageState } from '../image/imageUploadUtils.js';
 import { groupSelectedObjects, ungroupActiveObject } from '../interactions/groupUtils.js';
 import { updateGroupButtonsState, initializeGroupButtonsState, handleGroupCreated, handleGroupUngrouped } from '../ui/groupButtons.js';
+import { paperSizes, getCurrentSize } from '../canvas/canvasResizeUtils.js';
 
 /**
  * Gestiona todos los event listeners de la aplicación
@@ -93,8 +94,7 @@ export class EventManager {
   }
 
   updatePaperSizeButtons(selectedSize) {
-    const paperSizes = ['carta', 'oficio', 'a4'];
-    paperSizes.forEach(size => {
+    Object.keys(paperSizes).forEach(size => {
       const button = this.dom.get(`${size}Button`);
       if (button) {
         if (size === selectedSize) {
@@ -143,9 +143,10 @@ export class EventManager {
   }
 
   initializePaperSizeEvents() {
-    const paperSizes = ['carta', 'oficio', 'a4'];
-    
-    paperSizes.forEach(size => {
+    Object.keys(paperSizes).forEach(size => {
+      // Registrar el elemento dinámico por si aún no está en el mapa
+      this.dom.addElement(`${size}Button`, `${size}Button`);
+
       this.addEventBinding(`${size}Button`, 'click', async () => {
         const result = this.actions.resizeCanvas(size, this.canvasManager.getCanvas(), this.canvasManager.getMarginRect());
         this.canvasManager.updateMargins(result.marginRect, result.marginWidth);
@@ -156,7 +157,8 @@ export class EventManager {
       });
     });
 
-    this.updatePaperSizeButtons('carta');
+    // Establecer activo según el tamaño actual
+    this.updatePaperSizeButtons(getCurrentSize());
   }
 
   initializeOrientationEvents() {
@@ -591,4 +593,4 @@ export class EventManager {
       this.removeEventBindings(elementKey);
     });
   }
-} 
+}
