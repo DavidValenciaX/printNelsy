@@ -56,6 +56,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         bottomTabs.appendChild(content);
 
         pagesContainer.insertAdjacentElement("afterend", bottomTabs);
+
+        // Convertir en overlay deslizante en pantallas pequeñas
+        bottomTabs.classList.add("overlay");
+        bottomTabs.classList.remove("open");
       }
       return bottomTabs;
     }
@@ -138,6 +142,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       combinedTabsManager = new TabManager("bottomTabs");
       combinedTabsManager.restoreLastActiveTab();
       console.log("✅ Pestañas combinadas debajo del canvas");
+
+      // Asegurar que el panel comienza oculto y el toggle sincronizado
+      const toggleBtn = document.getElementById('toggleTabsButton');
+      const combinedEl = document.getElementById('bottomTabs');
+      combinedEl?.classList.remove('open');
+      toggleBtn?.setAttribute('aria-expanded', 'false');
     }
 
     function disableCombinedTabs() {
@@ -273,6 +283,10 @@ window.addEventListener('combineTabsRequest', () => {
     bottomTabs.appendChild(header);
     bottomTabs.appendChild(content);
     pagesContainer.insertAdjacentElement('afterend', bottomTabs);
+
+    // Estilo overlay deslizante
+    bottomTabs.classList.add('overlay');
+    bottomTabs.classList.remove('open');
     // Mover elementos
     [
       { el: leftSidebar, origin: 'left' },
@@ -370,4 +384,26 @@ window.addEventListener('restoreTabsRequest', () => {
       rightTM.restoreLastActiveTab();
     } catch (e) {}
   } catch (e) {}
+});
+
+// Toggle del panel de tabs en pantallas pequeñas
+document.addEventListener('DOMContentLoaded', () => {
+  const toggleBtn = document.getElementById('toggleTabsButton');
+  const SMALL_WIDTH = 1200;
+
+  function updateToggleVisibility() {
+    if (!toggleBtn) return;
+    toggleBtn.style.display = window.innerWidth <= SMALL_WIDTH ? 'flex' : 'none';
+  }
+
+  updateToggleVisibility();
+
+  toggleBtn?.addEventListener('click', () => {
+    const combined = document.getElementById('bottomTabs');
+    if (!combined) return;
+    const isOpen = combined.classList.toggle('open');
+    toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+
+  window.addEventListener('resize', debounce(updateToggleVisibility, 150));
 });

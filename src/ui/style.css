@@ -695,3 +695,71 @@ button:disabled:hover {
         display: none;
     }
 }
+
+/* ================ FLOATING TABS TOGGLE ================ */
+.floating-tabs-toggle {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+    z-index: 1001;
+}
+
+.floating-tabs-toggle i {
+    font-size: 1.25rem;
+}
+
+.floating-tabs-toggle:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+@media (min-width: 1201px) {
+    .floating-tabs-toggle {
+        display: none;
+    }
+}
+
+/* ================ BOTTOM TABS OVERLAY ================ */
+#bottomTabs.overlay {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 65vh;
+    background-color: #ffffff;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+#bottomTabs.overlay .tabs-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-radius: 12px 12px 0 0;
+}
+
+#bottomTabs.overlay .tabs-content {
+    max-height: calc(65vh - 56px);
+    overflow-y: auto;
+}
+
+#bottomTabs.overlay.open {
+    transform: translateY(0%);
+    pointer-events: auto;
+}
